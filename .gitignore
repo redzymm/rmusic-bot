@@ -24,3 +24,8 @@ Thumbs.db
 # Build outputs
 dashboard-v2/dist/
 dashboard-v2/installer/
+
+# Sensitive Config (TOKEN PROTECTION)
+data/ayarlar.json
+data/remote-config.json
+data/settings.json

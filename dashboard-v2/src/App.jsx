@@ -1425,6 +1425,9 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
                 })}
             </div>
 
+            {/* SLASH COMMANDS PANEL */}
+            <SlashCommandsPanel />
+
             {/* Audit Log Configuration - Moved from Settings */}
             <div className="glass p-8 rounded-[40px] border-white/5 relative overflow-hidden group hover:border-brand-red/30 transition-all duration-300 bg-gradient-to-br from-[#ffffff03] to-transparent">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -2018,6 +2021,112 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
                     <Zap size={14} className="animate-pulse" /> Hot-reload active
                 </p>
                 <div className="h-[1px] flex-1 bg-white/5" />
+            </div>
+        </div>
+    );
+});
+
+// --- Slash Commands Panel ---
+const SlashCommandsPanel = React.memo(() => {
+    const [slashCommands, setSlashCommands] = useState([]);
+    const [isDeploying, setIsDeploying] = useState(false);
+    const [deployResult, setDeployResult] = useState(null);
+
+    useEffect(() => {
+        const loadSlashCommands = async () => {
+            try {
+                const commands = await ipc.invoke('get-slash-commands');
+                setSlashCommands(commands);
+            } catch (e) {
+                console.error('[SLASH_CMD_LOAD]', e);
+            }
+        };
+        loadSlashCommands();
+    }, []);
+
+    const handleDeploy = async (isGlobal = false) => {
+        setIsDeploying(true);
+        setDeployResult(null);
+        try {
+            const result = await ipc.invoke('deploy-slash-commands', isGlobal);
+            setDeployResult(result);
+        } catch (e) {
+            setDeployResult({ success: false, error: e.message });
+        } finally {
+            setIsDeploying(false);
+        }
+    };
+
+    return (
+        <div className="glass p-8 rounded-[40px] border-white/5 relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300 bg-gradient-to-br from-purple-950/20 via-[#0c0c0e]/80 to-[#0c0c0e]">
+            <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
+                <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 bg-purple-500/20 text-purple-400 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl">
+                        <Terminal size={28} />
+                    </div>
+                    <div>
+                        <h3 className="font-black text-lg uppercase tracking-widest text-white/90">Slash Commands</h3>
+                        <p className="text-[10px] text-white/30 uppercase font-black tracking-[0.2em]">Discord Native Integration</p>
+                    </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                    <button
+                        onClick={() => handleDeploy(false)}
+                        disabled={isDeploying}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] border transition-all active:scale-95 ${isDeploying
+                                ? 'bg-white/5 text-white/30 border-white/10 cursor-wait'
+                                : 'bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500 hover:text-white'
+                            }`}
+                    >
+                        {isDeploying ? <Loader size={14} className="animate-spin" /> : <Zap size={14} />}
+                        Guild Deploy
+                    </button>
+                    <button
+                        onClick={() => handleDeploy(true)}
+                        disabled={isDeploying}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] border transition-all active:scale-95 ${isDeploying
+                                ? 'bg-white/5 text-white/30 border-white/10 cursor-wait'
+                                : 'bg-white/5 text-white/50 border-white/10 hover:border-white/20 hover:text-white'
+                            }`}
+                    >
+                        {isDeploying ? <Loader size={14} className="animate-spin" /> : <Crown size={14} />}
+                        Global Deploy
+                    </button>
+                </div>
+            </div>
+
+            {/* Deploy Result */}
+            {deployResult && (
+                <div className={`mt-6 p-4 rounded-xl border ${deployResult.success ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                    <div className="flex items-center gap-2">
+                        {deployResult.success ? <Check size={16} /> : <AlertTriangle size={16} />}
+                        <span className="font-black text-xs uppercase tracking-widest">
+                            {deployResult.success ? deployResult.message : deployResult.error}
+                        </span>
+                    </div>
+                </div>
+            )}
+
+            {/* Slash Command List */}
+            {slashCommands.length > 0 && (
+                <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    {slashCommands.map((cmd) => (
+                        <div key={cmd.name} className="bg-white/5 border border-white/5 px-4 py-3 rounded-xl hover:border-purple-500/30 transition-all group/cmd">
+                            <div className="flex items-center gap-2">
+                                <span className="text-purple-400 font-mono text-sm">/</span>
+                                <span className="font-bold text-sm text-white/80 group-hover/cmd:text-white transition-colors">{cmd.name}</span>
+                            </div>
+                            <p className="text-[9px] text-white/30 mt-1 line-clamp-1">{cmd.description}</p>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Info */}
+            <div className="mt-6 flex items-center gap-2 text-[9px] text-white/20 uppercase tracking-widest font-bold">
+                <Shield size={12} />
+                <span>Guild: Anında aktif | Global: ~1 saat gecikme</span>
             </div>
         </div>
     );

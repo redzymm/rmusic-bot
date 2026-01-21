@@ -274,6 +274,134 @@ client.on("messageCreate", async (message) => {
     }
 });
 
+/* =======================
+   SLASH COMMAND HANDLER
+ ======================= */
+// Slash command isimlerini prefix komutlarına eşle
+const slashToPrefix = {
+    'play': 'p',
+    'skip': 'skip',
+    'stop': 'stop',
+    'kuyruk': 'kuyruk',
+    'sifirla': 'sıfırla',
+    'ping': 'ping',
+    'yardim': 'yardım',
+    'test': 'test',
+    'prefix': 'prefix',
+    'clear': 'clear'
+};
+
+client.on(Events.InteractionCreate, async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    const commandName = interaction.commandName;
+    const prefixCmd = slashToPrefix[commandName];
+
+    if (!prefixCmd) {
+        return interaction.reply({ content: '❌ Bilinmeyen komut!', ephemeral: true });
+    }
+
+    const command = client.commands.get(prefixCmd);
+    if (!command) {
+        return interaction.reply({ content: '❌ Komut bulunamadı!', ephemeral: true });
+    }
+
+    // Komut devre dışı mı kontrol et
+    if (client.disabledCommands.includes(prefixCmd)) {
+        return interaction.reply({ content: '❌ **Bu komut şu anda devre dışı!**', ephemeral: true });
+    }
+
+    // Slash command options'ı args dizisine çevir
+    const args = [];
+
+    // play komutu için şarkı seçeneği
+    if (commandName === 'play') {
+        const şarkı = interaction.options.getString('şarkı');
+        if (şarkı) args.push(şarkı);
+    }
+    // prefix komutu için yeni_prefix seçeneği
+    else if (commandName === 'prefix') {
+        const yeniPrefix = interaction.options.getString('yeni_prefix');
+        if (yeniPrefix) args.push(yeniPrefix);
+    }
+    // clear komutu için miktar seçeneği
+    else if (commandName === 'clear') {
+        const miktar = interaction.options.getInteger('miktar');
+        if (miktar) args.push(miktar.toString());
+    }
+
+    // Yapay message objesi oluştur (mevcut komut yapısıyla uyumluluk için)
+    const fakeMessage = {
+        guild: interaction.guild,
+        member: interaction.member,
+        author: interaction.user,
+        channel: interaction.channel,
+        client: client,
+        // Slash komutlar için reply fonksiyonu
+        reply: async (content) => {
+            if (typeof content === 'string') {
+                return interaction.reply({ content });
+            }
+            return interaction.reply(content);
+        },
+        // Bazı komutlar channel.send kullanıyor
+        _interaction: interaction,
+        _replied: false
+    };
+
+    // Channel send'i de override et
+    const originalSend = interaction.channel.send.bind(interaction.channel);
+    fakeMessage.channel = {
+        ...interaction.channel,
+        send: async (content) => {
+            // Eğer henüz reply yapılmadıysa, interaction ile reply yap
+            if (!fakeMessage._replied && !interaction.replied && !interaction.deferred) {
+                fakeMessage._replied = true;
+                if (typeof content === 'string') {
+                    return interaction.reply({ content });
+                }
+                return interaction.reply(content);
+            }
+            // Aksi halde normal send kullan
+            return originalSend(content);
+        },
+        id: interaction.channel.id
+    };
+
+    try {
+        // Interaction'ı defer et (3 saniye limitini aşmamak için)
+        if (!interaction.deferred && !interaction.replied) {
+            await interaction.deferReply();
+            fakeMessage._replied = true;
+
+            // Defer yapıldıysa reply'ı editReply olarak değiştir
+            fakeMessage.reply = async (content) => {
+                if (typeof content === 'string') {
+                    return interaction.editReply({ content });
+                }
+                return interaction.editReply(content);
+            };
+            fakeMessage.channel.send = async (content) => {
+                if (typeof content === 'string') {
+                    return interaction.editReply({ content });
+                }
+                return interaction.editReply(content);
+            };
+        }
+
+        await command.run(fakeMessage, args, client);
+        console.log(`[SLASH] /${commandName} executed by ${interaction.user.tag}`);
+    } catch (e) {
+        console.error(`[SLASH_ERR] /${commandName}:`, e);
+        const errorMsg = '❌ Bir hata oluştu.';
+        if (interaction.deferred || interaction.replied) {
+            await interaction.editReply({ content: errorMsg });
+        } else {
+            await interaction.reply({ content: errorMsg, ephemeral: true });
+        }
+    }
+});
+
 // Auto Response Handler (Non-prefix messages)
 client.on("messageCreate", async (message) => {
     if (message.author.bot || !message.guild) return;

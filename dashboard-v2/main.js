@@ -572,6 +572,56 @@ ipcMain.on('beam-to-server', (event, data) => {
         if (mainWindow) mainWindow.webContents.send('bot-log', `[SYSTEM] Müziği sunucuya fırlatıyorum: ${data.title}`);
     }
 });
+
+// Deploy Slash Commands (Dashboard'dan tetiklenir)
+ipcMain.handle('deploy-slash-commands', async (event, isGlobal = false) => {
+    const { spawn } = require('child_process');
+    const deployScript = path.join(__dirname, '../src/deploy-commands.js');
+
+    return new Promise((resolve) => {
+        const args = isGlobal ? [deployScript, '--global'] : [deployScript];
+        const child = spawn('node', args, {
+            cwd: path.join(__dirname, '..'),
+            env: { ...process.env }
+        });
+
+        let output = '';
+        let error = '';
+
+        child.stdout.on('data', (data) => {
+            output += data.toString();
+            if (mainWindow) mainWindow.webContents.send('bot-log', data.toString());
+        });
+
+        child.stderr.on('data', (data) => {
+            error += data.toString();
+            if (mainWindow) mainWindow.webContents.send('bot-log', `[ERR] ${data.toString()}`);
+        });
+
+        child.on('close', (code) => {
+            if (code === 0) {
+                resolve({ success: true, message: 'Slash komutları başarıyla kaydedildi!', output });
+            } else {
+                resolve({ success: false, error: error || 'Deployment failed', output });
+            }
+        });
+    });
+});
+
+// Get Slash Commands List (Dashboard için)
+ipcMain.handle('get-slash-commands', async () => {
+    try {
+        const slashCommands = require('../src/slashCommands.js');
+        return slashCommands.map(cmd => ({
+            name: cmd.name,
+            description: cmd.description
+        }));
+    } catch (e) {
+        console.error('[SLASH_CMD_LIST_ERR]', e);
+        return [];
+    }
+});
+
 ipcMain.handle('ask-ai', async (event, { log }) => {
     const configPath = path.join(__dirname, '../data/ayarlar.json');
     let config = {};
