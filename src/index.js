@@ -365,19 +365,29 @@ client.on(Events.InteractionCreate, async (interaction) => {
     try {
         // Interaction'ı defer et (3 saniye limitini aşmamak için)
         if (!interaction.deferred && !interaction.replied) {
-            await interaction.deferReply();
+            // /clear komutu için ephemeral defer yap ki bulkDelete onu silmesin
+            const isClear = commandName === 'clear';
+            await interaction.deferReply({ ephemeral: isClear });
         }
 
         await command.run(fakeMessage, args, client);
         console.log(`[SLASH] /${commandName} executed by ${interaction.user.tag}`);
     } catch (e) {
+        // 10008: Unknown Message (Mesaj silinmiş olabilir, özellikle /clear sırasında)
+        if (e.code === 10008 || e.code === '10008') {
+            console.log(`[SLASH_WARN] /${commandName}: Interaction message was likely deleted, ignoring 10008.`);
+            return;
+        }
+
         console.error(`[SLASH_ERR] /${commandName}:`, e);
         const errorMsg = '❌ Bir hata oluştu.';
-        if (interaction.deferred || interaction.replied) {
-            await interaction.editReply({ content: errorMsg });
-        } else {
-            await interaction.reply({ content: errorMsg, ephemeral: true });
-        }
+        try {
+            if (interaction.deferred || interaction.replied) {
+                await interaction.editReply({ content: errorMsg });
+            } else {
+                await interaction.reply({ content: errorMsg, ephemeral: true });
+            }
+        } catch (err) { }
     }
 });
 
