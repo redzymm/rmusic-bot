@@ -291,8 +291,8 @@ async function playNext(guildId, client, isNew = false, seekTime = 0) {
     }
 
     ffmpegArgs.push(
-        '-analyze-duration', '0',
-        '-probesize', '32',
+        '-analyzeduration', '0',
+        '-probesize', '32k',
         '-i', 'pipe:0',
         '-f', 's16le',
         '-ar', '48000',
