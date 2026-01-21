@@ -10,20 +10,31 @@ const Nodes = [{
 class LavalinkManager {
     constructor(client) {
         this.client = client;
+        console.log(`[LAVALINK] Shoukaku başlatılıyor... (Node: ${Nodes[0].url})`);
+
         this.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), Nodes, {
             moveOnDisconnect: false,
             resumable: true,
             resumableTimeout: 60,
-            reconnectTries: 3,
+            reconnectTries: 10,
+            reconnectInterval: 5000,
             restTimeout: 60000
         });
 
+        // Immediate check
+        setTimeout(() => {
+            console.log(`[LAVALINK_STAT] Kayıtlı Node sayısı: ${this.shoukaku.nodes.size}`);
+            for (const [name, node] of this.shoukaku.nodes) {
+                console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${node.state}`);
+            }
+        }, 5000);
+
         this.shoukaku.on('ready', (name) => {
-            console.log(`[LAVALINK] Node ${name} bağlandı ✅`);
+            console.log(`[LAVALINK] Node ${name} bağlandı ✅ (Ready Event)`);
         });
 
         this.shoukaku.on('error', (name, error) => {
-            console.error(`[LAVALINK] Node ${name} hata:`, error);
+            console.error(`[LAVALINK] Node ${name} hata ❌:`, error);
         });
 
         this.shoukaku.on('debug', (name, info) => {

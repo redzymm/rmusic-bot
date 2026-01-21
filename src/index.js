@@ -188,11 +188,11 @@ fs.readdirSync(komutlarPath)
  ======================= */
 const os = require("os");
 
+// Initialize Lavalink Manager
+client.lavalink = new LavalinkManager(client);
+
 client.once(Events.ClientReady, () => {
     console.log(`[BOT] ${client.user.tag} aktif!`);
-
-    // Initialize Lavalink Manager
-    client.lavalink = new LavalinkManager(client);
     console.log(`[BOT] Lavalink manager başlatıldı, bağlantı bekleniyor...`);
 
     const sendStatus = () => {
