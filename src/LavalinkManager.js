@@ -37,10 +37,12 @@ class LavalinkManager {
             console.error(`[LAVALINK] Node ${name} hata ❌:`, error);
         });
 
+        /*
         this.shoukaku.on('debug', (name, info) => {
             if (info.includes('Wait')) return; // Ignore spammy wait logs
             console.log(`[LAVALINK_DEBUG] ${name}: ${info}`);
         });
+        */
 
         this.shoukaku.on('close', (name, code, reason) => {
             console.warn(`[LAVALINK] Node ${name} bağlantı kesildi: ${code} - ${reason}`);

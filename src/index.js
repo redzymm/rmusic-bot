@@ -798,7 +798,6 @@ process.stdin.on("data", (data) => {
         const lines = str.split("\n");
         for (const line of lines) {
             if (!line.trim()) continue;
-            console.log(`[STDIN] New command: ${line.substring(0, 100)}`);
 
             if (line.startsWith("beam:")) {
                 const data = JSON.parse(line.substring(5));
