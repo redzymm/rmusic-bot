@@ -56,9 +56,9 @@ module.exports = {
 
                         if (videos && videos.length > 0) {
                             playlistTracks = videos.map(v => ({
-                                url: v.url,
-                                title: v.title,
-                                thumbnail: v.thumbnails[0]?.url || "",
+                                url: v.url || v.link,
+                                title: v.title || "Unknown Title",
+                                thumbnail: v.thumbnails?.[0]?.url || "",
                                 requester: message.author.tag
                             }));
 
@@ -78,9 +78,9 @@ module.exports = {
 
                 if (!playlistTracks.length) {
                     const info = await play.video_basic_info(query);
-                    videoUrl = info.video_details.url;
+                    videoUrl = info.video_details.url || info.video_details.link;
                     videoTitle = info.video_details.title;
-                    thumbnail = info.video_details.thumbnails[0].url;
+                    thumbnail = info.video_details.thumbnails?.[0]?.url || "";
                 }
             } else {
                 const searchResult = await play.search(query, { limit: 1 });
@@ -228,6 +228,13 @@ async function playNext(guildId, client, isNew = false, seekTime = 0) {
     }
 
     const song = guildData.queue[0];
+    if (!song || (!song.url && !song.link)) {
+        console.error("[PLAYER_ERR] Invalid song in queue:", song);
+        guildData.queue.shift();
+        return playNext(guildId, client);
+    }
+
+    const songUrl = song.url || song.link;
 
     // DASHBOARD DATA
     console.log("DASHBOARD_DATA:" + JSON.stringify({
@@ -272,7 +279,7 @@ async function playNext(guildId, client, isNew = false, seekTime = 0) {
 
     try {
         // play-dl ile stream oluştur
-        const stream = await play.stream(song.url, {
+        const stream = await play.stream(songUrl, {
             seek: seekTime,
             quality: 1, // High quality
             discordPlayerCompatibility: true
