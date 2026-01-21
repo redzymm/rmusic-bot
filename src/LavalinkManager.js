@@ -74,7 +74,7 @@ class LavalinkManager {
         const player = await this.shoukaku.joinVoiceChannel({
             guildId: guildId,
             channelId: channelId,
-            shardId: 0,
+            shardId: this.client.shard?.id || 0,
             deaf: true
         });
 
@@ -96,8 +96,8 @@ class LavalinkManager {
     async setVolume(guildId, volume) {
         const player = this.getPlayer(guildId);
         if (!player) return;
-        // Lavalink volume is 0-1000, 100 is 100%
-        await player.setVolume(volume);
+        // Lavalink filters volume: 1.0 is 100%
+        await player.setFilters({ volume: volume / 100 });
     }
 
     async setFilters(guildId, filters) {
@@ -110,7 +110,6 @@ class LavalinkManager {
         const player = this.getPlayer(guildId);
         if (player) {
             await player.connection.disconnect();
-            // Player is automatically removed from node when disconnected
         }
     }
 }

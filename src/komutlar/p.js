@@ -195,14 +195,9 @@ async function playNext(guildId, client) {
         // Apply volume
         const volume = (client.globalVolume || 100) / 100;
 
-        // Apply filters if active
+        // Apply all filters (including volume)
         const filters = buildFilters(client);
-        if (Object.keys(filters).length > 0) {
-            await guildData.player.setFilters(filters);
-        }
-
-        // Set volume
-        await guildData.player.setVolume(Math.round(volume * 100));
+        await guildData.player.setFilters(filters);
 
         // Play the track
         await guildData.player.playTrack({
@@ -242,29 +237,29 @@ async function playNext(guildId, client) {
 function buildFilters(client) {
     const filters = {};
 
+    // Volume (Lavalink filters expect 1.0 for 100%)
+    const vol = (client.globalVolume || 100) / 100;
+    filters.volume = vol;
+
     // Equalizer
     if (client.equalizer && client.equalizer.some(g => g !== 0)) {
         const bands = client.equalizer.map((gain, i) => ({
             band: i,
-            gain: gain / 100 // Lavalink expects -0.25 to 1.0
+            gain: gain / 100 // Lavalink expects -0.25 to 1.0 (Note: gain 1.0 is very high, 0.25 is standard max)
         }));
         filters.equalizer = bands;
     }
 
-    // Timescale for nightcore
+    // Timescale filters (Nightcore/Vaporwave)
     if (client.filters?.nightcore) {
-        filters.timescale = {
-            speed: 1.25,
-            pitch: 1.25,
-            rate: 1.0
-        };
+        filters.timescale = { speed: 1.2, pitch: 1.2, rate: 1.0 };
+    } else if (client.filters?.vaporwave) {
+        filters.timescale = { speed: 0.85, pitch: 0.85, rate: 1.0 };
     }
 
-    // Rotation for 8D
+    // Rotation (8D)
     if (client.filters?.["8d"]) {
-        filters.rotation = {
-            rotationHz: 0.125
-        };
+        filters.rotation = { rotationHz: 0.2 };
     }
 
     // Bass boost via equalizer
@@ -272,8 +267,7 @@ function buildFilters(client) {
         const bassEq = [
             { band: 0, gain: 0.6 },
             { band: 1, gain: 0.5 },
-            { band: 2, gain: 0.3 },
-            { band: 3, gain: 0.1 }
+            { band: 2, gain: 0.3 }
         ];
         filters.equalizer = [...(filters.equalizer || []), ...bassEq];
     }
