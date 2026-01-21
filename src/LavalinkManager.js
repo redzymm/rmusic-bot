@@ -71,10 +71,7 @@ class LavalinkManager {
     }
 
     async createPlayer(guildId, channelId, textChannelId) {
-        const node = this.getNode();
-        if (!node) throw new Error('Lavalink node bulunamadı');
-
-        const player = await node.joinChannel({
+        const player = await this.shoukaku.joinVoiceChannel({
             guildId: guildId,
             channelId: channelId,
             shardId: 0,
