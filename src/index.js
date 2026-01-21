@@ -367,7 +367,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
         if (!interaction.deferred && !interaction.replied) {
             // /clear komutu için ephemeral defer yap ki bulkDelete onu silmesin
             const isClear = commandName === 'clear';
-            await interaction.deferReply({ ephemeral: isClear });
+            // Discord.js v14+ için flags kullanımı (64 = Ephemeral)
+            await interaction.deferReply({ flags: isClear ? [64] : [] });
         }
 
         await command.run(fakeMessage, args, client);
@@ -385,7 +386,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             if (interaction.deferred || interaction.replied) {
                 await interaction.editReply({ content: errorMsg });
             } else {
-                await interaction.reply({ content: errorMsg, ephemeral: true });
+                await interaction.reply({ content: errorMsg, flags: [64] });
             }
         } catch (err) { }
     }

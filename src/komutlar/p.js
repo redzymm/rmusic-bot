@@ -85,11 +85,17 @@ module.exports = {
             } else {
                 const searchResult = await play.search(query, { limit: 1 });
                 if (!searchResult || searchResult.length === 0) {
+                    if (message.guild.searchMsg) try { await message.guild.searchMsg.delete(); } catch (e) { }
                     return message.channel.send("❌ Sonuç bulunamadı.");
                 }
-                videoUrl = searchResult[0].url;
-                videoTitle = searchResult[0].title;
-                thumbnail = searchResult[0].thumbnails[0].url;
+                videoUrl = searchResult[0].url || searchResult[0].link;
+                videoTitle = searchResult[0].title || "Unknown Title";
+                thumbnail = searchResult[0].thumbnails?.[0]?.url || "";
+
+                if (!videoUrl) {
+                    if (message.guild.searchMsg) try { await message.guild.searchMsg.delete(); } catch (e) { }
+                    return message.channel.send("❌ Geçerli bir video URL'si bulunamadı.");
+                }
             }
 
             // Guild verilerini al veya oluştur
