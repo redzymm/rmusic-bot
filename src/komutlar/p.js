@@ -30,21 +30,30 @@ module.exports = {
             message.guild.searchMsg = await message.channel.send(`🔍 Aranıyor: **${query}**...`);
 
             // Search for the track
-            const result = await client.lavalink.search(query);
+            let result = await client.lavalink.search(query);
+            console.log(`[DEBUG] Search result loadType: ${result?.loadType}`);
 
-            if (!result || result.loadType === 'empty' || result.loadType === 'error') {
+            // Fallback to soundcloud if youtube fails or returns nothing
+            if (!result || ['empty', 'error', 'no_matches'].includes(result.loadType?.toLowerCase())) {
+                console.log(`[DEBUG] YouTube search failed, trying SoundCloud for: ${query}`);
+                result = await client.lavalink.search(query, 'soundcloud');
+            }
+
+            if (!result || ['empty', 'error', 'no_matches'].includes(result.loadType?.toLowerCase())) {
                 if (message.guild.searchMsg) try { await message.guild.searchMsg.delete(); } catch (e) { }
+                console.log(`[DEBUG] Final search failed for query: ${query}`, result);
                 return message.channel.send("❌ Sonuç bulunamadı.");
             }
 
             let tracks = [];
             let isPlaylist = false;
+            const loadType = result.loadType?.toLowerCase();
 
-            if (result.loadType === 'playlist') {
+            if (loadType === 'playlist') {
                 tracks = result.data.tracks;
                 isPlaylist = true;
-            } else if (result.loadType === 'search' || result.loadType === 'track') {
-                tracks = result.loadType === 'track' ? [result.data] : [result.data[0]];
+            } else if (loadType === 'search' || loadType === 'track') {
+                tracks = loadType === 'track' ? [result.data] : [result.data[0]];
             }
 
             if (tracks.length === 0) {
