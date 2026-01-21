@@ -85,12 +85,8 @@ class LavalinkManager {
     }
 
     getPlayer(guildId) {
-        // Shoukaku v4: Players are stored in nodes
-        for (const node of this.shoukaku.nodes.values()) {
-            const player = node.players.get(guildId);
-            if (player) return player;
-        }
-        return null;
+        // Shoukaku v4: Players are stored directly in the shoukaku instance
+        return this.shoukaku.players.get(guildId);
     }
 
     async setVolume(guildId, volume) {

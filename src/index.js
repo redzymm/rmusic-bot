@@ -854,12 +854,16 @@ process.stdin.on("data", (data) => {
                 if (client.filters.hasOwnProperty(fid)) {
                     client.filters[fid] = !client.filters[fid];
 
-                    const pCommand = client.commands.get('p');
-                    if (pCommand && pCommand.buildFilters) {
-                        const newFilters = pCommand.buildFilters(client);
-                        client.müzik.forEach((data, guildId) => {
-                            client.lavalink.setFilters(guildId, newFilters);
-                        });
+                    const pCommand = client.commands?.get('p');
+                    if (pCommand && typeof pCommand.buildFilters === 'function') {
+                        try {
+                            const newFilters = pCommand.buildFilters(client);
+                            client.müzik.forEach((data, guildId) => {
+                                client.lavalink.setFilters(guildId, newFilters);
+                            });
+                        } catch (e) {
+                            console.error("[DASHBOARD_FILTER_ERR]", e.message);
+                        }
                     }
                     saveSettings();
                 }
@@ -869,12 +873,16 @@ process.stdin.on("data", (data) => {
                 const [bid, val] = json.value.split(":").map(Number);
                 client.equalizer[bid] = val;
 
-                const pCommand = client.commands.get('p');
-                if (pCommand && pCommand.buildFilters) {
-                    const newFilters = pCommand.buildFilters(client);
-                    client.müzik.forEach((data, guildId) => {
-                        client.lavalink.setFilters(guildId, newFilters);
-                    });
+                const pCommand = client.commands?.get('p');
+                if (pCommand && typeof pCommand.buildFilters === 'function') {
+                    try {
+                        const newFilters = pCommand.buildFilters(client);
+                        client.müzik.forEach((data, guildId) => {
+                            client.lavalink.setFilters(guildId, newFilters);
+                        });
+                    } catch (e) {
+                        console.error("[DASHBOARD_EQ_ERR]", e.message);
+                    }
                 }
                 saveSettings();
             }
