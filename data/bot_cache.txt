@@ -1,0 +1,1 @@
+{"type":"status","username":"RMUSIC","tag":"RMUSIC#4248","avatar":"https://cdn.discordapp.com/avatars/950813277007515709/3910137f606d0a8766c34bf003c99f9c.png?size=128","ping":164,"guilds":1,"cpu":"0","ram":"21","songProgress":null,"guildList":[{"name":"GGC","icon":"https://cdn.discordapp.com/icons/661862322129862656/d9c2a4a689ae73cbd62a4cb997b67f84.png?size=64"}]}

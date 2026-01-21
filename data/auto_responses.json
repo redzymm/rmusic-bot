@@ -1,0 +1,165 @@
+[
+  {
+    "trigger": "sa",
+    "response": [
+      "Aleyküm Selam!",
+      "Aleyküm Selam {user}, hoş geldin!",
+      "Ve Aleyküm Selam, nasılsın?"
+    ]
+  },
+  {
+    "trigger": "as",
+    "response": [
+      "Memnun oldum!",
+      "Hoş geldin {user}!"
+    ]
+  },
+  {
+    "trigger": "merhaba",
+    "response": [
+      "Merhaba {user}, harika bir gün dilerim!",
+      "Selamlar! Nasıl yardımcı olabilirim?",
+      "Merhaba! Bugün nasılsın?"
+    ]
+  },
+  {
+    "trigger": "selam",
+    "response": [
+      "Selam {user}!",
+      "Selamlar, hoş geldin.",
+      "Ooo selamlar!"
+    ]
+  },
+  {
+    "trigger": "günaydın",
+    "response": [
+      "Günaydın! Harika bir sabah değil mi?",
+      "Günaydın {user}, bugün enerji doluyuz!",
+      "Sana da günaydın!"
+    ]
+  },
+  {
+    "trigger": "iyi geceler",
+    "response": [
+      "İyi geceler {user}, tatlı rüyalar.",
+      "Görüşürüz, kendine iyi bak.",
+      "İyi uykular!"
+    ]
+  },
+  {
+    "trigger": "nasılsın",
+    "response": [
+      "Çok iyiyim, seni gördüm daha iyi oldum!",
+      "Harikayım! Sen nasılsın?",
+      "Bomma gibiyim, her şey yolunda."
+    ]
+  },
+  {
+    "trigger": "teşekkürler",
+    "response": [
+      "Rica ederim!",
+      "Lafı bile olmaz {user}!",
+      "Ne demek, her zaman."
+    ]
+  },
+  {
+    "trigger": "hoş geldin",
+    "response": [
+      "Hoş bulduk!",
+      "Selamlar {user}!",
+      "Teşekkür ederim, nasılsın?"
+    ]
+  },
+  {
+    "trigger": "görüşürüz",
+    "response": [
+      "Güle güle!",
+      "Kendine iyi bak {user}!",
+      "Yine bekleriz."
+    ]
+  },
+  {
+    "trigger": "naber",
+    "response": [
+      "İyidir, senden naber?",
+      "Harika gidiyor, seninle daha iyi oldu!",
+      "Süperim, her şey yolunda."
+    ]
+  },
+  {
+    "trigger": "baybay",
+    "response": [
+      "Hadi baybay!",
+      "Görüşürüz!",
+      "Sana da bay bay."
+    ]
+  },
+  {
+    "trigger": "cansın",
+    "response": [
+      "O senin canlığın!",
+      "Teşekkür ederim {user}, sen de öylesin!",
+      "Seni sevdim!"
+    ]
+  },
+  {
+    "trigger": "bot",
+    "response": [
+      "Buyur benim?",
+      "Efendim {user}?",
+      "Biri bot mu dedi?"
+    ]
+  },
+  {
+    "trigger": "yardım",
+    "response": [
+      "Komutlar için !help yazabilirsin!",
+      "Herhangi bir konuda yardıma mı ihtiyacın var?",
+      "Sana nasıl yardımcı olabilirim?"
+    ]
+  },
+  {
+    "trigger": "müzik",
+    "response": [
+      "Müzik komutlarını çalma listende görebilirsin.",
+      "En sevdiğin şarkıyı açmaya ne dersin?",
+      "Müzik ruhun gıdasıdır!"
+    ]
+  },
+  {
+    "trigger": "eyvallah",
+    "response": [
+      "Rica ederim.",
+      "Ne demek!",
+      "Her zaman yanındayım."
+    ]
+  },
+  {
+    "trigger": "hb",
+    "response": [
+      "Hoş geldin kral!",
+      "Ooo hoş geldin {user}!",
+      "Merhaba!"
+    ]
+  },
+  {
+    "trigger": "kolay gelsin",
+    "response": [
+      "Teşekkürler, sana da!",
+      "Çok sağ ol {user}!",
+      "Eksik olma."
+    ]
+  },
+  {
+    "trigger": "afiyet olsun",
+    "response": [
+      "Teşekkürler!",
+      "Sana da afiyet olsun!",
+      "Birlikte olsun."
+    ]
+  },
+  {
+    "trigger": "!dc",
+    "response": "https://discord.gg/NgrM3GA785"
+  }
+]

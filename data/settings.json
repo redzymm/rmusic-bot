@@ -1,0 +1,20 @@
+{
+  "volume": 30,
+  "filters": {
+    "8d": false,
+    "bassboost": false,
+    "nightcore": false
+  },
+  "equalizer": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ]
+}
