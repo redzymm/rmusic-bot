@@ -291,9 +291,8 @@ async function playNext(guildId, client, isNew = false, seekTime = 0) {
     }
 
     ffmpegArgs.push(
-        '-reconnect', '1',
-        '-reconnect_streamed', '1',
-        '-reconnect_delay_max', '5',
+        '-analyze-duration', '0',
+        '-probesize', '32',
         '-i', 'pipe:0',
         '-f', 's16le',
         '-ar', '48000',
