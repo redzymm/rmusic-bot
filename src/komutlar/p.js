@@ -7,7 +7,6 @@ const ytdlpPath = process.platform === 'win32'
     ? path.join(__dirname, '../../node_modules/@distube/yt-dlp/bin/yt-dlp.exe')
     : 'yt-dlp'; // Use system-installed yt-dlp on Linux
 
-const ytdl = require('@distube/ytdl-core');
 const play = require('play-dl');
 const { EmbedBuilder } = require('discord.js');
 
@@ -148,8 +147,6 @@ module.exports = {
 async function playNext(guildId, client, options = {}) {
     const isRetry = options.isRetry || false;
     const seekTime = options.seekTime || 0;
-    const engineIndex = options.engineIndex || 0;
-
     const guildData = client.müzik.get(guildId);
     if (!guildData) return;
 
@@ -211,51 +208,34 @@ async function playNext(guildId, client, options = {}) {
     const isFilterActive = audioFilters.length > 0;
     let inputStream;
     let inputType = StreamType.Arbitrary;
-    const engines = ["yt-dlp", "play-dl", "ytdl-core"]; // yt-dlp first - most reliable
-    const currentEngine = engines[engineIndex] || "yt-dlp";
 
     try {
-        console.log(`[PLAYER] [${currentEngine}] Deneniyor: ${song.title} | URL: ${songUrl} | Filtre: ${isFilterActive}`);
+        console.log(`[PLAYER] yt-dlp Deneniyor: ${song.title} | URL: ${songUrl} | Filtre: ${isFilterActive}`);
 
         if (!songUrl || !songUrl.startsWith('http')) {
             throw new Error(`Invalid URL: ${songUrl}`);
         }
 
-        if (currentEngine === "yt-dlp") {
-            // Increased buffer to 1M for smoother streaming despite throttling
-            const ytdlpArgs = !isFilterActive
-                ? ['-f', '251/bestaudio[ext=webm]', '--buffer-size', '8M', '--js-runtime', 'nodejs', '--no-playlist', '-o', '-', songUrl]
-                : ['-f', 'ba*[vcodec=none]', '--buffer-size', '8M', '--js-runtime', 'nodejs', '--no-playlist', '-o', '-', songUrl];
+        // yt-dlp - only engine, most reliable
+        const ytdlpArgs = !isFilterActive
+            ? ['-f', '251/bestaudio[ext=webm]', '--buffer-size', '8M', '--js-runtime', 'nodejs', '--no-playlist', '-o', '-', songUrl]
+            : ['-f', 'ba*[vcodec=none]', '--buffer-size', '8M', '--js-runtime', 'nodejs', '--no-playlist', '-o', '-', songUrl];
 
-            console.log(`[PLAYER] yt-dlp args: ${ytdlpArgs.join(' ')}`);
-            const proc = spawn(ytdlpPath, ytdlpArgs);
-            inputStream = proc.stdout;
-            guildData.currentProcess = { ffmpeg: proc };
-            if (!isFilterActive) inputType = StreamType.WebmOpus;
+        console.log(`[PLAYER] yt-dlp args: ${ytdlpArgs.join(' ')}`);
+        const proc = spawn(ytdlpPath, ytdlpArgs);
+        inputStream = proc.stdout;
+        guildData.currentProcess = { ffmpeg: proc };
+        if (!isFilterActive) inputType = StreamType.WebmOpus;
 
-            proc.stderr.on('data', (data) => {
-                console.log(`[YT-DLP STDERR] ${data.toString().trim()}`);
-            });
-            proc.on('error', (e) => {
-                console.error(`[YT-DLP ERROR] ${e.message}`);
-            });
-            proc.on('close', (code) => {
-                if (code !== 0) console.log(`[YT-DLP] Exited with code ${code}`);
-            });
-        } else if (currentEngine === "play-dl") {
-            const stream = await play.stream(songUrl, {
-                seek: seekTime, quality: 2, discordPlayerCompatibility: true
-            });
-            inputStream = stream.stream;
-            inputType = stream.type;
-        } else {
-            inputStream = ytdl(songUrl, {
-                filter: 'audioonly', quality: 'highestaudio',
-                highWaterMark: 1 << 25,
-                begin: seekTime > 0 ? `${seekTime}s` : undefined
-            });
-            if (!isFilterActive) inputType = StreamType.WebmOpus;
-        }
+        proc.stderr.on('data', (data) => {
+            console.log(`[YT-DLP STDERR] ${data.toString().trim()}`);
+        });
+        proc.on('error', (e) => {
+            console.error(`[YT-DLP ERROR] ${e.message}`);
+        });
+        proc.on('close', (code) => {
+            if (code !== 0) console.log(`[YT-DLP] Exited with code ${code}`);
+        });
 
         if (isFilterActive) {
             const ffmpegArgs = [
@@ -284,22 +264,16 @@ async function playNext(guildId, client, options = {}) {
 
         guildData.player.removeAllListeners('error');
         guildData.player.on('error', error => {
-            console.error(`[PLAYER_ERR] [${currentEngine}]`, error.message);
-            const dur = Date.now() - (guildData.resourceStartTime || 0);
-            if (dur < 15000 && engineIndex < engines.length - 1) {
-                console.log(`[PLAYER] Kısa süre içinde hata, sonraki motor deneniyor...`);
-                return playNext(guildId, client, { isRetry: true, seekTime, engineIndex: engineIndex + 1 });
-            }
+            console.error(`[PLAYER_ERR] yt-dlp:`, error.message);
+            // Move to next song on error
             playNext(guildId, client);
         });
 
         guildData.player.play(resource);
 
     } catch (err) {
-        console.error(`[STREAM_ERR] [${currentEngine}]`, err.message);
-        if (engineIndex < engines.length - 1) {
-            return playNext(guildId, client, { isRetry: true, seekTime, engineIndex: engineIndex + 1 });
-        }
+        console.error(`[STREAM_ERR] yt-dlp:`, err.message);
+        // Move to next song on stream error
         playNext(guildId, client);
     }
 }
