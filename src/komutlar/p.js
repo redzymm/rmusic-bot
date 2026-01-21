@@ -31,17 +31,14 @@ module.exports = {
 
             // Search for the track
             let result = await client.lavalink.search(query);
-            console.log(`[DEBUG] Search result loadType: ${result?.loadType}`);
 
             // Fallback to soundcloud if youtube fails or returns nothing
             if (!result || ['empty', 'error', 'no_matches'].includes(result.loadType?.toLowerCase())) {
-                console.log(`[DEBUG] YouTube search failed, trying SoundCloud for: ${query}`);
                 result = await client.lavalink.search(query, 'soundcloud');
             }
 
             if (!result || ['empty', 'error', 'no_matches'].includes(result.loadType?.toLowerCase())) {
                 if (message.guild.searchMsg) try { await message.guild.searchMsg.delete(); } catch (e) { }
-                console.log(`[DEBUG] Final search failed for query: ${query}`, result);
                 return message.channel.send("❌ Sonuç bulunamadı.");
             }
 
@@ -207,7 +204,11 @@ async function playNext(guildId, client) {
         await guildData.player.setGlobalVolume(Math.round(volume * 100));
 
         // Play the track
-        await guildData.player.playTrack({ track: song.track.encoded });
+        await guildData.player.playTrack({
+            track: {
+                encoded: song.track.encoded
+            }
+        });
 
         console.log(`[PLAYER] Şimdi çalıyor: ${song.title}`);
 
