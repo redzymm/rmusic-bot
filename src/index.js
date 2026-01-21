@@ -335,58 +335,37 @@ client.on(Events.InteractionCreate, async (interaction) => {
         guild: interaction.guild,
         member: interaction.member,
         author: interaction.user,
-        channel: interaction.channel,
         client: client,
-        // Slash komutlar için reply fonksiyonu
-        reply: async (content) => {
-            if (typeof content === 'string') {
-                return interaction.reply({ content });
-            }
-            return interaction.reply(content);
-        },
-        // Bazı komutlar channel.send kullanıyor
         _interaction: interaction,
-        _replied: false
+        _replied: false,
+        reply: async (content) => {
+            const options = typeof content === 'string' ? { content } : content;
+            if (interaction.deferred || interaction.replied) {
+                return interaction.editReply(options);
+            }
+            fakeMessage._replied = true;
+            return interaction.reply({ ...options, fetchReply: true });
+        }
     };
 
-    // Channel send'i de override et
-    const originalSend = interaction.channel.send.bind(interaction.channel);
-    fakeMessage.channel = {
-        ...interaction.channel,
-        send: async (content) => {
-            // Eğer henüz reply yapılmadıysa, interaction ile reply yap
-            if (!fakeMessage._replied && !interaction.replied && !interaction.deferred) {
-                fakeMessage._replied = true;
-                if (typeof content === 'string') {
-                    return interaction.reply({ content });
-                }
-                return interaction.reply(content);
-            }
-            // Aksi halde normal send kullan
-            return originalSend(content);
-        },
-        id: interaction.channel.id
+    // Channel wrapper (Object.create ile prototype metodlarını koruyoruz)
+    fakeMessage.channel = Object.create(interaction.channel);
+    fakeMessage.channel.send = async (content) => {
+        const options = typeof content === 'string' ? { content } : content;
+        if (!fakeMessage._replied && !interaction.replied && !interaction.deferred) {
+            fakeMessage._replied = true;
+            return interaction.reply({ ...options, fetchReply: true });
+        }
+        if (interaction.deferred || interaction.replied) {
+            return interaction.editReply(options);
+        }
+        return interaction.channel.send(content);
     };
 
     try {
         // Interaction'ı defer et (3 saniye limitini aşmamak için)
         if (!interaction.deferred && !interaction.replied) {
             await interaction.deferReply();
-            fakeMessage._replied = true;
-
-            // Defer yapıldıysa reply'ı editReply olarak değiştir
-            fakeMessage.reply = async (content) => {
-                if (typeof content === 'string') {
-                    return interaction.editReply({ content });
-                }
-                return interaction.editReply(content);
-            };
-            fakeMessage.channel.send = async (content) => {
-                if (typeof content === 'string') {
-                    return interaction.editReply({ content });
-                }
-                return interaction.editReply(content);
-            };
         }
 
         await command.run(fakeMessage, args, client);
