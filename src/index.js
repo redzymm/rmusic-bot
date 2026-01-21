@@ -2,7 +2,7 @@ const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, AuditLogEve
 const initSqlJs = require("sql.js");
 const fs = require("fs");
 const path = require("path");
-const { spawn } = require("child_process");
+const { spawn, execSync } = require("child_process");
 const ayarlar = require("../data/ayarlar.json");
 const LavalinkManager = require("./LavalinkManager");
 
@@ -27,6 +27,32 @@ function startLavalink() {
         console.error("[LAVALINK_ERR] Lavalink.jar bulunamadı! Lütfen /lavalink klasöründe olduğundan emin olun.");
         return;
     }
+
+    // --- PORT CLEANUP (Pre-start) ---
+    try {
+        console.log("[LAVALINK] Port 2333 kontrol ediliyor ve temizleniyor...");
+        if (process.platform === "win32") {
+            // Windows: Portu kullanan PID'yi bul ve öldür
+            const netstat = execSync('netstat -ano | findstr :2333').toString();
+            const lines = netstat.split('\n');
+            for (const line of lines) {
+                const parts = line.trim().split(/\s+/);
+                if (parts.length > 4 && parts[1].includes(':2333')) {
+                    const pid = parts[parts.length - 1];
+                    if (pid && pid !== "0") {
+                        execSync(`taskkill /F /PID ${pid}`);
+                        console.log(`[LAVALINK] Eski işlem öldürüldü (PID: ${pid})`);
+                    }
+                }
+            }
+        } else {
+            // Linux/Mac
+            execSync("pkill -f Lavalink.jar || true");
+        }
+    } catch (e) {
+        // Port kullanımda değilse hata verebilir, yoksayıyoruz
+    }
+    // --------------------------------
 
     console.log("[LAVALINK] Sunucu başlatılıyor... (java -jar Lavalink.jar)");
 
