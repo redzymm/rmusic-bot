@@ -259,109 +259,79 @@ async function playNext(guildId, client, isNew = false, seekTime = 0) {
     if (client.filters["nightcore"]) audioFilters.push("atempo=1.25,asetrate=44100*1.25");
 
     // Equalizer (10-Band)
-    // ffmpeg equalizer=f=freq:width_type=h:w=width:g=gain
     const freqs = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
     client.equalizer.forEach((gain, i) => {
         if (gain !== 0) audioFilters.push(`equalizer=f=${freqs[i]}:width_type=h:w=1:g=${gain}`);
     });
 
-    const ytdlpArgs = [
-        song.url,
-        '-f', 'ba*[vcodec=none]/bestaudio/best',
-        '-o', '-',
-        '--quiet',
-        '--no-warnings',
-        '--buffer-size', '2M',
-        '--no-part',
-        '--no-cache-dir',
-        '--socket-timeout', '10'
-    ];
+    try {
+        // play-dl ile stream oluştur
+        const stream = await play.stream(song.url, {
+            seek: seekTime,
+            quality: 1, // High quality
+            discordPlayerCompatibility: true
+        });
 
-    const ytdlp = spawn(ytdlpPath, ytdlpArgs, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+        let inputStream = stream.stream;
+        let inputType = stream.type;
 
-    ytdlp.stderr.on('data', (data) => {
-        console.error(`[YTDLP-ERR] ${data.toString()}`);
-    });
+        // Eğer filtre varsa FFmpeg kullan
+        if (audioFilters.length > 0) {
+            const ffmpegArgs = [
+                '-analyzeduration', '0',
+                '-probesize', '32k',
+                '-i', 'pipe:0',
+                '-af', audioFilters.join(','),
+                '-f', 's16le',
+                '-ar', '48000',
+                '-ac', '2',
+                'pipe:1'
+            ];
 
-    let ffmpegArgs = [];
+            const ffmpeg = spawn(ffmpegPath, ffmpegArgs, {
+                windowsHide: true,
+                stdio: ['pipe', 'pipe', 'pipe']
+            });
 
-    // Seeking: Eğer saniye belirtilmişse girişten önce ekle (HIZLI SEEK)
-    if (seekTime > 0) {
-        ffmpegArgs.push('-ss', seekTime.toString());
-    }
+            inputStream.pipe(ffmpeg.stdin);
+            inputStream = ffmpeg.stdout;
+            inputType = StreamType.Raw;
 
-    ffmpegArgs.push(
-        '-analyzeduration', '0',
-        '-probesize', '32k',
-        '-i', 'pipe:0',
-        '-f', 's16le',
-        '-ar', '48000',
-        '-ac', '2'
-    );
-    if (audioFilters.length > 0) {
-        ffmpegArgs.push('-af', audioFilters.join(','));
-    }
-    ffmpegArgs.push('pipe:1');
+            // Hata yakalayıcılar
+            ffmpeg.stdin.on('error', e => { });
+            ffmpeg.stdout.on('error', e => { });
 
-    const ffmpeg = spawn(ffmpegPath, ffmpegArgs, {
-        windowsHide: true,
-        stdio: ['pipe', 'pipe', 'pipe']
-    });
-
-    ffmpeg.stderr.on('data', (data) => {
-        const str = data.toString();
-        if (!str.includes('frame=') && !str.includes('size=')) { // Gürültüyü azalt
-            console.error(`[FFMPEG-ERR] ${str}`);
-        }
-    });
-
-    // ROBUST PIPE HANDLING
-    // Prevent "write EOF" if ffmpeg dies early
-    ytdlp.stdout.on('error', (err) => {
-        if (err.code !== 'EPIPE') console.error(`[YTDLP] Stream Error: ${err.message}`);
-    });
-
-    ffmpeg.stdin.on('error', (err) => {
-        if (err.code !== 'EPIPE') console.error(`[FFMPEG] Stdin Error: ${err.message}`);
-    });
-
-    ffmpeg.stdout.on('error', (err) => {
-        console.error(`[FFMPEG] Stdout Error: ${err.message}`);
-    });
-
-    // Pipe yt-dlp to ffmpeg with error handling
-    ytdlp.stdout.pipe(ffmpeg.stdin).on('error', (e) => {
-        // Suppress pipe errors
-    });
-
-    // Process Lifecycle Management
-    if (guildData.currentProcess) {
-        try { guildData.currentProcess.ytdlp.kill(); } catch (e) { }
-        try { guildData.currentProcess.ffmpeg.kill(); } catch (e) { }
-    }
-    guildData.currentProcess = { ytdlp, ffmpeg };
-
-    const resource = createAudioResource(ffmpeg.stdout, {
-        inputType: StreamType.Raw,
-        inlineVolume: true
-    });
-
-    const vol = client.globalVolume || 100;
-    resource.volume.setVolume(vol / 100);
-
-    guildData.resource = resource;
-    guildData.resourceStartTime = Date.now(); // Başlangıç zamanını kaydet
-    guildData.currentSeekTime = seekTime; // Bu stream kaçıncı saniyeden başladı
-
-    guildData.player.play(resource);
-
-    // SEEK BİTİŞİ: Güvenli süre sonra bayrağı kaldır
-    if (seekTime > 0) {
-        setTimeout(() => {
-            if (guildData.isSeeking) {
-                guildData.isSeeking = false;
-                console.log("[PLAYER] Seek modu kapatıldı.");
+            if (guildData.currentProcess) {
+                try { guildData.currentProcess.ffmpeg.kill(); } catch (e) { }
             }
-        }, 2000);
+            guildData.currentProcess = { ffmpeg };
+        }
+
+        const resource = createAudioResource(inputStream, {
+            inputType: inputType,
+            inlineVolume: true
+        });
+
+        const vol = client.globalVolume || 100;
+        resource.volume.setVolume(vol / 100);
+
+        guildData.resource = resource;
+        guildData.resourceStartTime = Date.now();
+        guildData.currentSeekTime = seekTime;
+
+        guildData.player.play(resource);
+
+        // SEEK BİTİŞİ
+        if (seekTime > 0) {
+            setTimeout(() => {
+                guildData.isSeeking = false;
+            }, 2000);
+        }
+
+    } catch (err) {
+        console.error("[STREAM_ERR]", err);
+        const channel = client.channels.cache.get(guildData.textChannel);
+        if (channel) channel.send(`❌ Şarkı başlatılamadı: ${err.message}`);
+        playNext(guildId, client);
     }
 }
