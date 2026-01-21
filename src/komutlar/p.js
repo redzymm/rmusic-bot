@@ -267,13 +267,14 @@ async function playNext(guildId, client, isNew = false, seekTime = 0) {
 
     const ytdlpArgs = [
         song.url,
-        '-f', 'bestaudio[ext=webm]/bestaudio/best',
+        '-f', 'ba*[vcodec=none]/bestaudio/best',
         '-o', '-',
         '--quiet',
         '--no-warnings',
-        '--buffer-size', '16K',
+        '--buffer-size', '2M',
         '--no-part',
-        '--no-cache-dir'
+        '--no-cache-dir',
+        '--socket-timeout', '10'
     ];
 
     const ytdlp = spawn(ytdlpPath, ytdlpArgs, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -290,6 +291,9 @@ async function playNext(guildId, client, isNew = false, seekTime = 0) {
     }
 
     ffmpegArgs.push(
+        '-reconnect', '1',
+        '-reconnect_streamed', '1',
+        '-reconnect_delay_max', '5',
         '-i', 'pipe:0',
         '-f', 's16le',
         '-ar', '48000',
