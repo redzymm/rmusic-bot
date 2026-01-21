@@ -25,7 +25,6 @@ module.exports = {
             }
 
             let query = args.join(" ").replace(/^"|"$/g, '').trim();
-            console.log(`[CMD] P başlatıldı: ${query}`);
 
             if (message.guild.searchMsg) { try { await message.guild.searchMsg.delete(); } catch (e) { } }
             message.guild.searchMsg = await message.channel.send(`🔍 Aranıyor: **${query}**...`);

@@ -97,8 +97,6 @@ client.equalizer = Array(10).fill(0);
 client.disabledCommands = ayarlar.disabled_commands || [];
 client.autoResponses = [];
 
-client.autoResponses = [];
-
 function loadAutoResponses() {
     try {
         const arPath = path.join(__dirname, "../data/auto_responses.json");
