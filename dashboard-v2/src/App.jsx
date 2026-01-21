@@ -586,7 +586,7 @@ export default function App() {
                                     setEQ={setEQ}
                                 />
                             )}
-                            {activeTab === 'Logs' && <LogsView logs={logs} onSimulateLog={(l) => setLogs(p => [...p.slice(-49), l])} />}
+                            {activeTab === 'Logs' && <LogsView logs={logs} onSimulateLog={(l) => setLogs(p => [...p.slice(-49), l])} onClearLogs={() => setLogs([])} />}
                             {activeTab === 'Commands' && <CommandsView config={config} setConfig={saveConfig} killAll={killAll} botInfo={botData} isSystemAdmin={isSystemAdmin} />}
                             {activeTab === 'AutoResponse' && <AutoResponseView responses={autoResponses} setResponses={(r) => { setAutoResponses(r); ipc.send('save-auto-responses', r); }} isSystemAdmin={isSystemAdmin} />}
                             {activeTab === 'Settings' && <SettingsView config={config} setConfig={saveConfig} isSystemAdmin={isSystemAdmin} discordUser={discordUser} />}
@@ -1117,7 +1117,7 @@ const PlayerView = React.memo(({ query, setQuery, results, searching, onSearch, 
     );
 });
 
-const LogsView = React.memo(({ logs, onSimulateLog }) => {
+const LogsView = React.memo(({ logs, onSimulateLog, onClearLogs }) => {
     const scrollRef = React.useRef();
     const [analyzingLog, setAnalyzingLog] = useState(null);
     const [aiResult, setAiResult] = useState(null);
@@ -1208,6 +1208,12 @@ const LogsView = React.memo(({ logs, onSimulateLog }) => {
                         className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-lg border border-red-500/20 transition-none active:scale-95"
                     >
                         + Test Error
+                    </button>
+                    <button
+                        onClick={() => onClearLogs && onClearLogs()}
+                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/70 text-[10px] font-black uppercase tracking-widest rounded-lg border border-white/10 transition-none active:scale-95"
+                    >
+                        Temizle
                     </button>
                     <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/5">
                         <div className={`w-2 h-2 rounded-full ${analyzingLog ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`} />
@@ -2075,8 +2081,8 @@ const SlashCommandsPanel = React.memo(() => {
                         onClick={() => handleDeploy(false)}
                         disabled={isDeploying}
                         className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] border transition-all active:scale-95 ${isDeploying
-                                ? 'bg-white/5 text-white/30 border-white/10 cursor-wait'
-                                : 'bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500 hover:text-white'
+                            ? 'bg-white/5 text-white/30 border-white/10 cursor-wait'
+                            : 'bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500 hover:text-white'
                             }`}
                     >
                         {isDeploying ? <Loader size={14} className="animate-spin" /> : <Zap size={14} />}
@@ -2086,8 +2092,8 @@ const SlashCommandsPanel = React.memo(() => {
                         onClick={() => handleDeploy(true)}
                         disabled={isDeploying}
                         className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] border transition-all active:scale-95 ${isDeploying
-                                ? 'bg-white/5 text-white/30 border-white/10 cursor-wait'
-                                : 'bg-white/5 text-white/50 border-white/10 hover:border-white/20 hover:text-white'
+                            ? 'bg-white/5 text-white/30 border-white/10 cursor-wait'
+                            : 'bg-white/5 text-white/50 border-white/10 hover:border-white/20 hover:text-white'
                             }`}
                     >
                         {isDeploying ? <Loader size={14} className="animate-spin" /> : <Crown size={14} />}
