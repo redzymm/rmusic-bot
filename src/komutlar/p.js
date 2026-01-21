@@ -14,7 +14,7 @@ const { EmbedBuilder } = require('discord.js');
 module.exports = {
     name: "p",
     aliases: ["play", "oynat"],
-    description: "Şarkı çalar (yt-dlp + Kuyruk).",
+    description: "Şarkı çalar (Opus Passthrough + 3-Engine Fallback).",
     run: async (message, args, client) => {
         try {
             if (!args.length)
@@ -210,21 +210,25 @@ async function playNext(guildId, client, options = {}) {
         if (gain !== 0) audioFilters.push(`equalizer=f=${freqs[i]}:width_type=h:w=1:g=${gain}`);
     });
 
+    const isFilterActive = audioFilters.length > 0;
     let inputStream;
     let inputType = StreamType.Arbitrary;
     const engines = ["yt-dlp", "ytdl-core", "play-dl"];
     const currentEngine = engines[engineIndex] || "yt-dlp";
 
     try {
-        console.log(`[PLAYER] [${currentEngine}] Deneniyor: ${song.title}`);
+        console.log(`[PLAYER] [${currentEngine}] Deneniyor: ${song.title} | Filtre: ${isFilterActive}`);
 
         if (currentEngine === "yt-dlp") {
-            const ytdlpArgs = [
-                '--buffer-size', '16K', '--no-playlist', '-o', '-', '-f', 'ba*[vcodec=none]', songUrl
-            ];
+            // OPTIMIZATION: If no filters, get raw WebM/Opus for max quality and zero latency
+            const ytdlpArgs = !isFilterActive
+                ? ['-f', '251/bestaudio[ext=webm]', '--buffer-size', '16K', '--no-playlist', '-o', '-', songUrl]
+                : ['-f', 'ba*[vcodec=none]', '--buffer-size', '16K', '--no-playlist', '-o', '-', songUrl];
+
             const proc = spawn(ytdlpPath, ytdlpArgs);
             inputStream = proc.stdout;
             guildData.currentProcess = { ffmpeg: proc };
+            if (!isFilterActive) inputType = StreamType.WebmOpus;
             proc.on('error', e => { });
         } else if (currentEngine === "ytdl-core") {
             inputStream = ytdl(songUrl, {
@@ -232,16 +236,18 @@ async function playNext(guildId, client, options = {}) {
                 highWaterMark: 1 << 25,
                 begin: seekTime > 0 ? `${seekTime}s` : undefined
             });
+            // ytdl-core often defaults to webm if quality is high
+            if (!isFilterActive) inputType = StreamType.WebmOpus;
         } else {
             const info = await play.video_info(songUrl);
             const stream = await play.stream_from_info(info, {
                 seek: seekTime, quality: 1, discordPlayerCompatibility: true
             });
             inputStream = stream.stream;
-            inputType = stream.type;
+            inputType = stream.type; // play-dl already handles this correctly
         }
 
-        if (audioFilters.length > 0) {
+        if (isFilterActive) {
             const ffmpegArgs = [
                 '-analyzeduration', '0', '-probesize', '32k',
                 '-i', 'pipe:0',
