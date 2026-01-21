@@ -2,8 +2,9 @@ const { Shoukaku, Connectors } = require('shoukaku');
 
 const Nodes = [{
     name: 'main',
-    url: 'localhost:2333',
-    auth: 'rmusic_lavalink_2024'
+    url: '127.0.0.1:2333',
+    auth: 'rmusic_lavalink_2024',
+    secure: false
 }];
 
 class LavalinkManager {
@@ -22,7 +23,12 @@ class LavalinkManager {
         });
 
         this.shoukaku.on('error', (name, error) => {
-            console.error(`[LAVALINK] Node ${name} hata:`, error.message);
+            console.error(`[LAVALINK] Node ${name} hata:`, error);
+        });
+
+        this.shoukaku.on('debug', (name, info) => {
+            if (info.includes('Wait')) return; // Ignore spammy wait logs
+            console.log(`[LAVALINK_DEBUG] ${name}: ${info}`);
         });
 
         this.shoukaku.on('close', (name, code, reason) => {
@@ -32,6 +38,8 @@ class LavalinkManager {
         this.shoukaku.on('disconnect', (name, players, moved) => {
             console.warn(`[LAVALINK] Node ${name} disconnect - ${players.length} oynatıcı etkilendi`);
         });
+
+        console.log(`[LAVALINK] Shoukaku başlatıldı, düğümlere bağlanmaya çalışılıyor...`);
     }
 
     getNode() {
