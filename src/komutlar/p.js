@@ -211,8 +211,8 @@ async function playNext(guildId, client, options = {}) {
     const isFilterActive = audioFilters.length > 0;
     let inputStream;
     let inputType = StreamType.Arbitrary;
-    const engines = ["play-dl", "ytdl-core", "yt-dlp"]; // play-dl first for better buffering
-    const currentEngine = engines[engineIndex] || "play-dl";
+    const engines = ["yt-dlp", "play-dl", "ytdl-core"]; // yt-dlp first - most reliable
+    const currentEngine = engines[engineIndex] || "yt-dlp";
 
     try {
         console.log(`[PLAYER] [${currentEngine}] Deneniyor: ${song.title} | URL: ${songUrl} | Filtre: ${isFilterActive}`);
@@ -221,24 +221,11 @@ async function playNext(guildId, client, options = {}) {
             throw new Error(`Invalid URL: ${songUrl}`);
         }
 
-        if (currentEngine === "play-dl") {
-            const stream = await play.stream(songUrl, {
-                seek: seekTime, quality: 2, discordPlayerCompatibility: true
-            });
-            inputStream = stream.stream;
-            inputType = stream.type;
-        } else if (currentEngine === "ytdl-core") {
-            inputStream = ytdl(songUrl, {
-                filter: 'audioonly', quality: 'highestaudio',
-                highWaterMark: 1 << 25,
-                begin: seekTime > 0 ? `${seekTime}s` : undefined
-            });
-            if (!isFilterActive) inputType = StreamType.WebmOpus;
-        } else {
-            // yt-dlp as last fallback
+        if (currentEngine === "yt-dlp") {
+            // Increased buffer to 1M for smoother streaming despite throttling
             const ytdlpArgs = !isFilterActive
-                ? ['-f', '251/bestaudio[ext=webm]', '--buffer-size', '16K', '--no-playlist', '-o', '-', songUrl]
-                : ['-f', 'ba*[vcodec=none]', '--buffer-size', '16K', '--no-playlist', '-o', '-', songUrl];
+                ? ['-f', '251/bestaudio[ext=webm]', '--buffer-size', '1M', '--no-playlist', '-o', '-', songUrl]
+                : ['-f', 'ba*[vcodec=none]', '--buffer-size', '1M', '--no-playlist', '-o', '-', songUrl];
 
             console.log(`[PLAYER] yt-dlp args: ${ytdlpArgs.join(' ')}`);
             const proc = spawn(ytdlpPath, ytdlpArgs);
@@ -255,6 +242,19 @@ async function playNext(guildId, client, options = {}) {
             proc.on('close', (code) => {
                 if (code !== 0) console.log(`[YT-DLP] Exited with code ${code}`);
             });
+        } else if (currentEngine === "play-dl") {
+            const stream = await play.stream(songUrl, {
+                seek: seekTime, quality: 2, discordPlayerCompatibility: true
+            });
+            inputStream = stream.stream;
+            inputType = stream.type;
+        } else {
+            inputStream = ytdl(songUrl, {
+                filter: 'audioonly', quality: 'highestaudio',
+                highWaterMark: 1 << 25,
+                begin: seekTime > 0 ? `${seekTime}s` : undefined
+            });
+            if (!isFilterActive) inputType = StreamType.WebmOpus;
         }
 
         if (isFilterActive) {
