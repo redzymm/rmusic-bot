@@ -17,7 +17,7 @@ class LavalinkManager {
             resumable: true,
             resumableTimeout: 60,
             reconnectTries: 10,
-            reconnectInterval: 5000,
+            reconnectInterval: 5, // Logs showed "5000 seconds", so it likely expects seconds
             restTimeout: 60000
         });
 

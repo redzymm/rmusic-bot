@@ -18,28 +18,40 @@ if (process.stderr.setEncoding) process.stderr.setEncoding('utf8');
 let lavalinkProcess = null;
 
 function startLavalink() {
-    const lavalinkJar = path.join(__dirname, "../lavalink/Lavalink.jar");
-    const lavalinkDir = path.join(__dirname, "../lavalink");
+    const lavalinkJar = path.normalize(path.join(__dirname, "../lavalink/Lavalink.jar"));
+    const lavalinkDir = path.normalize(path.join(__dirname, "../lavalink"));
+
+    console.log(`[LAVALINK] Kontrol ediliyor: ${lavalinkJar}`);
 
     if (!fs.existsSync(lavalinkJar)) {
-        console.error("[LAVALINK_ERR] Lavalink.jar bulunamadı! Otomatik başlatma başarısız.");
+        console.error("[LAVALINK_ERR] Lavalink.jar bulunamadı! Lütfen /lavalink klasöründe olduğundan emin olun.");
         return;
     }
 
-    console.log("[LAVALINK] Sunucu otomatik olarak başlatılıyor...");
+    console.log("[LAVALINK] Sunucu başlatılıyor... (java -jar Lavalink.jar)");
 
-    lavalinkProcess = spawn("java", ["-jar", "Lavalink.jar"], {
-        cwd: lavalinkDir,
-        stdio: "inherit" // Dashboard loglarına aktarılması için
-    });
+    try {
+        lavalinkProcess = spawn("java", ["-jar", "Lavalink.jar"], {
+            cwd: lavalinkDir,
+            stdio: "inherit"
+        });
 
-    lavalinkProcess.on("exit", (code) => {
-        console.warn(`[LAVALINK] Sunucu kapandı (Kod: ${code})`);
-    });
+        lavalinkProcess.on("exit", (code) => {
+            console.warn(`[LAVALINK] Sunucu kapandı (Kod: ${code})`);
+            if (code !== 0) {
+                console.error("[LAVALINK_ERR] Sunucu beklenmedik şekilde kapandı. Java yüklü mü? (java -version)");
+            }
+        });
 
-    lavalinkProcess.on("error", (err) => {
-        console.error(`[LAVALINK_ERR] Başlatma hatası:`, err.message);
-    });
+        lavalinkProcess.on("error", (err) => {
+            console.error(`[LAVALINK_ERR] Başlatma hatası:`, err);
+            if (err.code === 'ENOENT') {
+                console.error("[LAVALINK_ERR] 'java' komutu bulunamadı. Lütfen sisteme Java 17+ yükleyin.");
+            }
+        });
+    } catch (e) {
+        console.error(`[LAVALINK_ERR] Spawn hatası:`, e);
+    }
 }
 
 // Bot kapanırken Lavalink'i de temizle
