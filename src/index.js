@@ -843,8 +843,8 @@ process.stdin.on("data", (data) => {
             if (json.cmd === "volume") {
                 const vol = parseInt(json.value);
                 client.globalVolume = vol;
-                client.müzik.forEach(data => {
-                    if (data.resource) data.resource.volume.setVolume(vol / 100);
+                client.müzik.forEach((data, guildId) => {
+                    client.lavalink.setVolume(guildId, vol);
                 });
                 saveSettings();
             }
@@ -853,18 +853,14 @@ process.stdin.on("data", (data) => {
                 const fid = json.value;
                 if (client.filters.hasOwnProperty(fid)) {
                     client.filters[fid] = !client.filters[fid];
-                    // Mevcut şarkıyı yeni filtrelerle KALDIĞI YERDEN devam ettir
-                    client.müzik.forEach((data, guildId) => {
-                        const playNext = require("./komutlar/p.js").playNext;
-                        if (playNext && data.resource && data.resourceStartTime) {
-                            const now = Date.now();
-                            const elapsed = (now - data.resourceStartTime) / 1000;
-                            const currentSeek = data.currentSeekTime || 0;
-                            const totalSeek = currentSeek + elapsed;
 
-                            playNext(guildId, client, true, totalSeek); // Resume with seek
-                        }
-                    });
+                    const pCommand = client.commands.get('p');
+                    if (pCommand && pCommand.buildFilters) {
+                        const newFilters = pCommand.buildFilters(client);
+                        client.müzik.forEach((data, guildId) => {
+                            client.lavalink.setFilters(guildId, newFilters);
+                        });
+                    }
                     saveSettings();
                 }
             }
@@ -872,18 +868,14 @@ process.stdin.on("data", (data) => {
             if (json.cmd === "equalizer") {
                 const [bid, val] = json.value.split(":").map(Number);
                 client.equalizer[bid] = val;
-                // Mevcut şarkıyı yeni EQ ile KALDIĞI YERDEN devam ettir
-                client.müzik.forEach((data, guildId) => {
-                    const playNext = require("./komutlar/p.js").playNext;
-                    if (playNext && data.resource && data.resourceStartTime) {
-                        const now = Date.now();
-                        const elapsed = (now - data.resourceStartTime) / 1000;
-                        const currentSeek = data.currentSeekTime || 0;
-                        const totalSeek = currentSeek + elapsed;
 
-                        playNext(guildId, client, true, totalSeek); // Resume with seek
-                    }
-                });
+                const pCommand = client.commands.get('p');
+                if (pCommand && pCommand.buildFilters) {
+                    const newFilters = pCommand.buildFilters(client);
+                    client.müzik.forEach((data, guildId) => {
+                        client.lavalink.setFilters(guildId, newFilters);
+                    });
+                }
                 saveSettings();
             }
 

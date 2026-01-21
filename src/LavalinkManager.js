@@ -85,19 +85,32 @@ class LavalinkManager {
     }
 
     getPlayer(guildId) {
-        const node = this.getNode();
-        if (!node) return null;
-        return node.players.get(guildId);
+        // Shoukaku v4: Players are stored in nodes
+        for (const node of this.shoukaku.nodes.values()) {
+            const player = node.players.get(guildId);
+            if (player) return player;
+        }
+        return null;
+    }
+
+    async setVolume(guildId, volume) {
+        const player = this.getPlayer(guildId);
+        if (!player) return;
+        // Lavalink volume is 0-1000, 100 is 100%
+        await player.setVolume(volume);
+    }
+
+    async setFilters(guildId, filters) {
+        const player = this.getPlayer(guildId);
+        if (!player) return;
+        await player.setFilters(filters);
     }
 
     async destroyPlayer(guildId) {
-        const node = this.getNode();
-        if (!node) return;
-
-        const player = node.players.get(guildId);
+        const player = this.getPlayer(guildId);
         if (player) {
             await player.connection.disconnect();
-            node.players.delete(guildId);
+            // Player is automatically removed from node when disconnected
         }
     }
 }

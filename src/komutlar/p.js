@@ -2,8 +2,9 @@ const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
     name: "p",
-    aliases: ["play", "oynat"],
-    description: "Şarkı çalar (Lavalink).",
+    aliases: ["play", "çal"],
+    description: "Lavalink ile müzik çalar",
+    buildFilters: buildFilters, // Export for dashboard
     run: async (message, args, client) => {
         try {
             if (!args.length)
@@ -201,7 +202,7 @@ async function playNext(guildId, client) {
         }
 
         // Set volume
-        await guildData.player.setGlobalVolume(Math.round(volume * 100));
+        await guildData.player.setVolume(Math.round(volume * 100));
 
         // Play the track
         await guildData.player.playTrack({
