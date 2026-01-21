@@ -1,12 +1,15 @@
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, VoiceConnectionStatus, entersState, StreamType } = require('@discordjs/voice');
 const { spawn } = require('child_process');
 const path = require('path');
+const ffmpegPath = require('ffmpeg-static');
+
+const ytdlpPath = process.platform === 'win32'
+    ? path.join(__dirname, '../../node_modules/@distube/yt-dlp/bin/yt-dlp.exe')
+    : path.join(__dirname, '../../node_modules/@distube/yt-dlp/bin/yt-dlp');
+
+const ytdl = require('@distube/ytdl-core');
 const play = require('play-dl');
 const { EmbedBuilder } = require('discord.js');
-const ffmpegPath = path.join(__dirname, '../../node_modules/ffmpeg-static/ffmpeg.exe');
-
-// yt-dlp binary yolu
-const ytdlpPath = path.join(__dirname, '../../node_modules/@distube/yt-dlp/bin/yt-dlp.exe');
 
 module.exports = {
     name: "p",
@@ -283,16 +286,42 @@ async function playNext(guildId, client, isNew = false, seekTime = 0) {
         if (gain !== 0) audioFilters.push(`equalizer=f=${freqs[i]}:width_type=h:w=1:g=${gain}`);
     });
 
-    try {
-        // play-dl ile stream oluştur
-        const stream = await play.stream(songUrl, {
-            seek: seekTime,
-            quality: 1, // High quality
-            discordPlayerCompatibility: true
-        });
+    let inputStream;
+    let inputType;
 
-        let inputStream = stream.stream;
-        let inputType = stream.type;
+    try {
+        console.log(`[PLAYER] Başlatılıyor: ${song.title} | URL: ${songUrl} | Seek: ${seekTime}s`);
+
+        // --- MOTOR 1: play-dl ---
+        try {
+            const info = await play.video_info(songUrl);
+            const stream = await play.stream_from_info(info, {
+                seek: seekTime,
+                quality: 1,
+                discordPlayerCompatibility: true
+            });
+            inputStream = stream.stream;
+            inputType = stream.type;
+            console.log(`[PLAYER] Motor: play-dl (Type: ${inputType})`);
+        } catch (e1) {
+            console.error(`[ERR] play-dl başarısız: ${e1.message}. Motor 2 (ytdl-core) deneniyor...`);
+
+            // --- MOTOR 2: ytdl-core ---
+            const ytdlStream = ytdl(songUrl, {
+                filter: 'audioonly',
+                quality: 'highestaudio',
+                highWaterMark: 1 << 25,
+                begin: seekTime > 0 ? `${seekTime}s` : undefined
+            });
+            inputStream = ytdlStream;
+            inputType = StreamType.Arbitrary;
+            console.log(`[PLAYER] Motor: ytdl-core`);
+
+            // Hata kontrolü
+            ytdlStream.on('error', err => {
+                console.error(`[ERR] ytdl-core stream hatası: ${err.message}`);
+            });
+        }
 
         // Eğer filtre varsa FFmpeg kullan
         if (audioFilters.length > 0) {
@@ -307,23 +336,22 @@ async function playNext(guildId, client, isNew = false, seekTime = 0) {
                 'pipe:1'
             ];
 
-            const ffmpeg = spawn(ffmpegPath, ffmpegArgs, {
+            const ffmpegProcess = spawn(ffmpegPath, ffmpegArgs, {
                 windowsHide: true,
                 stdio: ['pipe', 'pipe', 'pipe']
             });
 
-            inputStream.pipe(ffmpeg.stdin);
-            inputStream = ffmpeg.stdout;
+            inputStream.pipe(ffmpegProcess.stdin);
+            inputStream = ffmpegProcess.stdout;
             inputType = StreamType.Raw;
 
-            // Hata yakalayıcılar
-            ffmpeg.stdin.on('error', e => { });
-            ffmpeg.stdout.on('error', e => { });
+            ffmpegProcess.stdin.on('error', e => { });
+            ffmpegProcess.stdout.on('error', e => { });
 
             if (guildData.currentProcess) {
                 try { guildData.currentProcess.ffmpeg.kill(); } catch (e) { }
             }
-            guildData.currentProcess = { ffmpeg };
+            guildData.currentProcess = { ffmpeg: ffmpegProcess };
         }
 
         const resource = createAudioResource(inputStream, {
@@ -340,7 +368,6 @@ async function playNext(guildId, client, isNew = false, seekTime = 0) {
 
         guildData.player.play(resource);
 
-        // SEEK BİTİŞİ
         if (seekTime > 0) {
             setTimeout(() => {
                 guildData.isSeeking = false;
@@ -349,8 +376,26 @@ async function playNext(guildId, client, isNew = false, seekTime = 0) {
 
     } catch (err) {
         console.error("[STREAM_ERR]", err);
-        const channel = client.channels.cache.get(guildData.textChannel);
-        if (channel) channel.send(`❌ Şarkı başlatılamadı: ${err.message}`);
-        playNext(guildId, client);
+
+        // --- MOTOR 3: yt-dlp (Son Çare) ---
+        try {
+            console.log("[PLAYER] Motor 3 (yt-dlp) deneniyor...");
+            const ytdlpArgs = [
+                '--buffer-size', '16K',
+                '-o', '-',
+                '-f', 'ba*[vcodec=none]',
+                songUrl
+            ];
+            const ytdlp = spawn(ytdlpPath, ytdlpArgs);
+            const resource = createAudioResource(ytdlp.stdout, {
+                inputType: StreamType.Arbitrary,
+                inlineVolume: true
+            });
+            guildData.player.play(resource);
+        } catch (e3) {
+            const channel = client.channels.cache.get(guildData.textChannel);
+            if (channel) channel.send(`❌ Şarkı başlatılamadı: ${err.message}`);
+            playNext(guildId, client);
+        }
     }
 }
