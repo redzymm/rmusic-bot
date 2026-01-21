@@ -97,6 +97,8 @@ module.exports = {
 
                 guildData.player.on(AudioPlayerStatus.Idle, () => {
                     if (guildData.isSeeking) return;
+                    // Move to the next song only when current finishes
+                    if (guildData.queue.length > 0) guildData.queue.shift();
                     playNext(message.guild.id, client);
                 });
             }
@@ -158,10 +160,6 @@ async function playNext(guildId, client, options = {}) {
 
     if (seekTime > 0) guildData.isSeeking = true;
     else guildData.isSeeking = false;
-
-    if (!isRetry && seekTime === 0 && engineIndex === 0 && guildData.queue.length > 0) {
-        guildData.queue.shift();
-    }
 
     if (guildData.queue.length === 0) {
         if (guildData.disconnectTimer) return;
