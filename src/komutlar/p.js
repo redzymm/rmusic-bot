@@ -5,7 +5,7 @@ const ffmpegPath = require('ffmpeg-static');
 
 const ytdlpPath = process.platform === 'win32'
     ? path.join(__dirname, '../../node_modules/@distube/yt-dlp/bin/yt-dlp.exe')
-    : path.join(__dirname, '../../node_modules/@distube/yt-dlp/bin/yt-dlp');
+    : 'yt-dlp'; // Use system-installed yt-dlp on Linux
 
 const ytdl = require('@distube/ytdl-core');
 const play = require('play-dl');
