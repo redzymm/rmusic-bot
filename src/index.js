@@ -843,9 +843,14 @@ process.stdin.on("data", (data) => {
             if (json.cmd === "volume") {
                 const vol = parseInt(json.value);
                 client.globalVolume = vol;
-                client.müzik.forEach((data, guildId) => {
-                    client.lavalink.setVolume(guildId, vol);
-                });
+
+                const pCommand = client.commands?.get('p');
+                if (pCommand && typeof pCommand.buildFilters === 'function') {
+                    const newFilters = pCommand.buildFilters(client);
+                    client.müzik.forEach((data, guildId) => {
+                        client.lavalink.setFilters(guildId, newFilters);
+                    });
+                }
                 saveSettings();
             }
 
