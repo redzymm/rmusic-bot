@@ -223,11 +223,22 @@ async function playNext(guildId, client, options = {}) {
                 ? ['-f', '251/bestaudio[ext=webm]', '--buffer-size', '16K', '--no-playlist', '-o', '-', songUrl]
                 : ['-f', 'ba*[vcodec=none]', '--buffer-size', '16K', '--no-playlist', '-o', '-', songUrl];
 
+            console.log(`[PLAYER] yt-dlp args: ${ytdlpArgs.join(' ')}`);
             const proc = spawn(ytdlpPath, ytdlpArgs);
             inputStream = proc.stdout;
             guildData.currentProcess = { ffmpeg: proc };
             if (!isFilterActive) inputType = StreamType.WebmOpus;
-            proc.on('error', e => { });
+
+            // Log stderr for debugging
+            proc.stderr.on('data', (data) => {
+                console.log(`[YT-DLP STDERR] ${data.toString().trim()}`);
+            });
+            proc.on('error', (e) => {
+                console.error(`[YT-DLP ERROR] ${e.message}`);
+            });
+            proc.on('close', (code) => {
+                if (code !== 0) console.log(`[YT-DLP] Exited with code ${code}`);
+            });
         } else if (currentEngine === "ytdl-core") {
             inputStream = ytdl(songUrl, {
                 filter: 'audioonly', quality: 'highestaudio',
