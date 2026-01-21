@@ -215,12 +215,15 @@ async function playNext(guildId, client, options = {}) {
     const currentEngine = engines[engineIndex] || "play-dl";
 
     try {
-        console.log(`[PLAYER] [${currentEngine}] Deneniyor: ${song.title} | Filtre: ${isFilterActive}`);
+        console.log(`[PLAYER] [${currentEngine}] Deneniyor: ${song.title} | URL: ${songUrl} | Filtre: ${isFilterActive}`);
+
+        if (!songUrl || !songUrl.startsWith('http')) {
+            throw new Error(`Invalid URL: ${songUrl}`);
+        }
 
         if (currentEngine === "play-dl") {
-            const info = await play.video_info(songUrl);
-            const stream = await play.stream_from_info(info, {
-                seek: seekTime, quality: 1, discordPlayerCompatibility: true
+            const stream = await play.stream(songUrl, {
+                seek: seekTime, quality: 2, discordPlayerCompatibility: true
             });
             inputStream = stream.stream;
             inputType = stream.type;
