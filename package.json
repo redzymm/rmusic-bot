@@ -25,6 +25,7 @@
     "sodium-native": "^5.0.10",
     "sql.js": "^1.10.0",
     "tweetnacl": "^1.0.3",
+    "shoukaku": "^4.2.0",
     "ws": "^8.16.0"
   }
 }

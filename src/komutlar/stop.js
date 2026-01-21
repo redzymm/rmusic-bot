@@ -10,7 +10,8 @@ module.exports = {
         }
 
         try {
-            data.connection.destroy();
+            // Destroy the Lavalink player
+            await client.lavalink.destroyPlayer(message.guild.id);
             client.müzik.delete(message.guild.id);
             message.channel.send("⏹️ Müzik durduruldu ve kanaldan çıkıldı.");
         } catch (e) {

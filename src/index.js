@@ -3,6 +3,7 @@ const initSqlJs = require("sql.js");
 const fs = require("fs");
 const path = require("path");
 const ayarlar = require("../data/ayarlar.json");
+const LavalinkManager = require("./LavalinkManager");
 
 // Encoding ayarları
 process.env.PYTHONIOENCODING = "utf-8";
@@ -189,6 +190,10 @@ const os = require("os");
 
 client.once(Events.ClientReady, () => {
     console.log(`[BOT] ${client.user.tag} aktif!`);
+
+    // Initialize Lavalink Manager
+    client.lavalink = new LavalinkManager(client);
+    console.log(`[BOT] Lavalink manager başlatıldı, bağlantı bekleniyor...`);
 
     const sendStatus = () => {
         const memUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(0);
