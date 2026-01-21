@@ -2,6 +2,7 @@ const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, AuditLogEve
 const initSqlJs = require("sql.js");
 const fs = require("fs");
 const path = require("path");
+const { spawn } = require("child_process");
 const ayarlar = require("../data/ayarlar.json");
 const LavalinkManager = require("./LavalinkManager");
 
@@ -10,6 +11,57 @@ process.env.PYTHONIOENCODING = "utf-8";
 process.env.LANG = "en_US.UTF-8";
 if (process.stdout.setEncoding) process.stdout.setEncoding('utf8');
 if (process.stderr.setEncoding) process.stderr.setEncoding('utf8');
+
+/* =======================
+   LAVALINK AUTOMATION
+   ======================= */
+let lavalinkProcess = null;
+
+function startLavalink() {
+    const lavalinkJar = path.join(__dirname, "../lavalink/Lavalink.jar");
+    const lavalinkDir = path.join(__dirname, "../lavalink");
+
+    if (!fs.existsSync(lavalinkJar)) {
+        console.error("[LAVALINK_ERR] Lavalink.jar bulunamadı! Otomatik başlatma başarısız.");
+        return;
+    }
+
+    console.log("[LAVALINK] Sunucu otomatik olarak başlatılıyor...");
+
+    lavalinkProcess = spawn("java", ["-jar", "Lavalink.jar"], {
+        cwd: lavalinkDir,
+        stdio: "inherit" // Dashboard loglarına aktarılması için
+    });
+
+    lavalinkProcess.on("exit", (code) => {
+        console.warn(`[LAVALINK] Sunucu kapandı (Kod: ${code})`);
+    });
+
+    lavalinkProcess.on("error", (err) => {
+        console.error(`[LAVALINK_ERR] Başlatma hatası:`, err.message);
+    });
+}
+
+// Bot kapanırken Lavalink'i de temizle
+const cleanup = () => {
+    if (lavalinkProcess) {
+        console.log("[LAVALINK] Sunucu kapatılıyor...");
+        lavalinkProcess.kill();
+    }
+};
+
+process.on("exit", cleanup);
+process.on("SIGINT", () => {
+    cleanup();
+    process.exit();
+});
+process.on("SIGTERM", () => {
+    cleanup();
+    process.exit();
+});
+
+// Lavalink'i başlat
+startLavalink();
 
 /* =======================
    CLIENT
