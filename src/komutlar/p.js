@@ -224,8 +224,8 @@ async function playNext(guildId, client, options = {}) {
         if (currentEngine === "yt-dlp") {
             // Increased buffer to 1M for smoother streaming despite throttling
             const ytdlpArgs = !isFilterActive
-                ? ['-f', '251/bestaudio[ext=webm]', '--buffer-size', '1M', '--no-playlist', '-o', '-', songUrl]
-                : ['-f', 'ba*[vcodec=none]', '--buffer-size', '1M', '--no-playlist', '-o', '-', songUrl];
+                ? ['-f', '251/bestaudio[ext=webm]', '--buffer-size', '8M', '--no-playlist', '-o', '-', songUrl]
+                : ['-f', 'ba*[vcodec=none]', '--buffer-size', '8M', '--no-playlist', '-o', '-', songUrl];
 
             console.log(`[PLAYER] yt-dlp args: ${ytdlpArgs.join(' ')}`);
             const proc = spawn(ytdlpPath, ytdlpArgs);
