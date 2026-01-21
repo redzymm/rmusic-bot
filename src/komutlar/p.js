@@ -228,13 +228,19 @@ async function playNext(guildId, client, isNew = false, seekTime = 0) {
     }
 
     const song = guildData.queue[0];
-    if (!song || (!song.url && !song.link)) {
-        console.error("[PLAYER_ERR] Invalid song in queue:", song);
-        guildData.queue.shift();
-        return playNext(guildId, client);
+    if (!song) {
+        console.log("[PLAYER] Kuyrukta şarkı bulunamadı.");
+        return;
     }
 
     const songUrl = song.url || song.link;
+    console.log(`[PLAYER] Çalmaya hazırlanıyor: ${song.title} | URL: ${songUrl}`);
+
+    if (!songUrl || typeof songUrl !== 'string' || !songUrl.startsWith('http')) {
+        console.error("[PLAYER_ERR] Geçersiz şarkı URL'si:", songUrl);
+        guildData.queue.shift();
+        return playNext(guildId, client);
+    }
 
     // DASHBOARD DATA
     console.log("DASHBOARD_DATA:" + JSON.stringify({
@@ -254,7 +260,7 @@ async function playNext(guildId, client, isNew = false, seekTime = 0) {
 
                 const embed = new EmbedBuilder()
                     .setTitle("🎵 Şimdi Çalıyor")
-                    .setDescription(`**[${song.title}](${song.url})**`)
+                    .setDescription(`**[${song.title}](${songUrl})**`)
                     .setThumbnail(song.thumbnail)
                     .addFields({ name: "👤 İsteyen", value: song.requester, inline: true })
                     .setColor(0x5865F2)
