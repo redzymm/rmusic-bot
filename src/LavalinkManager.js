@@ -105,10 +105,7 @@ class LavalinkManager {
     }
 
     async destroyPlayer(guildId) {
-        const player = this.getPlayer(guildId);
-        if (player) {
-            await player.connection.disconnect();
-        }
+        await this.shoukaku.leaveVoiceChannel(guildId);
     }
 }
 
