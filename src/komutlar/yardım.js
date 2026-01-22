@@ -8,8 +8,17 @@ module.exports = {
         const prefix = client.getPrefix(message.guild.id);
 
         // Kullanılan komutu al (help mi yardım mı?)
-        const usedCommand = message.content.slice(prefix.length).trim().split(/ +/)[0].toLowerCase();
-        const isEnglish = usedCommand === "help" || usedCommand === "h";
+        // Slash komutları için _interaction kontrolü yap
+        let isEnglish = false;
+
+        if (message._interaction) {
+            // Slash command - /help kullanıldıysa İngilizce
+            isEnglish = message._interaction.commandName === 'help';
+        } else if (message.content) {
+            // Normal prefix command
+            const usedCommand = message.content.slice(prefix.length).trim().split(/ +/)[0].toLowerCase();
+            isEnglish = usedCommand === "help" || usedCommand === "h";
+        }
 
         let helpEmbed;
 
