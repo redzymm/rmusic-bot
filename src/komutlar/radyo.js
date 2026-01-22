@@ -3,15 +3,15 @@ const { playNext } = require('./p');
 
 const radyolar = [
     { name: "Power Türk", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/POWER_TURK.mp3" },
-    { name: "Kral FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/KRAL_FM.mp3" },
+    { name: "Kral FM", url: "https://ssldyg.radyotvonline.com/smil/smil:kralfm.smil/playlist.m3u8" },
     { name: "Süper FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/SUPER_FM.mp3" },
     { name: "Metro FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/METRO_FM.mp3" },
     { name: "Joy FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM.mp3" },
     { name: "Fenomen", url: "https://fenomen.listenlive.co/fenomen" },
-    { name: "Slow Türk", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/SLOW_TURK.mp3" },
+    { name: "Slow Türk", url: "https://radyo.duhnet.tv/slowturk" },
     { name: "Best FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/BEST_FM.mp3" },
     { name: "Virgin Radio", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/VIRGIN_RADIO_TR.mp3" },
-    { name: "Kral Pop", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/KRAL_POP.mp3" }
+    { name: "Kral Pop", url: "https://ssldyg.radyotvonline.com/smil/smil:kralpop.smil/playlist.m3u8" }
 ];
 
 module.exports = {
