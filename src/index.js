@@ -25,7 +25,6 @@ function startLavalink() {
 
     let jarFound = fs.existsSync(lavalinkJar);
     if (!jarFound) {
-        // Fallback for case-sensitivity on Linux
         const fallbackJar = path.join(lavalinkDir, "lavalink.jar");
         if (fs.existsSync(fallbackJar)) {
             lavalinkJar = fallbackJar;
@@ -34,8 +33,16 @@ function startLavalink() {
     }
 
     if (!jarFound) {
-        console.error(`[LAVALINK_ERR] Lavalink jar dosyası bulunamadı! Aranan Yol: ${lavalinkJar}`);
-        return;
+        console.warn(`[LAVALINK] Lavalink.jar bulunamadı, indiriliyor...`);
+        try {
+            if (!fs.existsSync(lavalinkDir)) fs.mkdirSync(lavalinkDir, { recursive: true });
+            execSync(`curl -L -o "${lavalinkJar}" "https://github.com/lavalink-devs/Lavalink/releases/download/4.0.10/Lavalink.jar"`);
+            console.log(`[LAVALINK] Lavalink.jar başarıyla indirildi.`);
+            jarFound = true;
+        } catch (e) {
+            console.error(`[LAVALINK_ERR] Lavalink indirilemedi: ${e.message}`);
+            return;
+        }
     }
 
     // --- PORT CLEANUP (Pre-start) ---
