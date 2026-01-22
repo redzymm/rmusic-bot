@@ -56,8 +56,8 @@ function startLavalink() {
 
     try {
         lavalinkProcess = spawn("java", [
-            "-Xmx512M",
-            "-Xms128M",
+            "-Xmx384M",
+            "-Xms64M",
             "-XX:+UseG1GC",
             "-jar",
             "Lavalink.jar"
