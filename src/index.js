@@ -24,7 +24,7 @@ function startLavalink() {
     console.log(`[LAVALINK] Kontrol ediliyor: ${lavalinkJar}`);
 
     if (!fs.existsSync(lavalinkJar)) {
-        console.error("[LAVALINK_ERR] Lavalink.jar bulunamadı! Lütfen /lavalink klasöründe olduğundan emin olun.");
+        console.error(`[LAVALINK_ERR] Lavalink.jar bulunamadı! Aranan Yol: ${lavalinkJar}`);
         return;
     }
 
