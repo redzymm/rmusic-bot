@@ -24,6 +24,6 @@ if [ ! -f "$LAVALINK_JAR" ]; then
     curl -L -o "$LAVALINK_JAR" "https://github.com/lavalink-devs/Lavalink/releases/download/4.0.10/Lavalink.jar"
 fi
 
-echo "🚀 Lavalink başlatılıyor..."
+echo "🚀 Lavalink başlatılıyor (RAM: 512M-1G, G1GC)..."
 cd "$LAVALINK_DIR"
-java -jar Lavalink.jar
+java -Xmx1G -Xms512M -XX:+UseG1GC -jar Lavalink.jar

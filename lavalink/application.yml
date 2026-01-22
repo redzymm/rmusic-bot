@@ -27,8 +27,8 @@ lavalink:
       rotation: true
       channelMix: true
       lowPass: true
-    bufferDurationMs: 400 # Lowered for faster volume updates
-    frameBufferDurationMs: 1000 # Lowered for faster response
+    bufferDurationMs: 1000 # Increased for better jitter handling
+    frameBufferDurationMs: 5000 # Increased for more resilient streaming
     opusEncodingQuality: 10
     resamplingQuality: HIGH
     trackStuckThresholdMs: 10000

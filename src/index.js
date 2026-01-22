@@ -57,7 +57,13 @@ function startLavalink() {
     console.log("[LAVALINK] Sunucu başlatılıyor... (java -jar Lavalink.jar)");
 
     try {
-        lavalinkProcess = spawn("java", ["-jar", "Lavalink.jar"], {
+        lavalinkProcess = spawn("java", [
+            "-Xmx1G",
+            "-Xms512M",
+            "-XX:+UseG1GC",
+            "-jar",
+            "Lavalink.jar"
+        ], {
             cwd: lavalinkDir,
             stdio: "inherit"
         });
