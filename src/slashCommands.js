@@ -2,69 +2,69 @@ const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
 /**
  * Discord Slash Command Definitions
- * Bu dosya tüm slash command tanımlarını içerir.
- * Deploy edilmek için deploy-commands.js kullanılır.
+ * All slash commands are in English for global reach.
+ * Use deploy-commands.js to register these commands.
  */
 
 module.exports = [
-    // 🎵 Müzik Komutları
+    // 🎵 Music Commands
     new SlashCommandBuilder()
         .setName('play')
-        .setDescription('Şarkı çalar (YouTube)')
-        .addStringOption(opt => 
-            opt.setName('şarkı')
-                .setDescription('Şarkı adı veya YouTube linki')
+        .setDescription('Play a song or playlist')
+        .addStringOption(opt =>
+            opt.setName('song')
+                .setDescription('Song name or YouTube/Spotify link')
                 .setRequired(true)
         ),
 
     new SlashCommandBuilder()
         .setName('skip')
-        .setDescription('Çalan şarkıyı atlar'),
+        .setDescription('Skip the current song'),
 
     new SlashCommandBuilder()
         .setName('stop')
-        .setDescription('Müziği durdurur ve kanaldan çıkar'),
+        .setDescription('Stop playback and leave the voice channel'),
 
     new SlashCommandBuilder()
-        .setName('kuyruk')
-        .setDescription('Sıradaki şarkıları gösterir'),
+        .setName('queue')
+        .setDescription('Show the current song queue'),
 
     new SlashCommandBuilder()
-        .setName('sifirla')
-        .setDescription('Oynatma sırasını temizler'),
+        .setName('reset')
+        .setDescription('Clear the current queue'),
 
-    // 🛠️ Sistem Komutları
+    // 🛠️ System Commands
     new SlashCommandBuilder()
         .setName('ping')
-        .setDescription('Botun ping değerini gösterir'),
+        .setDescription('Check bot latency'),
 
     new SlashCommandBuilder()
-        .setName('yardim')
-        .setDescription('Tüm komutları listeler'),
+        .setName('help')
+        .setDescription('Show all available commands'),
 
     new SlashCommandBuilder()
         .setName('test')
-        .setDescription('Sistem durumunu kontrol eder')
+        .setDescription('Check system status')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-    // ⚙️ Yönetim Komutları
+    // ⚙️ Management Commands
     new SlashCommandBuilder()
         .setName('prefix')
-        .setDescription('Sunucu ön ekini değiştirir')
+        .setDescription('Change the server command prefix')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(opt =>
-            opt.setName('yeni_prefix')
-                .setDescription('Yeni ön ek (maksimum 10 karakter)')
+            opt.setName('new_prefix')
+                .setDescription('New prefix (max 10 characters)')
                 .setRequired(true)
         ),
 
     new SlashCommandBuilder()
         .setName('clear')
-        .setDescription('Belirtilen sayıda mesajı siler')
+        .setDescription('Delete a specified number of messages')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
         .addIntegerOption(opt =>
-            opt.setName('miktar')
-                .setDescription('Silinecek mesaj sayısı (1-100)')
+            opt.setName('amount')
+                .setDescription('Number of messages to delete (1-100)')
                 .setRequired(true)
                 .setMinValue(1)
                 .setMaxValue(100)

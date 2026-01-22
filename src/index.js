@@ -370,15 +370,15 @@ client.on("messageCreate", async (message) => {
 /* =======================
    SLASH COMMAND HANDLER
  ======================= */
-// Slash command isimlerini prefix komutlarına eşle
+// Map slash commands to prefix commands
 const slashToPrefix = {
     'play': 'p',
     'skip': 'skip',
     'stop': 'stop',
-    'kuyruk': 'kuyruk',
-    'sifirla': 'sıfırla',
+    'queue': 'kuyruk',
+    'reset': 'sıfırla',
     'ping': 'ping',
-    'yardim': 'yardım',
+    'help': 'help',
     'test': 'test',
     'prefix': 'prefix',
     'clear': 'clear'
@@ -391,36 +391,36 @@ client.on(Events.InteractionCreate, async (interaction) => {
     const prefixCmd = slashToPrefix[commandName];
 
     if (!prefixCmd) {
-        return interaction.reply({ content: '❌ Bilinmeyen komut!', ephemeral: true });
+        return interaction.reply({ content: '❌ Unknown command!', ephemeral: true });
     }
 
     const command = client.commands.get(prefixCmd);
     if (!command) {
-        return interaction.reply({ content: '❌ Komut bulunamadı!', ephemeral: true });
+        return interaction.reply({ content: '❌ Command not found!', ephemeral: true });
     }
 
-    // Komut devre dışı mı kontrol et
+    // Check if command is disabled
     if (client.disabledCommands.includes(prefixCmd)) {
-        return interaction.reply({ content: '❌ **Bu komut şu anda devre dışı!**', ephemeral: true });
+        return interaction.reply({ content: '❌ **This command is currently disabled!**', ephemeral: true });
     }
 
-    // Slash command options'ı args dizisine çevir
+    // Convert slash command options to args array
     const args = [];
 
-    // play komutu için şarkı seçeneği
+    // play command - song option
     if (commandName === 'play') {
-        const şarkı = interaction.options.getString('şarkı');
-        if (şarkı) args.push(şarkı);
+        const song = interaction.options.getString('song');
+        if (song) args.push(song);
     }
-    // prefix komutu için yeni_prefix seçeneği
+    // prefix command - new_prefix option
     else if (commandName === 'prefix') {
-        const yeniPrefix = interaction.options.getString('yeni_prefix');
-        if (yeniPrefix) args.push(yeniPrefix);
+        const newPrefix = interaction.options.getString('new_prefix');
+        if (newPrefix) args.push(newPrefix);
     }
-    // clear komutu için miktar seçeneği
+    // clear command - amount option
     else if (commandName === 'clear') {
-        const miktar = interaction.options.getInteger('miktar');
-        if (miktar) args.push(miktar.toString());
+        const amount = interaction.options.getInteger('amount');
+        if (amount) args.push(amount.toString());
     }
 
     // Yapay message objesi oluştur (mevcut komut yapısıyla uyumluluk için)
