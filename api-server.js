@@ -112,13 +112,22 @@ app.post('/api/bot/start', authenticate, (req, res) => {
         return res.status(404).json({ success: false, message: 'Bot dosyası bulunamadı: ' + botPath });
     }
 
-    botProcess = spawn('node', [botPath], {
-        cwd: __dirname,
-        env: { ...process.env, FORCE_COLOR: 'true', PYTHONIOENCODING: 'utf-8' }
-    });
+    console.log(`[API] Bot başlatılıyor: ${botPath}`);
+    console.log(`[API] CWD: ${__dirname}`);
+
+    try {
+        botProcess = spawn('node', [botPath], {
+            cwd: __dirname,
+            env: { ...process.env, FORCE_COLOR: 'true', PYTHONIOENCODING: 'utf-8' }
+        });
+    } catch (spawnErr) {
+        console.error(`[API_SPAWN_ERR] Spawn failed: ${spawnErr.message}`);
+        return res.status(500).json({ success: false, message: 'Bot başlatılamadı: ' + spawnErr.message });
+    }
 
     botProcess.stdout.on('data', (data) => {
         const str = data.toString('utf8');
+        console.log(`[BOT_STDOUT] ${str.trim()}`);
 
         // Parse dashboard data
         if (str.includes('DASHBOARD_DATA:')) {
