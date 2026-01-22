@@ -567,45 +567,90 @@ export default function App() {
                     <button onClick={closeApp} className="p-2 hover:bg-brand-red group rounded-lg transition-none text-white/40 hover:text-white"><X size={18} /></button>
                 </div>
 
-                <main className="flex-1 p-8 pt-16 overflow-y-auto custom-scroll">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={activeTab}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.1 }}
-                            className="h-full"
-                        >
-                            {activeTab === 'Home' && <HomeView status={botStatus} start={startBot} stop={stopBot} botInfo={botData} killAll={killAll} />}
-                            {activeTab === 'Player' && (
-                                <PlayerView
-                                    query={searchQuery}
-                                    setQuery={setSearchQuery}
-                                    results={searchResults}
-                                    searching={isSearching}
-                                    onSearch={handleSearch}
-                                    onPlay={playMusic}
-                                    onStop={stopMusic}
-                                    playing={nowPlayingLocal}
-                                    onBeam={discordUser ? beamToServer : null}
-                                />
+                <main className="flex-1 p-4 pt-10 overflow-y-auto custom-scroll">
+                    {/* Global Admin Authentication Gate */}
+                    {!isSystemAdmin ? (
+                        <div className="h-full flex flex-col items-center justify-center space-y-8">
+                            <div className="text-center space-y-4">
+                                <div className="w-20 h-20 mx-auto bg-brand-red/10 rounded-full flex items-center justify-center ring-4 ring-brand-red/20">
+                                    <ShieldCheck size={40} className="text-brand-red" />
+                                </div>
+                                <h1 className="text-3xl font-black tracking-tighter uppercase">Erişim <span className="text-brand-red">Engellendi</span></h1>
+                                <p className="text-sm text-white/40 max-w-md">
+                                    Bu dashboard'a erişmek için sistem yöneticisi yetkisi gereklidir.
+                                    Lütfen yetkili Discord hesabınızla giriş yapın.
+                                </p>
+                            </div>
+
+                            {!discordUser ? (
+                                <button
+                                    onClick={loginDiscord}
+                                    className="flex items-center gap-3 px-8 py-4 bg-[#5865F2] text-white font-black text-sm rounded-2xl hover:bg-[#4752C4] transition-all active:scale-95 shadow-xl shadow-[#5865F2]/30"
+                                >
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z" />
+                                    </svg>
+                                    Discord ile Giriş Yap
+                                </button>
+                            ) : (
+                                <div className="text-center space-y-4">
+                                    <div className="flex items-center justify-center gap-3 px-6 py-3 bg-white/5 rounded-2xl border border-white/10">
+                                        <img src={`https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`} className="w-10 h-10 rounded-full border-2 border-white/20" alt="" />
+                                        <div className="text-left">
+                                            <p className="font-bold text-sm">{discordUser.username}</p>
+                                            <p className="text-[10px] text-red-400 uppercase font-black tracking-widest">Yetki Yok</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-white/30">Bu hesap sistem yöneticisi olarak tanımlanmamış.</p>
+                                    <button
+                                        onClick={logoutDiscord}
+                                        className="text-[10px] text-red-400 hover:text-red-300 font-black uppercase tracking-widest underline"
+                                    >
+                                        Farklı Hesapla Dene
+                                    </button>
+                                </div>
                             )}
-                            {activeTab === 'Audio' && (
-                                <AudioEngineView
-                                    botInfo={botData}
-                                    status={botStatus}
-                                    updateVolume={updateVolume}
-                                    toggleFilter={toggleFilter}
-                                    setEQ={setEQ}
-                                />
-                            )}
-                            {activeTab === 'Logs' && <LogsView logs={logs} onSimulateLog={(l) => setLogs(p => [...p.slice(-49), l])} onClearLogs={() => setLogs([])} />}
-                            {activeTab === 'Commands' && <CommandsView config={config} setConfig={saveConfig} killAll={killAll} botInfo={botData} isSystemAdmin={isSystemAdmin} />}
-                            {activeTab === 'AutoResponse' && <AutoResponseView responses={autoResponses} setResponses={(r) => { setAutoResponses(r); ipc.send('save-auto-responses', r); }} isSystemAdmin={isSystemAdmin} />}
-                            {activeTab === 'Settings' && <SettingsView config={config} setConfig={saveConfig} isSystemAdmin={isSystemAdmin} discordUser={discordUser} remoteConfig={remoteConfig} saveRemoteConfig={saveRemoteConfig} />}
-                        </motion.div>
-                    </AnimatePresence>
+                        </div>
+                    ) : (
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={activeTab}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.1 }}
+                                className="h-full"
+                            >
+                                {activeTab === 'Home' && <HomeView status={botStatus} start={startBot} stop={stopBot} botInfo={botData} killAll={killAll} />}
+                                {activeTab === 'Player' && (
+                                    <PlayerView
+                                        query={searchQuery}
+                                        setQuery={setSearchQuery}
+                                        results={searchResults}
+                                        searching={isSearching}
+                                        onSearch={handleSearch}
+                                        onPlay={playMusic}
+                                        onStop={stopMusic}
+                                        playing={nowPlayingLocal}
+                                        onBeam={discordUser ? beamToServer : null}
+                                    />
+                                )}
+                                {activeTab === 'Audio' && (
+                                    <AudioEngineView
+                                        botInfo={botData}
+                                        status={botStatus}
+                                        updateVolume={updateVolume}
+                                        toggleFilter={toggleFilter}
+                                        setEQ={setEQ}
+                                    />
+                                )}
+                                {activeTab === 'Logs' && <LogsView logs={logs} onSimulateLog={(l) => setLogs(p => [...p.slice(-49), l])} onClearLogs={() => setLogs([])} />}
+                                {activeTab === 'Commands' && <CommandsView config={config} setConfig={saveConfig} killAll={killAll} botInfo={botData} isSystemAdmin={isSystemAdmin} />}
+                                {activeTab === 'AutoResponse' && <AutoResponseView responses={autoResponses} setResponses={(r) => { setAutoResponses(r); ipc.send('save-auto-responses', r); }} isSystemAdmin={isSystemAdmin} />}
+                                {activeTab === 'Settings' && <SettingsView config={config} setConfig={saveConfig} isSystemAdmin={isSystemAdmin} discordUser={discordUser} remoteConfig={remoteConfig} saveRemoteConfig={saveRemoteConfig} />}
+                            </motion.div>
+                        </AnimatePresence>
+                    )}
                 </main>
             </div>
 
@@ -765,17 +810,17 @@ const StatCard = React.memo(({ icon: Icon, label, value, color }) => {
     };
 
     return (
-        <div className={`bg-[#ffffff05] border border-white/5 p-6 rounded-[32px] group transition-all duration-300 overflow-hidden relative hover:border-white/20`}>
+        <div className={`bg-[#ffffff05] border border-white/5 p-4 rounded-2xl group transition-all duration-300 overflow-hidden relative hover:border-white/20`}>
             <div className={`absolute -inset-2 opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none`} style={{ backgroundColor: glowColors[color] }} />
 
             <div className="flex justify-between items-start relative z-10">
-                <div className={`p-4 rounded-xl bg-white/5 ${colors[color]} group-hover:scale-110 group-hover:neo-glow transition-all duration-300`}>
-                    <Icon size={24} />
+                <div className={`p-3 rounded-xl bg-white/5 ${colors[color]} group-hover:scale-110 group-hover:neo-glow transition-all duration-300`}>
+                    <Icon size={18} />
                 </div>
-                <span className={`text-[10px] font-black tracking-widest uppercase text-white/20`}>{label}</span>
+                <span className={`text-[9px] font-black tracking-widest uppercase text-white/20`}>{label}</span>
             </div>
-            <div className="mt-8 relative z-10">
-                <p className="text-4xl font-black tracking-tighter group-hover:translate-x-1 transition-transform">{value}</p>
+            <div className="mt-4 relative z-10">
+                <p className="text-3xl font-black tracking-tighter group-hover:translate-x-1 transition-transform">{value}</p>
             </div>
         </div>
     );
@@ -785,40 +830,40 @@ const StatCard = React.memo(({ icon: Icon, label, value, color }) => {
 
 const HomeView = React.memo(({ status, start, stop, botInfo, killAll, discordUser, onDiscordLogin }) => {
     return (
-        <div className="space-y-10">
+        <div className="space-y-8">
             <header>
                 <div className="flex items-center gap-4 mb-2">
                     <div className="w-8 h-[2px] bg-brand-red" />
                     <span className="text-[10px] text-brand-red font-black uppercase tracking-[0.3em]">System Overview</span>
                 </div>
-                <h1 className="text-5xl font-black tracking-tighter uppercase">Command <span className="text-brand-red">Center</span></h1>
+                <h1 className="text-4xl font-black tracking-tighter uppercase">Command <span className="text-brand-red">Center</span></h1>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
                 {/* Bot Identity Card */}
-                <div className="bg-[#ffffff05] border border-white/5 p-8 rounded-[40px] flex flex-col items-center justify-center space-y-6 relative overflow-hidden group transition-colors duration-150">
+                <div className="bg-[#ffffff05] border border-white/5 p-5 rounded-3xl flex flex-col items-center justify-center space-y-4 relative overflow-hidden group transition-colors duration-150">
                     <div className={`absolute inset-0 bg-gradient-to-br ${status === 'online' ? 'from-green-500/5' : 'from-brand-red/5'} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-100`} />
 
-                    <div className={`w-24 h-24 rounded-full flex items-center justify-center transition-none duration-100 relative ${status === 'online' ? 'bg-green-500/10 neo-glow ring-4 ring-green-500/20' : 'bg-brand-red/10 ring-4 ring-brand-red/20'}`}>
+                    <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-none duration-100 relative ${status === 'online' ? 'bg-green-500/10 neo-glow ring-4 ring-green-500/20' : 'bg-brand-red/10 ring-4 ring-brand-red/20'}`}>
                         {botInfo?.avatar ? (
                             <img src={botInfo.avatar} className="w-[calc(100%-8px)] h-[calc(100%-8px)] rounded-full object-cover" alt="Avatar" />
                         ) : (
-                            <Power size={36} className={status === 'online' ? 'text-green-500' : 'text-brand-red'} />
+                            <Power size={28} className={status === 'online' ? 'text-green-500' : 'text-brand-red'} />
                         )}
-                        <div className={`absolute bottom-1 right-1 w-5 h-5 rounded-full border-[3px] border-[#0a0a0c] ${status === 'online' ? 'bg-green-500' : 'bg-red-500'}`} />
+                        <div className={`absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full border-[2px] border-[#0a0a0c] ${status === 'online' ? 'bg-green-500' : 'bg-red-500'}`} />
                     </div>
 
                     <div className="text-center z-10">
-                        <h3 className={`font-black text-2xl tracking-tighter text-white`}>{botInfo?.username || 'RMusic Engine'}</h3>
-                        <p className={`text-[10px] uppercase tracking-[0.2em] font-black mt-1 text-white/30`}>{status === 'online' ? 'OPERATIONAL' : 'SYSTEM STANDBY'}</p>
+                        <h3 className={`font-black text-xl tracking-tighter text-white`}>{botInfo?.username || 'RMusic Engine'}</h3>
+                        <p className={`text-[9px] uppercase tracking-[0.2em] font-black mt-0.5 text-white/30`}>{status === 'online' ? 'OPERATIONAL' : 'SYSTEM STANDBY'}</p>
                     </div>
 
-                    <div className="flex flex-col gap-3 w-full mt-2 z-10">
+                    <div className="flex flex-col gap-2 w-full mt-1 z-10">
                         {status === 'offline' ? (
-                            <button onClick={start} className={`w-full font-black py-3 rounded-2xl btn-animate active:scale-95 text-xs tracking-widest uppercase bg-white text-black hover:bg-brand-red hover:text-white`}>BOOT SYSTEM</button>
+                            <button onClick={start} className={`w-full font-black py-2.5 rounded-xl btn-animate active:scale-95 text-[10px] tracking-widest uppercase bg-white text-black hover:bg-brand-red hover:text-white`}>BOOT SYSTEM</button>
                         ) : (
-                            <button onClick={stop} className={`w-full border font-black py-3 rounded-2xl btn-animate active:scale-95 text-xs tracking-widest uppercase bg-brand-red/10 border-brand-red/30 text-brand-red hover:bg-brand-red hover:text-white`}>SHUTDOWN</button>
+                            <button onClick={stop} className={`w-full border font-black py-2.5 rounded-xl btn-animate active:scale-95 text-[10px] tracking-widest uppercase bg-brand-red/10 border-brand-red/30 text-brand-red hover:bg-brand-red hover:text-white`}>SHUTDOWN</button>
                         )}
                     </div>
                 </div>
@@ -859,15 +904,15 @@ const HomeView = React.memo(({ status, start, stop, botInfo, killAll, discordUse
             {/* Guild List */}
             {
                 botInfo?.guildList && (
-                    <div className="glass p-8 rounded-[40px] space-y-6 overflow-hidden">
-                        <h3 className="font-black text-xl tracking-tight uppercase px-2">Connected <span className="text-brand-red">Nodes</span></h3>
-                        <div className="flex gap-4 overflow-x-auto pb-4 custom-scroll px-2">
+                    <div className="glass p-5 rounded-3xl space-y-4 overflow-hidden">
+                        <h3 className="font-black text-base tracking-tight uppercase px-2">Connected <span className="text-brand-red">Nodes</span></h3>
+                        <div className="flex gap-3 overflow-x-auto pb-3 custom-scroll px-2">
                             {botInfo.guildList.map((g, i) => (
-                                <div key={i} className="min-w-[200px] bg-white/5 border border-white/5 p-4 rounded-2xl flex items-center gap-4 hover:bg-white/10 transition-colors duration-150 shrink-0">
-                                    <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 bg-black">
+                                <div key={i} className="min-w-[160px] bg-white/5 border border-white/5 p-3 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-colors duration-150 shrink-0">
+                                    <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10 bg-black">
                                         <img src={g.icon} alt="" className="w-full h-full object-cover" />
                                     </div>
-                                    <span className="font-bold text-[11px] truncate uppercase tracking-tighter">{g.name}</span>
+                                    <span className="font-bold text-[10px] truncate uppercase tracking-tighter">{g.name}</span>
                                 </div>
                             ))}
                         </div>
@@ -887,21 +932,21 @@ const AudioEngineView = React.memo(({ botInfo, status, updateVolume, toggleFilte
     const filters = ["8d", "bassboost", "nightcore"];
 
     return (
-        <div className="space-y-10">
+        <div className="space-y-6">
             <header>
                 <div className="flex items-center gap-4 mb-2">
                     <div className="w-8 h-[2px] bg-brand-red" />
                     <span className="text-[10px] text-brand-red font-black uppercase tracking-[0.3em]">Acoustic Processing</span>
                 </div>
-                <h1 className="text-5xl font-black tracking-tighter uppercase">Audio <span className="text-brand-red">Studio</span></h1>
+                <h1 className="text-4xl font-black tracking-tighter uppercase">Audio <span className="text-brand-red">Studio</span></h1>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-[#ffffff05] border border-white/5 p-8 rounded-[40px] space-y-10">
-                    <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div className="bg-[#ffffff05] border border-white/5 p-5 rounded-3xl space-y-6">
+                    <div className="space-y-4">
                         <div className="flex justify-between items-center">
-                            <h3 className="font-black text-xl tracking-tight uppercase flex items-center gap-3"><Volume2 className="text-brand-red" /> Master Gain</h3>
-                            <span className="bg-brand-red px-4 py-1.5 rounded-full text-[12px] font-black ring-4 ring-brand-red/20">{currentVolume}%</span>
+                            <h3 className="font-black text-base tracking-tight uppercase flex items-center gap-2"><Volume2 className="text-brand-red" size={18} /> Master Gain</h3>
+                            <span className="bg-brand-red px-3 py-1 rounded-full text-[10px] font-black ring-2 ring-brand-red/20">{currentVolume}%</span>
                         </div>
                         <input
                             type="range"
@@ -909,27 +954,27 @@ const AudioEngineView = React.memo(({ botInfo, status, updateVolume, toggleFilte
                             max="200"
                             value={currentVolume}
                             onChange={(e) => updateVolume(e.target.value)}
-                            className="w-full accent-brand-red bg-white/5 h-2.5 rounded-full cursor-pointer appearance-none outline-none focus:ring-4 ring-brand-red/5"
+                            className="w-full accent-brand-red bg-white/5 h-2 rounded-full cursor-pointer appearance-none outline-none focus:ring-4 ring-brand-red/5"
                         />
-                        <div className="flex justify-between text-[10px] text-white/20 font-black tracking-widest">
+                        <div className="flex justify-between text-[9px] text-white/20 font-black tracking-widest">
                             <span>MUTE</span>
                             <span>NORMAL</span>
                             <span>BOOST (200%)</span>
                         </div>
                     </div>
 
-                    <div className="space-y-6">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <h3 className="font-black text-lg tracking-tight uppercase flex items-center gap-3 whitespace-nowrap">
-                                <Zap className="text-brand-red" size={20} /> Signal Processing
+                    <div className="space-y-4">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                            <h3 className="font-black text-sm tracking-tight uppercase flex items-center gap-2 whitespace-nowrap">
+                                <Zap className="text-brand-red" size={16} /> Signal Processing
                             </h3>
                         </div>
-                        <div className="flex flex-wrap gap-4">
+                        <div className="flex flex-wrap gap-3">
                             {filters.map(f => (
                                 <button
                                     key={f}
                                     onClick={() => toggleFilter(f)}
-                                    className={`px-8 py-4 rounded-2xl border btn-animate font-black text-xs uppercase tracking-[0.2em] transform active:scale-95 ${currentFilters[f]
+                                    className={`px-5 py-2.5 rounded-xl border btn-animate font-black text-[10px] uppercase tracking-[0.2em] transform active:scale-95 ${currentFilters[f]
                                         ? 'bg-brand-red text-white border-brand-red neo-glow'
                                         : 'bg-white/5 border-white/5 text-white/30 hover:border-white/20 hover:text-white'
                                         }`}
@@ -941,19 +986,19 @@ const AudioEngineView = React.memo(({ botInfo, status, updateVolume, toggleFilte
                     </div>
                 </div>
 
-                <div className="bg-[#ffffff05] border border-white/5 p-8 rounded-[40px] space-y-8">
-                    <h3 className="font-black text-xl tracking-tight uppercase flex items-center gap-3"><Activity className="text-brand-red" /> 10-Band Equalizer</h3>
-                    <div className="flex justify-between h-48 items-end gap-3 px-2">
+                <div className="bg-[#ffffff05] border border-white/5 p-5 rounded-3xl space-y-5">
+                    <h3 className="font-black text-base tracking-tight uppercase flex items-center gap-2"><Activity className="text-brand-red" size={18} /> 10-Band Equalizer</h3>
+                    <div className="flex justify-between h-36 items-end gap-2 px-1">
                         {(botInfo?.equalizer || [...Array(10).fill(0)]).map((val, i) => (
-                            <div key={i} className="flex-1 flex flex-col gap-3 items-center group">
-                                <div className="w-full bg-white/5 rounded-full relative h-[160px] group-hover:bg-white/10 transition-colors duration-300 overflow-hidden">
+                            <div key={i} className="flex-1 flex flex-col gap-2 items-center group">
+                                <div className="w-full bg-white/5 rounded-full relative h-[120px] group-hover:bg-white/10 transition-colors duration-300 overflow-hidden">
                                     <div
-                                        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-brand-red/40 via-brand-red to-brand-red rounded-full transition-none duration-100 shadow-[0_0_20px_var(--brand-glow)]"
+                                        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-brand-red/40 via-brand-red to-brand-red rounded-full transition-none duration-100 shadow-[0_0_15px_var(--brand-glow)]"
                                         style={{ height: `${((val + 10) / 20) * 100}%` }}
                                     />
                                     {/* Subtle meter lines */}
                                     <div className="absolute inset-0 flex flex-col justify-between opacity-10 pointer-events-none p-1">
-                                        {[...Array(8)].map((_, j) => <div key={j} className="h-px w-full bg-white" />)}
+                                        {[...Array(6)].map((_, j) => <div key={j} className="h-px w-full bg-white" />)}
                                     </div>
                                     <input
                                         type="range"
@@ -965,14 +1010,14 @@ const AudioEngineView = React.memo(({ botInfo, status, updateVolume, toggleFilte
                                         style={{ writingMode: 'bt-lr', appearance: 'slider-vertical' }}
                                     />
                                 </div>
-                                <span className="text-[8px] text-white/20 font-black tracking-tighter uppercase">{i === 0 ? '60Hz' : i === 9 ? '16kHz' : i + 1}</span>
+                                <span className="text-[7px] text-white/20 font-black tracking-tighter uppercase">{i === 0 ? '60Hz' : i === 9 ? '16kHz' : i + 1}</span>
                             </div>
                         ))}
                     </div>
-                    <div className="flex flex-col items-center gap-6">
-                        <p className="text-[9px] text-center text-white/10 font-bold uppercase tracking-[0.3em]">Drag columns to adjust frequency response</p>
+                    <div className="flex flex-col items-center gap-4">
+                        <p className="text-[8px] text-center text-white/10 font-bold uppercase tracking-[0.3em]">Drag columns to adjust frequency response</p>
 
-                        <div className="flex gap-3 p-2 bg-black/20 rounded-2xl border border-white/5 shadow-inner">
+                        <div className="flex gap-2 p-1.5 bg-black/20 rounded-xl border border-white/5 shadow-inner">
                             {['ROCK', 'POP', 'JAZZ', 'FLAT'].map(p => (
                                 <button
                                     key={p}
@@ -985,7 +1030,7 @@ const AudioEngineView = React.memo(({ botInfo, status, updateVolume, toggleFilte
                                         };
                                         presets[p].forEach((v, i) => setEQ(i, v));
                                     }}
-                                    className="px-5 py-2.5 bg-white/5 hover:bg-brand-red hover:text-white rounded-xl text-[10px] font-black transition-all border border-white/5 active:scale-95 uppercase tracking-widest shadow-lg hover:shadow-brand-red/20"
+                                    className="px-4 py-2 bg-white/5 hover:bg-brand-red hover:text-white rounded-lg text-[9px] font-black transition-all border border-white/5 active:scale-95 uppercase tracking-widest shadow-lg hover:shadow-brand-red/20"
                                 >
                                     {p}
                                 </button>
@@ -1020,54 +1065,54 @@ const PlayerView = React.memo(({ query, setQuery, results, searching, onSearch, 
     };
 
     return (
-        <div className="h-full flex flex-col space-y-8">
+        <div className="h-full flex flex-col space-y-5">
             <header className="flex items-center justify-between">
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="w-8 h-[2px] bg-brand-red" />
                         <span className="text-[10px] text-brand-red font-black uppercase tracking-[0.3em]">Local Playback Engine</span>
                     </div>
-                    <h1 className="text-5xl font-black tracking-tighter uppercase">Music <span className="text-brand-red">Studio</span></h1>
+                    <h1 className="text-4xl font-black tracking-tighter uppercase">Music <span className="text-brand-red">Studio</span></h1>
                 </div>
 
                 {/* Compact Search Bar */}
-                <div className="relative group w-96">
-                    <Search className={`absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-brand-red transition-none duration-150`} size={18} />
+                <div className="relative group w-80">
+                    <Search className={`absolute left-3 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-brand-red transition-none duration-150`} size={16} />
                     <input
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && onSearch()}
                         placeholder="Search tracks..."
-                        className={`w-full glass p-3 pl-12 rounded-full outline-none focus:ring-2 ring-brand-red/20 border border-white/5 focus:border-brand-red/40 transition-none duration-150 text-sm font-bold placeholder:text-white/10`}
+                        className={`w-full glass p-2.5 pl-10 rounded-xl outline-none focus:ring-2 ring-brand-red/20 border border-white/5 focus:border-brand-red/40 transition-none duration-150 text-xs font-bold placeholder:text-white/10`}
                     />
                     {query && (
                         <button
                             onClick={onSearch}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-brand-red p-1.5 rounded-full text-white hover:scale-110 transition-transform shadow-lg"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-brand-red p-1 rounded-full text-white hover:scale-110 transition-transform shadow-lg"
                         >
-                            <Search size={12} />
+                            <Search size={10} />
                         </button>
                     )}
                 </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto custom-scroll pr-2 space-y-10 pb-20">
+            <div className="flex-1 overflow-y-auto custom-scroll pr-2 space-y-6 pb-16">
                 {/* Search Results (Conditional) */}
                 {results.length > 0 && (
-                    <div className="space-y-4">
-                        <h3 className="font-black text-lg tracking-tight uppercase flex items-center gap-2"><Search size={18} className="text-brand-red" /> Search Results</h3>
-                        <div className="grid grid-cols-1 gap-3">
+                    <div className="space-y-3">
+                        <h3 className="font-black text-sm tracking-tight uppercase flex items-center gap-2"><Search size={14} className="text-brand-red" /> Search Results</h3>
+                        <div className="grid grid-cols-1 gap-2">
                             {results.map((track) => (
-                                <div key={track.id} className={`bg-[#ffffff05] border border-white/5 p-3 rounded-2xl flex items-center gap-4 hover:bg-white/10 transition-colors group`}>
-                                    <div className="w-24 aspect-video rounded-xl overflow-hidden relative bg-white/5">
+                                <div key={track.id} className={`bg-[#ffffff05] border border-white/5 p-2.5 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-colors group`}>
+                                    <div className="w-20 aspect-video rounded-lg overflow-hidden relative bg-white/5">
                                         <img src={track.thumbnail} className="w-full h-full object-cover" alt="" />
                                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => handlePlay(track)} className="bg-brand-red p-2 rounded-full text-white shadow-xl transform scale-75 group-hover:scale-100 transition-all duration-300"><Play size={20} fill="white" /></button>
+                                            <button onClick={() => handlePlay(track)} className="bg-brand-red p-1.5 rounded-full text-white shadow-xl transform scale-75 group-hover:scale-100 transition-all duration-300"><Play size={16} fill="white" /></button>
                                         </div>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h4 className="font-bold text-sm truncate">{track.title}</h4>
-                                        <span className="text-[10px] text-white/40 font-bold">{track.duration} • YouTube</span>
+                                        <h4 className="font-bold text-xs truncate">{track.title}</h4>
+                                        <span className="text-[9px] text-white/40 font-bold">{track.duration} • YouTube</span>
                                     </div>
                                 </div>
                             ))}
@@ -1077,19 +1122,19 @@ const PlayerView = React.memo(({ query, setQuery, results, searching, onSearch, 
 
                 {/* Trending Grid */}
                 {results.length === 0 && (
-                    <div className="space-y-4">
-                        <h3 className="font-black text-lg tracking-tight uppercase flex items-center gap-2"><Flame size={18} className="text-brand-red" /> Trending Now</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="space-y-3">
+                        <h3 className="font-black text-sm tracking-tight uppercase flex items-center gap-2"><Flame size={14} className="text-brand-red" /> Trending Now</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                             {popularTracks.map((track) => (
-                                <div key={track.id} className="group relative aspect-video rounded-3xl overflow-hidden cursor-pointer bg-white/5 border border-white/5" onClick={() => handlePlay(track)}>
+                                <div key={track.id} className="group relative aspect-video rounded-2xl overflow-hidden cursor-pointer bg-white/5 border border-white/5" onClick={() => handlePlay(track)}>
                                     <img src={track.thumbnail} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
-                                    <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 group-hover:translate-y-0 transition-transform duration-100">
-                                        <div className="w-12 h-12 bg-brand-red rounded-full flex items-center justify-center mb-4 opacity-0 group-hover:opacity-100 transition-none duration-100 shadow-xl scale-0 group-hover:scale-100">
-                                            <Play size={20} fill="white" className="ml-1" />
+                                    <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-3 group-hover:translate-y-0 transition-transform duration-100">
+                                        <div className="w-10 h-10 bg-brand-red rounded-full flex items-center justify-center mb-2 opacity-0 group-hover:opacity-100 transition-none duration-100 shadow-xl scale-0 group-hover:scale-100">
+                                            <Play size={16} fill="white" className="ml-0.5" />
                                         </div>
-                                        <h4 className="font-black text-lg leading-tight line-clamp-2 mb-1">{track.title}</h4>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/50">{track.duration}</p>
+                                        <h4 className="font-black text-sm leading-tight line-clamp-2 mb-0.5">{track.title}</h4>
+                                        <p className="text-[9px] font-bold uppercase tracking-widest text-white/50">{track.duration}</p>
                                     </div>
                                 </div>
                             ))}
@@ -1099,21 +1144,21 @@ const PlayerView = React.memo(({ query, setQuery, results, searching, onSearch, 
 
                 {/* Recently Played */}
                 {recentlyPlayed.length > 0 && results.length === 0 && (
-                    <div className="space-y-4">
-                        <h3 className="font-black text-lg tracking-tight uppercase flex items-center gap-2"><Activity size={18} className="text-brand-red" /> Recently Played</h3>
-                        <div className="flex gap-4 overflow-x-auto pb-4 custom-scroll snap-x">
+                    <div className="space-y-3">
+                        <h3 className="font-black text-sm tracking-tight uppercase flex items-center gap-2"><Activity size={14} className="text-brand-red" /> Recently Played</h3>
+                        <div className="flex gap-3 overflow-x-auto pb-3 custom-scroll snap-x">
                             {recentlyPlayed.map((track, i) => (
-                                <div key={`${track.id}-${i}`} className="min-w-[45%] md:min-w-[calc(25%-12px)] group cursor-pointer snap-start" onClick={() => handlePlay(track)}>
-                                    <div className="w-full aspect-video rounded-[32px] overflow-hidden mb-4 relative shadow-lg bg-white/5">
+                                <div key={`${track.id}-${i}`} className="min-w-[40%] md:min-w-[calc(20%-10px)] group cursor-pointer snap-start" onClick={() => handlePlay(track)}>
+                                    <div className="w-full aspect-video rounded-2xl overflow-hidden mb-2 relative shadow-lg bg-white/5">
                                         <img src={track.thumbnail} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
                                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform duration-300">
-                                                <Play size={24} fill="white" />
+                                            <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                                                <Play size={20} fill="white" />
                                             </div>
                                         </div>
                                     </div>
-                                    <h4 className="font-black text-base truncate px-1">{track.title}</h4>
-                                    <p className="text-[10px] text-white/40 font-bold uppercase px-1">Played recently</p>
+                                    <h4 className="font-black text-sm truncate px-1">{track.title}</h4>
+                                    <p className="text-[9px] text-white/40 font-bold uppercase px-1">Played recently</p>
                                 </div>
                             ))}
                         </div>
@@ -1197,14 +1242,14 @@ const LogsView = React.memo(({ logs, onSimulateLog, onClearLogs }) => {
     };
 
     return (
-        <div className="h-full flex flex-col space-y-10 relative">
+        <div className="h-full flex flex-col space-y-4 relative">
             <header className="flex items-center justify-between">
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="w-8 h-[2px] bg-brand-red" />
                         <span className="text-[10px] text-brand-red font-black uppercase tracking-[0.3em]">Console Access</span>
                     </div>
-                    <h1 className="text-5xl font-black tracking-tighter uppercase">System <span className="text-brand-red">Logs</span></h1>
+                    <h1 className="text-4xl font-black tracking-tighter uppercase">System <span className="text-brand-red">Logs</span></h1>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
@@ -1225,16 +1270,16 @@ const LogsView = React.memo(({ logs, onSimulateLog, onClearLogs }) => {
                     </button>
                     <button
                         onClick={() => onClearLogs && onClearLogs()}
-                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/70 text-[10px] font-black uppercase tracking-widest rounded-lg border border-white/10 transition-none active:scale-95"
+                        className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-white/50 text-[9px] font-black uppercase tracking-widest rounded-lg border border-white/5 transition-none active:scale-95"
                     >
                         Temizle
                     </button>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/5">
-                        <div className={`w-2 h-2 rounded-full ${analyzingLog ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`} />
-                        <span className="text-[10px] font-black uppercase tracking-widest opacity-50">
-                            RMusic Guardian {analyzingLog ? 'Analyzing' : 'Ready'}
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border border-white/5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${analyzingLog ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`} />
+                        <span className="text-[9px] font-black uppercase tracking-widest opacity-40">
+                            Guardian {analyzingLog ? 'Analyzing' : 'Ready'}
                         </span>
-                        <Bot size={14} className="opacity-50 ml-2" />
+                        <Bot size={12} className="opacity-40 ml-1" />
                     </div>
                 </div>
             </header>
@@ -1308,7 +1353,7 @@ const LogsView = React.memo(({ logs, onSimulateLog, onClearLogs }) => {
 
             <div
                 ref={scrollRef}
-                className={`flex-1 glass-heavy p-8 rounded-[40px] font-mono text-[11px] overflow-y-auto space-y-3 custom-scroll shadow-inner scroll-smooth bg-[#020205]`}
+                className={`flex-1 glass-heavy p-3 rounded-2xl font-mono text-[10px] overflow-y-auto space-y-2 custom-scroll shadow-inner scroll-smooth bg-[#020205]`}
             >
                 {logs.map((log, i) => {
                     const isErr = log.includes('[ERR]');
@@ -1333,26 +1378,26 @@ const LogsView = React.memo(({ logs, onSimulateLog, onClearLogs }) => {
                     }
 
                     return (
-                        <div key={i} className={`p-4 rounded-xl border transition-all duration-300 group relative overflow-hidden ${statusClass} hover:translate-x-1`}>
+                        <div key={i} className={`px-4 py-3 rounded-xl border transition-all duration-300 group relative overflow-hidden ${statusClass} hover:translate-x-1`}>
                             {/* Terminal scanline effect on hover */}
                             <div className="absolute inset-x-0 top-0 h-px bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                            <div className="flex justify-between items-center mb-2 relative z-10">
-                                <span className={`text-[10px] font-black uppercase tracking-widest ${labelClass}`}>{label}</span>
+                            <div className="flex justify-between items-center mb-1 relative z-10">
+                                <span className={`text-[9px] font-black uppercase tracking-widest ${labelClass} opacity-60`}>{label}</span>
                                 <div className="flex items-center gap-3">
                                     {isErr && (
                                         <button
                                             onClick={() => handleAnalyze(log)}
-                                            className="flex items-center gap-1.5 px-3 py-1 bg-red-500 text-white rounded-lg shadow-lg shadow-red-500/20 hover:scale-105 active:scale-95 transition-all"
+                                            className="flex items-center gap-1.5 px-2 py-0.5 bg-red-500 text-white rounded-md shadow-lg shadow-red-500/20 hover:scale-105 active:scale-95 transition-all"
                                         >
-                                            <Bot size={12} />
-                                            <span className="text-[9px] font-black uppercase tracking-wider">Guardian Fix</span>
+                                            <Bot size={10} />
+                                            <span className="text-[8px] font-black uppercase tracking-wider">Guardian Fix</span>
                                         </button>
                                     )}
-                                    <span className={`text-[10px] font-mono opacity-30 text-white`}>{new Date().toLocaleTimeString()}</span>
+                                    <span className={`text-[9px] font-mono opacity-20 text-white`}>{new Date().toLocaleTimeString()}</span>
                                 </div>
                             </div>
-                            <div className="leading-relaxed break-all font-mono text-[11px] font-medium tracking-tight relative z-10">{log}</div>
+                            <div className="leading-relaxed break-all font-mono text-[10px] font-medium tracking-tight relative z-10 opacity-90">{log}</div>
                         </div>
                     );
                 })}
@@ -1410,7 +1455,7 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
                     <div className="w-8 h-[2px] bg-brand-red" />
                     <span className="text-[10px] text-brand-red font-black uppercase tracking-[0.3em]">Access Policy</span>
                 </div>
-                <h1 className="text-5xl font-black tracking-tighter uppercase">Command <span className="text-brand-red">Vault</span></h1>
+                <h1 className="text-4xl font-black tracking-tighter uppercase">Command <span className="text-brand-red">Vault</span></h1>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -1420,22 +1465,22 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
                         <div
                             key={cmd.name}
                             onClick={() => toggleCommand(cmd.name)}
-                            className={`p-6 rounded-[32px] border transition-all duration-300 group relative overflow-hidden cursor-pointer ${isEnabled
-                                ? 'bg-brand-red/5 border-brand-red/20 hover:border-brand-red/40 hover:shadow-[0_0_30px_rgba(255,76,76,0.1)]'
+                            className={`p-4 rounded-2xl border transition-all duration-300 group relative overflow-hidden cursor-pointer ${isEnabled
+                                ? 'bg-brand-red/5 border-brand-red/20 hover:border-brand-red/40 hover:shadow-[0_0_20px_rgba(255,76,76,0.1)]'
                                 : 'bg-white/5 border-white/5 opacity-50 grayscale hover:grayscale-0 hover:opacity-100'
                                 }`}
                         >
-                            <div className="flex justify-between items-start mb-6 relative z-10">
-                                <div className={`p-4 rounded-2xl transition-all duration-300 ${isEnabled ? 'bg-brand-red text-white neo-glow' : 'bg-white/10 text-white/40'}`}>
+                            <div className="flex justify-between items-start mb-4 relative z-10">
+                                <div className={`p-3 rounded-xl transition-all duration-300 ${isEnabled ? 'bg-brand-red text-white neo-glow' : 'bg-white/10 text-white/40'}`}>
                                     {getIcon(cmd.name)}
                                 </div>
-                                <div className={`w-12 h-6 rounded-full relative transition-all duration-300 ${isEnabled ? 'bg-brand-red' : 'bg-white/10'}`}>
-                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${isEnabled ? 'left-7 shadow-[0_0_10px_white]' : 'left-1'}`} />
+                                <div className={`w-10 h-5 rounded-full relative transition-all duration-300 ${isEnabled ? 'bg-brand-red' : 'bg-white/10'}`}>
+                                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all duration-300 ${isEnabled ? 'left-5.5 shadow-[0_0_10px_white]' : 'left-0.5'}`} />
                                 </div>
                             </div>
                             <div className="relative z-10">
-                                <h4 className={`font-black text-xl uppercase tracking-tighter mb-1 transition-colors ${isEnabled ? 'text-white' : 'text-white/20'}`}>{cmd.name}</h4>
-                                <p className={`text-[10px] font-bold uppercase tracking-wider line-clamp-2 transition-colors ${isEnabled ? 'text-white/40' : 'text-white/10'}`}>{cmd.description}</p>
+                                <h4 className={`font-black text-lg uppercase tracking-tighter mb-0.5 transition-colors ${isEnabled ? 'text-white' : 'text-white/20'}`}>{cmd.name}</h4>
+                                <p className={`text-[9px] font-bold opacity-60 uppercase tracking-tight line-clamp-1 transition-colors ${isEnabled ? 'text-white/40' : 'text-white/10'}`}>{cmd.description}</p>
                             </div>
 
                             {/* Hover background glow */}
@@ -1449,19 +1494,19 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
             <SlashCommandsPanel />
 
             {/* Audit Log Configuration - Moved from Settings */}
-            <div className="glass p-8 rounded-[40px] border-white/5 relative overflow-hidden group hover:border-brand-red/30 transition-all duration-300 bg-gradient-to-br from-[#ffffff03] to-transparent">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-5">
-                        <div className={`w-14 h-14 ${config.mod_log_enabled ? 'bg-brand-red/20 text-brand-red' : 'bg-white/10 text-white/20'} rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl`}>
-                            <Activity size={28} />
+            <div className="glass p-5 rounded-3xl border-white/5 relative overflow-hidden group hover:border-brand-red/30 transition-all duration-300 bg-gradient-to-br from-[#ffffff03] to-transparent">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <div className={`w-11 h-11 ${config.mod_log_enabled ? 'bg-brand-red/20 text-brand-red' : 'bg-white/10 text-white/20'} rounded-xl flex items-center justify-center transition-all duration-500 shadow-xl`}>
+                            <Activity size={20} />
                         </div>
                         <div>
-                            <h3 className="font-black text-lg uppercase tracking-widest text-white/90">Denetim Kaydı Sistemi</h3>
-                            <p className="text-[10px] text-white/30 uppercase font-black tracking-[0.2em]">Audit Log Configuration</p>
+                            <h3 className="font-black text-sm uppercase tracking-widest text-white/90">Denetim Kaydı Sistemi</h3>
+                            <p className="text-[9px] text-white/30 uppercase font-black tracking-[0.2em]">Audit Log Configuration</p>
                         </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
                         <div className="relative flex-1 md:w-64">
                             <input
                                 type="text"
@@ -1471,11 +1516,11 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
                                     setConfig(newConfig);
                                     ipc.send('save-config', newConfig);
                                 }}
-                                placeholder="Log Kanal ID (Örn: 772499369827106867)"
-                                className="w-full bg-black/40 border border-white/10 p-4 rounded-xl outline-none focus:border-brand-red transition-all font-mono text-xs text-center md:text-left"
+                                placeholder="Log Kanal ID"
+                                className="w-full bg-black/40 border border-white/10 p-2.5 rounded-lg outline-none focus:border-brand-red transition-all font-mono text-[10px] text-center md:text-left"
                             />
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/10">
-                                <Search size={14} />
+                            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/10">
+                                <Search size={12} />
                             </div>
                         </div>
 
@@ -1485,8 +1530,8 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
                                 setConfig(newConfig);
                                 ipc.send('save-config', newConfig);
                             }}
-                            className={`px-8 py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.3em] border transition-all active:scale-95 ${config.mod_log_enabled
-                                ? 'bg-brand-red text-white border-brand-red neo-glow shadow-[0_0_20px_rgba(255,76,76,0.3)]'
+                            className={`px-6 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-[0.2em] border transition-all active:scale-95 ${config.mod_log_enabled
+                                ? 'bg-brand-red text-white border-brand-red neo-glow shadow-[0_0_15px_rgba(255,76,76,0.3)]'
                                 : 'bg-white/5 text-white/30 border-white/10 hover:border-white/20'}`}
                         >
                             {config.mod_log_enabled ? 'SİSTEM AKTİF' : 'DEVRE DIŞI'}
@@ -1497,19 +1542,19 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
 
             {/* KILL SWITCH PANEL */}
             <div className="mt-12 relative">
-                <div className="bg-[#ffffff05] border border-white/5 p-10 rounded-[40px] border-red-600/30 bg-gradient-to-br from-red-950/30 via-[#0c0c0e]/80 to-red-950/20 relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-red-600/5 rounded-[40px]"></div>
+                <div className="bg-[#ffffff05] border border-white/5 p-6 rounded-3xl border-red-600/30 bg-gradient-to-br from-red-950/30 via-[#0c0c0e]/80 to-red-950/20 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-red-600/5 rounded-3xl"></div>
 
-                    <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+                    <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
                         <div className="flex-1 text-center lg:text-left">
-                            <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
+                            <div className="flex items-center justify-center lg:justify-start gap-4 mb-3">
                                 <div className="w-8 h-[2px] bg-red-600" />
-                                <span className="text-[10px] text-red-500 font-black uppercase tracking-[0.3em]">Emergency Override</span>
+                                <span className="text-[9px] text-red-500 font-black uppercase tracking-[0.3em]">Emergency Override</span>
                             </div>
-                            <h2 className={`text-4xl font-black tracking-tighter uppercase mb-3 text-white`}>
+                            <h2 className={`text-3xl font-black tracking-tighter uppercase mb-2 text-white`}>
                                 <span className="text-red-500">KILL</span> SWITCH
                             </h2>
-                            <p className={`text-white/40 text-sm max-w-md`}>
+                            <p className={`text-white/40 text-[11px] max-w-sm leading-relaxed`}>
                                 Bot kilitlenmelerinde ve acil durumlarda tüm süreçleri anında sonlandırır.
                                 Database kilitlerini temizler ve sistemi sıfırlar.
                             </p>
@@ -1517,7 +1562,7 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
 
                         <button
                             onClick={killAll}
-                            className={`px-6 py-2 rounded-full font-black text-[10px] tracking-widest uppercase transition-none duration-150 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white`}
+                            className={`px-6 py-2.5 rounded-full font-black text-[9px] tracking-widest uppercase transition-none duration-150 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 active:scale-95`}
                         >
                             KAYNAKLARI SIFIRLA
                         </button>
@@ -2107,39 +2152,39 @@ const SlashCommandsPanel = React.memo(() => {
     };
 
     return (
-        <div className="glass p-8 rounded-[40px] border-white/5 relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300 bg-gradient-to-br from-purple-950/20 via-[#0c0c0e]/80 to-[#0c0c0e]">
-            <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
-                <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 bg-purple-500/20 text-purple-400 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl">
-                        <Terminal size={28} />
+        <div className="glass p-5 rounded-3xl border-white/5 relative overflow-hidden group hover:border-purple-500/30 transition-all duration-300 bg-gradient-to-br from-purple-950/20 via-[#0c0c0e]/80 to-[#0c0c0e]">
+            <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 bg-purple-500/20 text-purple-400 rounded-xl flex items-center justify-center transition-all duration-500 shadow-xl">
+                        <Terminal size={22} />
                     </div>
                     <div>
-                        <h3 className="font-black text-lg uppercase tracking-widest text-white/90">Slash Commands</h3>
-                        <p className="text-[10px] text-white/30 uppercase font-black tracking-[0.2em]">Discord Native Integration</p>
+                        <h3 className="font-black text-base uppercase tracking-widest text-white/90">Slash Commands</h3>
+                        <p className="text-[9px] text-white/30 uppercase font-black tracking-[0.2em]">Discord Native Integration</p>
                     </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                     <button
                         onClick={() => handleDeploy(false)}
                         disabled={isDeploying}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] border transition-all active:scale-95 ${isDeploying
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-[0.2em] border transition-all active:scale-95 ${isDeploying
                             ? 'bg-white/5 text-white/30 border-white/10 cursor-wait'
                             : 'bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500 hover:text-white'
                             }`}
                     >
-                        {isDeploying ? <Loader size={14} className="animate-spin" /> : <Zap size={14} />}
+                        {isDeploying ? <Loader size={12} className="animate-spin" /> : <Zap size={12} />}
                         Guild Deploy
                     </button>
                     <button
                         onClick={() => handleDeploy(true)}
                         disabled={isDeploying}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] border transition-all active:scale-95 ${isDeploying
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-[0.2em] border transition-all active:scale-95 ${isDeploying
                             ? 'bg-white/5 text-white/30 border-white/10 cursor-wait'
                             : 'bg-white/5 text-white/50 border-white/10 hover:border-white/20 hover:text-white'
                             }`}
                     >
-                        {isDeploying ? <Loader size={14} className="animate-spin" /> : <Crown size={14} />}
+                        {isDeploying ? <Loader size={12} className="animate-spin" /> : <Crown size={12} />}
                         Global Deploy
                     </button>
                 </div>
@@ -2147,10 +2192,10 @@ const SlashCommandsPanel = React.memo(() => {
 
             {/* Deploy Result */}
             {deployResult && (
-                <div className={`mt-6 p-4 rounded-xl border ${deployResult.success ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                <div className={`mt-4 p-3 rounded-lg border ${deployResult.success ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
                     <div className="flex items-center gap-2">
-                        {deployResult.success ? <Check size={16} /> : <AlertTriangle size={16} />}
-                        <span className="font-black text-xs uppercase tracking-widest">
+                        {deployResult.success ? <Check size={14} /> : <AlertTriangle size={14} />}
+                        <span className="font-black text-[10px] uppercase tracking-widest">
                             {deployResult.success ? deployResult.message : deployResult.error}
                         </span>
                     </div>
@@ -2159,22 +2204,22 @@ const SlashCommandsPanel = React.memo(() => {
 
             {/* Slash Command List */}
             {slashCommands.length > 0 && (
-                <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div className="mt-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
                     {slashCommands.map((cmd) => (
-                        <div key={cmd.name} className="bg-white/5 border border-white/5 px-4 py-3 rounded-xl hover:border-purple-500/30 transition-all group/cmd">
-                            <div className="flex items-center gap-2">
-                                <span className="text-purple-400 font-mono text-sm">/</span>
-                                <span className="font-bold text-sm text-white/80 group-hover/cmd:text-white transition-colors">{cmd.name}</span>
+                        <div key={cmd.name} className="bg-white/5 border border-white/5 px-3 py-2 rounded-lg hover:border-purple-500/30 transition-all group/cmd">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-purple-400 font-mono text-xs">/</span>
+                                <span className="font-bold text-xs text-white/80 group-hover/cmd:text-white transition-colors">{cmd.name}</span>
                             </div>
-                            <p className="text-[9px] text-white/30 mt-1 line-clamp-1">{cmd.description}</p>
+                            <p className="text-[8px] text-white/30 mt-0.5 line-clamp-1">{cmd.description}</p>
                         </div>
                     ))}
                 </div>
             )}
 
             {/* Info */}
-            <div className="mt-6 flex items-center gap-2 text-[9px] text-white/20 uppercase tracking-widest font-bold">
-                <Shield size={12} />
+            <div className="mt-4 flex items-center gap-2 text-[8px] text-white/20 uppercase tracking-widest font-bold">
+                <Shield size={10} />
                 <span>Guild: Anında aktif | Global: ~1 saat gecikme</span>
             </div>
         </div>
