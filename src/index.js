@@ -182,10 +182,10 @@ async function initDatabase() {
 
     const lockExists = db.exec("SELECT lockID FROM locks WHERE lockID = 'active_bot'");
     if (lockExists.length > 0) {
-        console.error(`[CRITICAL] DOUBLE_INSTANCE_DETECTED (Current PID: ${process.pid})`);
-        console.error("Başka bir bot instance'ı hala aktif. Lütfen tüm süreçleri temizleyin.");
-        setTimeout(() => process.exit(1), 1000);
-        return;
+        const msg = `[CRITICAL] DOUBLE_INSTANCE_DETECTED (Current PID: ${process.pid})`;
+        console.error(msg);
+        console.error("Başka bir bot instance'ı hala aktif. Eğer botu yeni kapattıysanız 15 saniye bekleyin veya PM2/node süreçlerini tamamen temizleyin.");
+        throw new Error("Double instance detected");
     }
 
     db.run("INSERT INTO locks (lockID, lastHeartbeat) VALUES ('active_bot', ?)", [now]);
