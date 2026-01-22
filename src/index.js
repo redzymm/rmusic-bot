@@ -56,15 +56,18 @@ function startLavalink() {
 
     try {
         lavalinkProcess = spawn("java", [
-            "-Xmx1G",
-            "-Xms512M",
+            "-Xmx512M",
+            "-Xms128M",
             "-XX:+UseG1GC",
             "-jar",
             "Lavalink.jar"
         ], {
             cwd: lavalinkDir,
-            stdio: "inherit"
+            stdio: ["ignore", "pipe", "pipe"]
         });
+
+        lavalinkProcess.stdout.on("data", (data) => console.log(`[LAVALINK_OUT] ${data}`));
+        lavalinkProcess.stderr.on("data", (data) => console.error(`[LAVALINK_ERR] ${data}`));
 
         lavalinkProcess.on("exit", (code) => {
             console.warn(`[LAVALINK] Sunucu kapandı (Kod: ${code})`);
