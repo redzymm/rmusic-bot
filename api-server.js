@@ -12,9 +12,12 @@ const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 
-// Configuration
+// Load environment variables
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+// Configuration - use environment variables with secure defaults
 const PORT = process.env.API_PORT || 3001;
-const API_KEY = process.env.API_KEY || 'rmusic-secret-2024'; // Değiştirin!
+const API_KEY = process.env.API_SECRET_KEY || 'CHANGE_THIS_INSECURE_DEFAULT';
 
 const app = express();
 const server = http.createServer(app);
@@ -45,18 +48,18 @@ wss.on('connection', (ws, req) => {
     // Authenticate WebSocket connections
     const url = new URL(req.url, `http://localhost:${PORT}`);
     const key = url.searchParams.get('apiKey');
-    
+
     if (key !== API_KEY) {
         ws.close(1008, 'Unauthorized');
         return;
     }
-    
+
     wsClients.add(ws);
     console.log('[WS] Client connected. Total:', wsClients.size);
-    
+
     // Send current status immediately
     ws.send(JSON.stringify({ type: 'status', status: botStatus, info: botInfo }));
-    
+
     ws.on('close', () => {
         wsClients.delete(ws);
         console.log('[WS] Client disconnected. Total:', wsClients.size);
@@ -101,7 +104,7 @@ app.post('/api/bot/start', authenticate, (req, res) => {
     }
 
     const botPath = path.join(__dirname, 'src/index.js');
-    
+
     if (!fs.existsSync(botPath)) {
         return res.status(404).json({ success: false, message: 'Bot dosyası bulunamadı: ' + botPath });
     }
@@ -113,7 +116,7 @@ app.post('/api/bot/start', authenticate, (req, res) => {
 
     botProcess.stdout.on('data', (data) => {
         const str = data.toString('utf8');
-        
+
         // Parse dashboard data
         if (str.includes('DASHBOARD_DATA:')) {
             const rawPart = str.split('DASHBOARD_DATA:')[1].split('\n')[0];
@@ -123,7 +126,7 @@ app.post('/api/bot/start', authenticate, (req, res) => {
             } catch (e) { }
             return;
         }
-        
+
         sendLog(str);
     });
 
@@ -166,12 +169,12 @@ app.post('/api/bot/kill', authenticate, (req, res) => {
     if (botProcess) {
         botProcess.kill('SIGKILL');
     }
-    
+
     // Kill all node processes on Windows (optional, be careful!)
     if (process.platform === 'win32') {
         spawn('taskkill', ['/F', '/IM', 'node.exe', '/T']);
     }
-    
+
     botProcess = null;
     botStatus = 'offline';
     broadcast({ type: 'status', status: 'offline' });
@@ -212,18 +215,18 @@ app.post('/api/config', authenticate, (req, res) => {
         if (fs.existsSync(configPath)) {
             existing = JSON.parse(fs.readFileSync(configPath, 'utf8'));
         }
-        
+
         // Token'ı koru
         const newConfig = { ...existing, ...req.body };
         if (existing.token) newConfig.token = existing.token;
-        
+
         fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2));
-        
+
         // Reload config in bot
         if (botProcess) {
             botProcess.stdin.write(JSON.stringify({ cmd: 'reloadConfig' }) + '\n');
         }
-        
+
         res.json({ success: true, message: 'Config kaydedildi' });
     } catch (e) {
         res.status(500).json({ error: 'Config kaydedilemedi', details: e.message });

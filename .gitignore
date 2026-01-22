@@ -1,31 +1,49 @@
-# Dependencies
-node_modules/
-dashboard-v2/node_modules/
+# ====================================
+# RMusic Bot - Git Ignore Configuration
+# ====================================
 
-# Logs
-*.log
-npm-debug.log*
-
-# Environment
+# Environment & Secrets
 .env
-.env.local
+.env.*
+*.env
 
-# Database
-*.db
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-
-# Build outputs
-dashboard-v2/dist/
-dashboard-v2/installer/
-
-# Sensitive Config (TOKEN PROTECTION)
+# Sensitive Config Files
 data/ayarlar.json
 data/remote-config.json
-data/settings.json
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+out/
+build/
+
+# Electron
+release/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+
+# Cache
+.cache/
+*.cache
+
+# Database (optional - uncomment if you don't want to track)
+# data/database.db

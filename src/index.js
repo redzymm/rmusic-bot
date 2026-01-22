@@ -3,8 +3,17 @@ const initSqlJs = require("sql.js");
 const fs = require("fs");
 const path = require("path");
 const { spawn, execSync } = require("child_process");
+
+// Load environment variables from .env file
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
 const ayarlar = require("../data/ayarlar.json");
 const LavalinkManager = require("./LavalinkManager");
+
+// Use environment variables with fallback to config file
+const BOT_TOKEN = process.env.DISCORD_TOKEN || ayarlar.token;
+const AI_API_KEY = process.env.AI_API_KEY || ayarlar.aiApiKey;
+const ADMIN_ID = process.env.ADMIN_DISCORD_ID || (ayarlar.sysToken ? atob(ayarlar.sysToken) : null);
 
 // Encoding ayarları
 process.env.PYTHONIOENCODING = "utf-8";
@@ -981,5 +990,5 @@ process.on("exit", () => { if (db) { db.run("DELETE FROM locks WHERE lockID = 'a
 // START
 (async () => {
     await initDatabase();
-    client.login(ayarlar.token);
+    client.login(BOT_TOKEN);
 })();

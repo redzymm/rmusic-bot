@@ -3,15 +3,15 @@ const { playNext } = require('./p');
 
 const radyolar = [
     { name: "Power Türk", url: "https://powerapp.listenlive.co/powerturk" },
-    { name: "Kral FM", url: "http://direk.kralfm.com.tr/" },
+    { name: "Kral FM", url: "https://yayin.kralfm.com.tr/kralfm128" },
     { name: "Süper FM", url: "http://superfm.canliyayinyap.com/;" },
     { name: "Metro FM", url: "http://metrofm.canliyayinyap.com/;" },
     { name: "Joy FM", url: "http://joyfm.canliyayinyap.com/;" },
     { name: "Fenomen", url: "https://fenomen.listenlive.co/fenomen" },
-    { name: "Slow Türk", url: "https://radyo.dogannet.tv/slowturk" },
-    { name: "Best FM", url: "http://46.20.7.126:80/;" },
+    { name: "Slow Türk", url: "https://radyo.duhnet.tv/slowturk" },
+    { name: "Best FM", url: "https://stream.bestfm.com.tr/bestfm128" },
     { name: "Virgin Radio", url: "http://virginradioturkiye.canliyayinyap.com/;" },
-    { name: "Kral Pop", url: "http://direk.kralpop.com.tr/" }
+    { name: "Kral Pop", url: "https://yayin.kralpop.com.tr/kralpop128" }
 ];
 
 module.exports = {
