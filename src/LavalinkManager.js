@@ -2,7 +2,7 @@ const { Shoukaku, Connectors } = require('shoukaku');
 
 const Nodes = [{
     name: 'main',
-    url: '127.0.0.1:2333',
+    url: 'localhost:2333',
     auth: 'rmusic_lavalink_2024',
     secure: false
 }];
@@ -10,13 +10,13 @@ const Nodes = [{
 class LavalinkManager {
     constructor(client) {
         this.client = client;
-        console.log(`[LAVALINK] Shoukaku başlatılıyor... (Node: ${Nodes[0].url})`);
+        console.log(`[LAVALINK] Shoukaku başlatılıyor... (Target: ${Nodes[0].url})`);
 
         this.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), Nodes, {
             moveOnDisconnect: false,
             resumable: true,
             resumableTimeout: 60,
-            reconnectTries: 15,
+            reconnectTries: 20,
             reconnectInterval: 5000,
             restTimeout: 60000
         });
@@ -25,9 +25,9 @@ class LavalinkManager {
         setTimeout(() => {
             console.log(`[LAVALINK_STAT] Kayıtlı Node sayısı: ${this.shoukaku.nodes.size}`);
             for (const [name, node] of this.shoukaku.nodes) {
-                console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${node.state}`);
+                console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${node.state} | URL: ${node.options.url}`);
             }
-        }, 8000); // 8 seconds to allow boot
+        }, 15000); // 15 seconds to allow full startup and connection attempts
 
         this.shoukaku.on('ready', (name) => {
             console.log(`[LAVALINK] Node ${name} bağlandı ✅ (Ready Event)`);
