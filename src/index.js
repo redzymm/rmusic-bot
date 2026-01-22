@@ -190,22 +190,25 @@ async function initDatabase() {
     db.run(`CREATE TABLE IF NOT EXISTS locks (lockID TEXT PRIMARY KEY, lastHeartbeat INTEGER)`);
 
     const now = Date.now();
-    db.run("DELETE FROM locks WHERE lastHeartbeat < ?", [now - 15000]);
+    // Auto-clean locks older than 20 seconds (ghost locks)
+    db.run("DELETE FROM locks WHERE lastHeartbeat < ?", [now - 20000]);
 
     const lockExists = db.exec("SELECT lockID FROM locks WHERE lockID = 'active_bot'");
     if (lockExists.length > 0) {
-        const msg = `[CRITICAL] DOUBLE_INSTANCE_DETECTED (Current PID: ${process.pid})`;
-        console.error(msg);
-        console.error("Başka bir bot instance'ı hala aktif. Eğer botu yeni kapattıysanız 15 saniye bekleyin veya PM2/node süreçlerini tamamen temizleyin.");
+        console.error(`[CRITICAL] Başka bir bot instance'ı hala aktif! (PID: ${process.pid})`);
+        console.error("Lütfen PM2 süreçlerini temizleyin veya 20 saniye bekleyip tekrar deneyin.");
         throw new Error("Double instance detected");
     }
 
     db.run("INSERT INTO locks (lockID, lastHeartbeat) VALUES ('active_bot', ?)", [now]);
     saveDatabase();
 
+    // Heartbeat every 5 seconds to keep the lock active
     setInterval(() => {
-        db.run("UPDATE locks SET lastHeartbeat = ? WHERE lockID = 'active_bot'", [Date.now()]);
-        saveDatabase();
+        if (db) {
+            db.run("UPDATE locks SET lastHeartbeat = ? WHERE lockID = 'active_bot'", [Date.now()]);
+            saveDatabase();
+        }
     }, 5000);
 }
 
@@ -313,10 +316,23 @@ const os = require("os");
 // Initialize Lavalink Manager
 client.lavalink = new LavalinkManager(client);
 
-client.once(Events.ClientReady, () => {
-    console.log(`[BOT] ${client.user.tag} aktif!`);
-    console.log(`[BOT] Lavalink manager başlatıldı, bağlantı bekleniyor...`);
+client.once(Events.ClientReady, async (c) => {
+    console.log(`[BOT] ${c.user.tag} aktif!`);
 
+    // Deploy slash commands if not already deployed
+    if (!ayarlar.slash_commands_deployed) {
+        try {
+            require("./deploy-commands");
+        } catch (e) {
+            console.error("[DEPLOY_ERR]", e.message);
+        }
+    }
+
+    // Initialize Lavalink AFTER bot is ready (Ensures UserID is available)
+    if (client.lavalink) {
+        console.log("[BOT] Lavalink bağlantısı kuruluyor...");
+        await client.lavalink.init();
+    }
     const sendStatus = () => {
         const memUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(0);
         const cpuUsed = (os.loadavg()[0] * 10).toFixed(0);

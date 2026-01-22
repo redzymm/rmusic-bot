@@ -10,54 +10,71 @@ const Nodes = [{
 class LavalinkManager {
     constructor(client) {
         this.client = client;
+        this.shoukaku = null;
+        console.log('[LAVALINK] LavalinkManager yüklendi, Discord bağlantısı bekleniyor...');
+    }
+
+    /**
+     * Initialize Shoukaku connection. 
+     * This should be called AFTER the client is ready to ensure we have a valid UserId.
+     */
+    async init() {
+        if (this.shoukaku) return;
+
         console.log(`[LAVALINK] Shoukaku başlatılıyor... (Node: ${Nodes[0].url})`);
 
-        this.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), Nodes, {
-            moveOnDisconnect: false,
-            resume: true,
-            resumeTimeout: 60,
-            reconnectTries: 30,
-            reconnectInterval: 5000,
-            restTimeout: 60000
-        });
+        try {
+            this.shoukaku = new Shoukaku(new Connectors.DiscordJS(this.client), Nodes, {
+                moveOnDisconnect: false,
+                resume: true,
+                resumeTimeout: 60,
+                reconnectTries: 30,
+                reconnectInterval: 5000,
+                restTimeout: 60000
+            });
 
-        this.shoukaku.on('ready', (name) => {
-            console.log(`[LAVALINK] Node ${name} bağlandı ✅`);
-        });
+            this.shoukaku.on('ready', (name) => {
+                console.log(`[LAVALINK] Node ${name} bağlandı ✅`);
+            });
 
-        this.shoukaku.on('error', (name, error) => {
-            console.error(`[LAVALINK] Node ${name} hata ❌:`, error.message || error);
-        });
+            this.shoukaku.on('error', (name, error) => {
+                console.error(`[LAVALINK] Node ${name} hatası ❌:`, error.message || error);
+            });
 
-        this.shoukaku.on('close', (name, code, reason) => {
-            console.warn(`[LAVALINK] Node ${name} bağlantı kapandı: ${code} - ${reason}`);
-        });
+            this.shoukaku.on('close', (name, code, reason) => {
+                console.warn(`[LAVALINK] Node ${name} bağlantı kapandı: ${code} - ${reason}`);
+            });
 
-        this.shoukaku.on('disconnect', (name, players, moved) => {
-            console.warn(`[LAVALINK] Node ${name} kesildi.`);
-        });
+            this.shoukaku.on('disconnect', (name) => {
+                console.warn(`[LAVALINK] Node ${name} kesildi.`);
+            });
 
-        console.log(`[LAVALINK] Shoukaku yüklendi, bağlantı kuruluyor...`);
+            console.log('[LAVALINK] Shoukaku hazır.');
+        } catch (err) {
+            console.error('[LAVALINK_FATAL] Shoukaku başlatılamadı:', err.message);
+        }
     }
 
     getNode() {
+        if (!this.shoukaku) return null;
         return this.shoukaku.options.nodeResolver(this.shoukaku.nodes);
     }
 
     async search(query, source = 'youtube') {
         const node = this.getNode();
-        if (!node) throw new Error('Lavalink node bulunamadı');
+        if (!node) throw new Error('Lavalink bağlantısı hazır değil');
 
         let searchQuery = query;
         if (!query.startsWith('http')) {
             searchQuery = source === 'youtube' ? `ytsearch:${query}` : `scsearch:${query}`;
         }
 
-        const result = await node.rest.resolve(searchQuery);
-        return result;
+        return await node.rest.resolve(searchQuery);
     }
 
     async createPlayer(guildId, channelId, textChannelId) {
+        if (!this.shoukaku) throw new Error('Lavalink bağlantısı hazır değil');
+
         const player = await this.shoukaku.joinVoiceChannel({
             guildId: guildId,
             channelId: channelId,
@@ -65,32 +82,26 @@ class LavalinkManager {
             deaf: true
         });
 
-        // Store text channel for messages
         player.textChannelId = textChannelId;
-
         return player;
     }
 
     getPlayer(guildId) {
-        // Shoukaku v4: Players are stored directly in the shoukaku instance
-        return this.shoukaku.players.get(guildId);
+        return this.shoukaku?.players.get(guildId);
     }
 
     async setVolume(guildId, volume) {
         const player = this.getPlayer(guildId);
-        if (!player) return;
-        // Lavalink filters volume: 1.0 is 100%
-        await player.setFilters({ volume: volume / 100 });
+        if (player) await player.setFilters({ volume: volume / 100 });
     }
 
     async setFilters(guildId, filters) {
         const player = this.getPlayer(guildId);
-        if (!player) return;
-        await player.setFilters(filters);
+        if (player) await player.setFilters(filters);
     }
 
     async destroyPlayer(guildId) {
-        await this.shoukaku.leaveVoiceChannel(guildId);
+        if (this.shoukaku) await this.shoukaku.leaveVoiceChannel(guildId);
     }
 }
 
