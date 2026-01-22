@@ -26,16 +26,33 @@ class LavalinkManager {
         });
 
         this.shoukaku.on('error', (name, error) => {
-            console.error(`[LAVALINK] Node ${name} hata ❌:`, error);
+            console.error(`[LAVALINK] Node ${name} Shoukaku Hatası ❌:`, error.message || error);
+        });
+
+        this.shoukaku.on('debug', (name, info) => {
+            if (info.includes('Wait') || info.includes('Checking nodes') || info.includes('already registered')) return;
+            console.log(`[LAVALINK_DEBUG] ${name}: ${info}`);
         });
 
         this.shoukaku.on('close', (name, code, reason) => {
-            console.warn(`[LAVALINK] Node ${name} bağlantı kesildi: ${code} - ${reason}`);
+            console.warn(`[LAVALINK] Node ${name} bağlantı kapandı: ${code} - ${reason}`);
         });
 
         this.shoukaku.on('disconnect', (name, players, moved) => {
-            console.warn(`[LAVALINK] Node ${name} disconnect - ${players.length} oynatıcı etkilendi`);
+            console.warn(`[LAVALINK] Node ${name} kesildi (Disconnect)`);
         });
+
+        // Periodic Status Report
+        setInterval(() => {
+            const states = ['CONNECTING', 'CONNECTED', 'DISCONNECTING', 'DISCONNECTED', 'RECONNECTING'];
+            if (this.shoukaku.nodes.size > 0) {
+                for (const [name, node] of this.shoukaku.nodes) {
+                    console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${states[node.state] || 'UNKNOWN'} (${node.state})`);
+                }
+            } else {
+                console.log("[LAVALINK_STAT] Kayıtlı node bulunamadı!");
+            }
+        }, 15000);
 
         console.log(`[LAVALINK] Shoukaku başlatıldı, düğümlere bağlanmaya çalışılıyor...`);
     }
