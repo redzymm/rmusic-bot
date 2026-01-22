@@ -27,7 +27,7 @@ class LavalinkManager {
             for (const [name, node] of this.shoukaku.nodes) {
                 console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${node.state}`);
             }
-        }, 5000);
+        }, 8000); // 8 seconds to allow boot
 
         this.shoukaku.on('ready', (name) => {
             console.log(`[LAVALINK] Node ${name} bağlandı ✅ (Ready Event)`);
@@ -37,12 +37,10 @@ class LavalinkManager {
             console.error(`[LAVALINK] Node ${name} hata ❌:`, error);
         });
 
-        /*
         this.shoukaku.on('debug', (name, info) => {
-            if (info.includes('Wait')) return; // Ignore spammy wait logs
+            if (info.includes('Wait') || info.includes('Checking nodes')) return;
             console.log(`[LAVALINK_DEBUG] ${name}: ${info}`);
         });
-        */
 
         this.shoukaku.on('close', (name, code, reason) => {
             console.warn(`[LAVALINK] Node ${name} bağlantı kesildi: ${code} - ${reason}`);
