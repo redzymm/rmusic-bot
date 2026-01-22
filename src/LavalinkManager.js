@@ -2,7 +2,7 @@ const { Shoukaku, Connectors } = require('shoukaku');
 
 const Nodes = [{
     name: 'main',
-    url: 'localhost:2333',
+    url: '127.0.0.1:2333',
     auth: 'rmusic_lavalink_2024',
     secure: false
 }];
@@ -16,25 +16,28 @@ class LavalinkManager {
             moveOnDisconnect: false,
             resumable: true,
             resumableTimeout: 60,
-            reconnectTries: 20,
+            reconnectTries: 25,
             reconnectInterval: 5000,
             restTimeout: 60000
         });
 
-        // Immediate check
-        setTimeout(() => {
-            console.log(`[LAVALINK_STAT] Kayıtlı Node sayısı: ${this.shoukaku.nodes.size}`);
-            for (const [name, node] of this.shoukaku.nodes) {
-                console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${node.state}`);
+        // Periodic status check
+        setInterval(() => {
+            if (this.shoukaku.nodes.size > 0) {
+                for (const [name, node] of this.shoukaku.nodes) {
+                    if (node.state !== 1) { // 1 = CONNECTED/READY
+                        console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${node.state} (0=DISC, 1=CONN, 2=CONNING, 3=DISCONNING)`);
+                    }
+                }
             }
-        }, 15000); // 15 seconds to allow full startup and connection attempts
+        }, 10000);
 
         this.shoukaku.on('ready', (name) => {
             console.log(`[LAVALINK] Node ${name} bağlandı ✅ (Ready Event)`);
         });
 
         this.shoukaku.on('error', (name, error) => {
-            console.error(`[LAVALINK] Node ${name} hata ❌:`, error);
+            console.error(`[LAVALINK] Node ${name} Shoukaku Hatası ❌:`, error.message || error);
         });
 
         this.shoukaku.on('debug', (name, info) => {
@@ -43,11 +46,11 @@ class LavalinkManager {
         });
 
         this.shoukaku.on('close', (name, code, reason) => {
-            console.warn(`[LAVALINK] Node ${name} bağlantı kesildi: ${code} - ${reason}`);
+            console.warn(`[LAVALINK] Node ${name} bağlantı kapandı: ${code} - ${reason}`);
         });
 
         this.shoukaku.on('disconnect', (name, players, moved) => {
-            console.warn(`[LAVALINK] Node ${name} disconnect - ${players.length} oynatıcı etkilendi`);
+            console.warn(`[LAVALINK] Node ${name} tamamen kesildi (Disconnect)`);
         });
 
         console.log(`[LAVALINK] Shoukaku başlatıldı, düğümlere bağlanmaya çalışılıyor...`);
