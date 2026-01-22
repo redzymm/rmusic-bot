@@ -21,13 +21,23 @@ process.env.LANG = "en_US.UTF-8";
 if (process.stdout.setEncoding) process.stdout.setEncoding('utf8');
 if (process.stderr.setEncoding) process.stderr.setEncoding('utf8');
 
+// Error handlers (Move to top for crash visibility)
+process.on('uncaughtException', (err) => console.error(`[FATAL] ${err.message}\n${err.stack}`));
+process.on('unhandledRejection', (reason) => console.error(`[REJECT] ${reason}`));
+
+// ANSI stripper
+const origLog = console.log, origErr = console.error;
+const strip = s => typeof s === 'string' ? s.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '') : s;
+console.log = (...a) => origLog(...a.map(strip));
+console.error = (...a) => origErr(...a.map(strip));
+
 /* =======================
    LAVALINK AUTOMATION
    ======================= */
 let lavalinkProcess = null;
 
 function startLavalink() {
-    const lavalinkJar = path.normalize(path.join(__dirname, "../lavalink/Lavalink.jar"));
+    let lavalinkJar = path.normalize(path.join(__dirname, "../lavalink/Lavalink.jar"));
     const lavalinkDir = path.normalize(path.join(__dirname, "../lavalink"));
 
     console.log(`[LAVALINK] Kontrol ediliyor: ${lavalinkJar}`);
@@ -948,16 +958,6 @@ process.stdin.on("data", (data) => {
         // Sessiz hata (Dashboard verisi bazen bozuk gelebilir)
     }
 });
-
-// Error handlers
-process.on('uncaughtException', (err) => console.error(`[FATAL] ${err.message}`));
-process.on('unhandledRejection', (reason) => console.error(`[REJECT] ${reason}`));
-
-// ANSI stripper
-const origLog = console.log, origErr = console.error;
-const strip = s => typeof s === 'string' ? s.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '') : s;
-console.log = (...a) => origLog(...a.map(strip));
-console.error = (...a) => origErr(...a.map(strip));
 
 // Process events
 process.on("SIGINT", () => { if (db) { db.run("DELETE FROM locks WHERE lockID = 'active_bot'"); saveDatabase(); } process.exit(); });
