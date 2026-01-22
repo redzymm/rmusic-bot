@@ -965,17 +965,12 @@ process.stdin.on("data", (data) => {
 process.on("SIGINT", () => { if (db) { db.run("DELETE FROM locks WHERE lockID = 'active_bot'"); saveDatabase(); } process.exit(); });
 process.on("exit", () => { if (db) { db.run("DELETE FROM locks WHERE lockID = 'active_bot'"); saveDatabase(); } });
 
-console.log("[BOT] Modüller yüklendi, başlatılıyor...");
-
 // START
 (async () => {
     try {
-        console.log("[BOT] Veritabanı başlatılıyor...");
         await initDatabase();
-        console.log("[BOT] Discord girişi yapılıyor...");
         await client.login(BOT_TOKEN);
     } catch (e) {
         console.error("[FATAL_START]", e.message);
-        console.error(e.stack);
     }
 })();

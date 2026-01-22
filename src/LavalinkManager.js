@@ -12,44 +12,21 @@ class LavalinkManager {
         this.client = client;
         console.log(`[LAVALINK] Shoukaku başlatılıyor... (Node: ${Nodes[0].url})`);
 
-        try {
-            this.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), Nodes, {
-                moveOnDisconnect: false,
-                resume: true,
-                resumeTimeout: 60,
-                reconnectTries: 30,
-                reconnectInterval: 5000,
-                restTimeout: 60000
-            });
-
-            console.log(`[LAVALINK_INIT] Shoukaku instance created. Nodes in map: ${this.shoukaku.nodes.size}`);
-
-            // Fallback: If no nodes in map, try manual add
-            if (this.shoukaku.nodes.size === 0) {
-                console.log("[LAVALINK_INIT] Nodes map is empty. Manually adding node...");
-                try {
-                    this.shoukaku.addNode(Nodes[0]);
-                    console.log("[LAVALINK_INIT] Manual addNode call completed.");
-                } catch (addErr) {
-                    console.error("[LAVALINK_ERR] Manual addNode failed:", addErr.message);
-                }
-            }
-        } catch (initErr) {
-            console.error("[LAVALINK_ERR] Shoukaku initialization failed:", initErr);
-            return;
-        }
+        this.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), Nodes, {
+            moveOnDisconnect: false,
+            resume: true,
+            resumeTimeout: 60,
+            reconnectTries: 30,
+            reconnectInterval: 5000,
+            restTimeout: 60000
+        });
 
         this.shoukaku.on('ready', (name) => {
-            console.log(`[LAVALINK] Node ${name} bağlandı ✅ (Ready Event)`);
+            console.log(`[LAVALINK] Node ${name} bağlandı ✅`);
         });
 
         this.shoukaku.on('error', (name, error) => {
-            console.error(`[LAVALINK] Node ${name} Shoukaku Hatası ❌:`, error.message || error);
-        });
-
-        this.shoukaku.on('debug', (name, info) => {
-            if (info.includes('Wait') || info.includes('Checking nodes') || info.includes('already registered')) return;
-            console.log(`[LAVALINK_DEBUG] ${name}: ${info}`);
+            console.error(`[LAVALINK] Node ${name} hata ❌:`, error.message || error);
         });
 
         this.shoukaku.on('close', (name, code, reason) => {
@@ -57,23 +34,10 @@ class LavalinkManager {
         });
 
         this.shoukaku.on('disconnect', (name, players, moved) => {
-            console.warn(`[LAVALINK] Node ${name} kesildi (Disconnect)`);
+            console.warn(`[LAVALINK] Node ${name} kesildi.`);
         });
 
-        // Periodic Status Report
-        setInterval(() => {
-            const states = ['CONNECTING', 'CONNECTED', 'DISCONNECTING', 'DISCONNECTED', 'RECONNECTING'];
-            if (this.shoukaku.nodes.size > 0) {
-                for (const [name, node] of this.shoukaku.nodes) {
-                    const statusText = states[node.state] || 'UNKNOWN';
-                    console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${statusText} (${node.state})`);
-                }
-            } else {
-                console.log("[LAVALINK_STAT] Kayıtlı node bulunamadı! (Nodes map empty)");
-            }
-        }, 15000);
-
-        console.log(`[LAVALINK] Shoukaku başlatıldı, düğümlere bağlanmaya çalışılıyor...`);
+        console.log(`[LAVALINK] Shoukaku yüklendi, bağlantı kuruluyor...`);
     }
 
     getNode() {
