@@ -2,16 +2,16 @@ const { EmbedBuilder } = require('discord.js');
 const { playNext } = require('./p');
 
 const radyolar = [
-    { name: "Power Türk", url: "https://powerapp.listenlive.co/powerturk" },
-    { name: "Kral FM", url: "https://yayin.kralfm.com.tr/kralfm128" },
-    { name: "Süper FM", url: "http://superfm.canliyayinyap.com/;" },
-    { name: "Metro FM", url: "http://metrofm.canliyayinyap.com/;" },
-    { name: "Joy FM", url: "http://joyfm.canliyayinyap.com/;" },
+    { name: "Power Türk", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/POWER_TURK.mp3" },
+    { name: "Kral FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/KRAL_FM.mp3" },
+    { name: "Süper FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/SUPER_FM.mp3" },
+    { name: "Metro FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/METRO_FM.mp3" },
+    { name: "Joy FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM.mp3" },
     { name: "Fenomen", url: "https://fenomen.listenlive.co/fenomen" },
-    { name: "Slow Türk", url: "https://radyo.duhnet.tv/slowturk" },
-    { name: "Best FM", url: "https://stream.bestfm.com.tr/bestfm128" },
-    { name: "Virgin Radio", url: "http://virginradioturkiye.canliyayinyap.com/;" },
-    { name: "Kral Pop", url: "https://yayin.kralpop.com.tr/kralpop128" }
+    { name: "Slow Türk", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/SLOW_TURK.mp3" },
+    { name: "Best FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/BEST_FM.mp3" },
+    { name: "Virgin Radio", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/VIRGIN_RADIO_TR.mp3" },
+    { name: "Kral Pop", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/KRAL_POP.mp3" }
 ];
 
 module.exports = {
