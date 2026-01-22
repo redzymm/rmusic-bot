@@ -6,8 +6,6 @@ lavalink:
   plugins:
     - dependency: "dev.lavalink.youtube:youtube-plugin:1.16.0"
       snapshot: false
-    - dependency: "dev.arbjerg:lavalink-plugin-spotify:1.3.0" # Spotify Support
-      snapshot: false
   server:
     password: "rmusic_lavalink_2024"
     sources:
@@ -29,14 +27,14 @@ lavalink:
       rotation: true
       channelMix: true
       lowPass: true
-    bufferDurationMs: 1000 # Increased for better jitter handling
-    frameBufferDurationMs: 5000 # Increased for more resilient streaming
+    bufferDurationMs: 1000
+    frameBufferDurationMs: 5000
     opusEncodingQuality: 10
-    resamplingQuality: MEDIUM # Lowered from HIGH to save CPU
+    resamplingQuality: MEDIUM
     trackStuckThresholdMs: 10000
     useSeekGhosting: true
     youtubePlaylistLoadLimit: 100
-    playerUpdateInterval: 5 # Increased from 1s to reduce overhead
+    playerUpdateInterval: 5
     youtubeSearchEnabled: true
     soundcloudSearchEnabled: true
     gc-warnings: true
@@ -53,25 +51,10 @@ plugins:
       - MUSIC
       - WEB
       - TVHTML5EMBEDDED
-  spotify: # Spotify API Credentials
-    clientId: "YOUR_SPOTIFY_CLIENT_ID"
-    clientSecret: "YOUR_SPOTIFY_CLIENT_SECRET"
-    countryCode: "TR"
-    playlistLoadLimit: 6
-    albumLoadLimit: 6
 
 logging:
   file:
     path: ./logs/
-
   level:
-    root: WARN
-    lavalink: WARN
-
-  request:
-    enabled: false
-    includeClientInfo: false
-    includeHeaders: false
-    includeQueryString: false
-    includePayload: false
-    maxPayloadLength: 0
+    root: INFO
+    lavalink: INFO
