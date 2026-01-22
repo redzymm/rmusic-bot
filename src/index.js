@@ -406,7 +406,8 @@ const slashToPrefix = {
     'help': 'help',
     'test': 'test',
     'prefix': 'prefix',
-    'clear': 'clear'
+    'clear': 'clear',
+    'radio': 'radyo'
 };
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -416,17 +417,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
     const prefixCmd = slashToPrefix[commandName];
 
     if (!prefixCmd) {
-        return interaction.reply({ content: '❌ Unknown command!', ephemeral: true });
+        console.log(`[SLASH_DEBUG] Unknown command: ${commandName}`);
+        return interaction.reply({ content: '❌ Unknown command!', flags: [64] });
     }
 
     const command = client.commands.get(prefixCmd);
     if (!command) {
-        return interaction.reply({ content: '❌ Command not found!', ephemeral: true });
+        console.log(`[SLASH_DEBUG] Command not found in collection: ${prefixCmd}`);
+        return interaction.reply({ content: '❌ Command not found!', flags: [64] });
     }
 
     // Check if command is disabled
     if (client.disabledCommands.includes(prefixCmd)) {
-        return interaction.reply({ content: '❌ **This command is currently disabled!**', ephemeral: true });
+        return interaction.reply({ content: '❌ **This command is currently disabled!**', flags: [64] });
     }
 
     // Convert slash command options to args array
@@ -446,6 +449,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
     else if (commandName === 'clear') {
         const amount = interaction.options.getInteger('amount');
         if (amount) args.push(amount.toString());
+    }
+    // radio command - station option
+    else if (commandName === 'radio') {
+        const station = interaction.options.getString('station');
+        if (station) args.push(station);
     }
 
     // Yapay message objesi oluştur (mevcut komut yapısıyla uyumluluk için)
