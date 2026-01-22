@@ -23,8 +23,18 @@ function startLavalink() {
 
     console.log(`[LAVALINK] Kontrol ediliyor: ${lavalinkJar}`);
 
-    if (!fs.existsSync(lavalinkJar)) {
-        console.error(`[LAVALINK_ERR] Lavalink.jar bulunamadı! Aranan Yol: ${lavalinkJar}`);
+    let jarFound = fs.existsSync(lavalinkJar);
+    if (!jarFound) {
+        // Fallback for case-sensitivity on Linux
+        const fallbackJar = path.join(lavalinkDir, "lavalink.jar");
+        if (fs.existsSync(fallbackJar)) {
+            lavalinkJar = fallbackJar;
+            jarFound = true;
+        }
+    }
+
+    if (!jarFound) {
+        console.error(`[LAVALINK_ERR] Lavalink jar dosyası bulunamadı! Aranan Yol: ${lavalinkJar}`);
         return;
     }
 
