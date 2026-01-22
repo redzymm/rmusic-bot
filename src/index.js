@@ -36,7 +36,7 @@ function startLavalink() {
         console.warn(`[LAVALINK] Lavalink.jar bulunamadı, indiriliyor...`);
         try {
             if (!fs.existsSync(lavalinkDir)) fs.mkdirSync(lavalinkDir, { recursive: true });
-            execSync(`curl -L -o "${lavalinkJar}" "https://github.com/lavalink-devs/Lavalink/releases/download/4.0.10/Lavalink.jar"`);
+            execSync(`curl -L -o "${lavalinkJar}" "https://github.com/lavalink-devs/Lavalink/releases/latest/download/Lavalink.jar"`);
             console.log(`[LAVALINK] Lavalink.jar başarıyla indirildi.`);
             jarFound = true;
         } catch (e) {
