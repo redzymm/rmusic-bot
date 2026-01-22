@@ -12,14 +12,32 @@ class LavalinkManager {
         this.client = client;
         console.log(`[LAVALINK] Shoukaku başlatılıyor... (Node: ${Nodes[0].url})`);
 
-        this.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), Nodes, {
-            moveOnDisconnect: false,
-            resume: true,
-            resumeTimeout: 60,
-            reconnectTries: 20,
-            reconnectInterval: 5000,
-            restTimeout: 60000
-        });
+        try {
+            this.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), Nodes, {
+                moveOnDisconnect: false,
+                resume: true,
+                resumeTimeout: 60,
+                reconnectTries: 30,
+                reconnectInterval: 5000,
+                restTimeout: 60000
+            });
+
+            console.log(`[LAVALINK_INIT] Shoukaku instance created. Nodes in map: ${this.shoukaku.nodes.size}`);
+
+            // Fallback: If no nodes in map, try manual add
+            if (this.shoukaku.nodes.size === 0) {
+                console.log("[LAVALINK_INIT] Nodes map is empty. Manually adding node...");
+                try {
+                    this.shoukaku.addNode(Nodes[0]);
+                    console.log("[LAVALINK_INIT] Manual addNode call completed.");
+                } catch (addErr) {
+                    console.error("[LAVALINK_ERR] Manual addNode failed:", addErr.message);
+                }
+            }
+        } catch (initErr) {
+            console.error("[LAVALINK_ERR] Shoukaku initialization failed:", initErr);
+            return;
+        }
 
         this.shoukaku.on('ready', (name) => {
             console.log(`[LAVALINK] Node ${name} bağlandı ✅ (Ready Event)`);
@@ -47,10 +65,11 @@ class LavalinkManager {
             const states = ['CONNECTING', 'CONNECTED', 'DISCONNECTING', 'DISCONNECTED', 'RECONNECTING'];
             if (this.shoukaku.nodes.size > 0) {
                 for (const [name, node] of this.shoukaku.nodes) {
-                    console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${states[node.state] || 'UNKNOWN'} (${node.state})`);
+                    const statusText = states[node.state] || 'UNKNOWN';
+                    console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${statusText} (${node.state})`);
                 }
             } else {
-                console.log("[LAVALINK_STAT] Kayıtlı node bulunamadı!");
+                console.log("[LAVALINK_STAT] Kayıtlı node bulunamadı! (Nodes map empty)");
             }
         }, 15000);
 
