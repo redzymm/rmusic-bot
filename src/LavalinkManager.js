@@ -25,7 +25,7 @@ class LavalinkManager {
         setTimeout(() => {
             console.log(`[LAVALINK_STAT] Kayıtlı Node sayısı: ${this.shoukaku.nodes.size}`);
             for (const [name, node] of this.shoukaku.nodes) {
-                console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${node.state} | URL: ${node.options.url}`);
+                console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${node.state}`);
             }
         }, 15000); // 15 seconds to allow full startup and connection attempts
 
