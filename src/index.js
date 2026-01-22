@@ -31,6 +31,8 @@ const strip = s => typeof s === 'string' ? s.replace(/[\u001b\u009b][[()#;?]*(?:
 console.log = (...a) => origLog(...a.map(strip));
 console.error = (...a) => origErr(...a.map(strip));
 
+console.log("[BOT] Başlangıç prosedürü başlatıldı...");
+
 /* =======================
    LAVALINK AUTOMATION
    ======================= */
@@ -963,8 +965,17 @@ process.stdin.on("data", (data) => {
 process.on("SIGINT", () => { if (db) { db.run("DELETE FROM locks WHERE lockID = 'active_bot'"); saveDatabase(); } process.exit(); });
 process.on("exit", () => { if (db) { db.run("DELETE FROM locks WHERE lockID = 'active_bot'"); saveDatabase(); } });
 
+console.log("[BOT] Modüller yüklendi, başlatılıyor...");
+
 // START
 (async () => {
-    await initDatabase();
-    client.login(BOT_TOKEN);
+    try {
+        console.log("[BOT] Veritabanı başlatılıyor...");
+        await initDatabase();
+        console.log("[BOT] Discord girişi yapılıyor...");
+        await client.login(BOT_TOKEN);
+    } catch (e) {
+        console.error("[FATAL_START]", e.message);
+        console.error(e.stack);
+    }
 })();
