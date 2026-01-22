@@ -229,10 +229,19 @@ async function playNext(guildId, client) {
         const filters = buildFilters(client);
         await guildData.player.setFilters(filters);
 
-        // Play the track
-        await guildData.player.playTrack({
-            encoded: song.track.encoded
-        });
+        // DEBUG: Track verisini kontrol et
+        console.log(`[DEBUG_PLAY] Track title: ${song.title}`);
+        console.log(`[DEBUG_PLAY] Track object type: ${typeof song.track}`);
+
+        const trackToPlay = song.track?.encoded || (typeof song.track === 'string' ? song.track : null);
+
+        if (!trackToPlay) {
+            console.error("[DEBUG_PLAY] HATA: Çalınacak 'encoded' veri bulunamadı!", song.track);
+            throw new Error("Çalınacak ses verisi bulunamadı.");
+        }
+
+        // Play the track - Lavalink v4 prefers top-level encoded string or object
+        await guildData.player.playTrack(trackToPlay);
 
         console.log(`[PLAYER] Şimdi çalıyor: ${song.title}`);
 
