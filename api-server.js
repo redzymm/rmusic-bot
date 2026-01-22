@@ -144,11 +144,17 @@ app.post('/api/bot/start', authenticate, (req, res) => {
 
     botProcess.stderr.on('data', (data) => {
         const str = data.toString('utf8');
+        console.error(`[BOT_STDERR] ${str.trim()}`);
         if (str.includes('ffmpeg') || str.includes('FFMPEG')) {
             sendLog(`[FFMPEG] ${str}`);
         } else {
             sendLog(`[ERR] ${str}`, true);
         }
+    });
+
+    botProcess.on('error', (err) => {
+        console.error(`[API_BOT_ERR] Failed to start bot process: ${err.message}`);
+        sendLog(`[SYSTEM_ERR] Bot süreci başlatılamadı: ${err.message}`, true);
     });
 
     botProcess.on('close', (code) => {
