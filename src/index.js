@@ -54,30 +54,6 @@ function startLavalink() {
         }
     }
 
-    // --- PORT CLEANUP (Pre-start) ---
-    try {
-        console.log("[LAVALINK] Port 2333 kontrol ediliyor ve temizleniyor...");
-        if (process.platform === "win32") {
-            try {
-                execSync('netstat -ano | findstr :2333').toString().split('\n').forEach(line => {
-                    const pid = line.trim().split(/\s+/).pop();
-                    if (pid && pid !== "0" && !isNaN(pid)) {
-                        execSync(`taskkill /F /PID ${pid} /T`);
-                        console.log(`[LAVALINK] Eski Windows işlemi öldürüldü (PID: ${pid})`);
-                    }
-                });
-            } catch (e) { /* Port boş olabilir */ }
-        } else {
-            // Linux/Mac: More aggressive cleanup
-            try { execSync("fuser -k 2333/tcp 2>/dev/null || true"); } catch (e) { }
-            try { execSync("pkill -9 -f Lavalink.jar || true"); } catch (e) { }
-            console.log("[LAVALINK] Eski Linux/Mac işlemleri temizlendi.");
-        }
-    } catch (e) {
-        console.warn("[LAVALINK] Port temizleme sırasında ufak bir sorun (yoksayılıyor):", e.message);
-    }
-    // --------------------------------
-
     console.log("[LAVALINK] Sunucu başlatılıyor... (java -jar Lavalink.jar)");
 
     try {

@@ -14,10 +14,10 @@ class LavalinkManager {
 
         this.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), Nodes, {
             moveOnDisconnect: false,
-            resumable: true,
-            resumableTimeout: 60,
-            reconnectTries: 10,
-            reconnectInterval: 5,
+            resume: true,
+            resumeTimeout: 60,
+            reconnectTries: 20,
+            reconnectInterval: 5000,
             restTimeout: 60000
         });
 
