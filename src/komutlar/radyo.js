@@ -3,15 +3,15 @@ const { playNext } = require('./p');
 
 const radyolar = [
     { name: "Power Türk", url: "https://powerapp.listenlive.co/powerturk" },
-    { name: "Metro FM", url: "http://rtvlive.net/metro" },
-    { name: "Joy FM", url: "http://rtvlive.net/joyfm" },
-    { name: "Fenomen", url: "https://fenomen.listenlive.co/fenomen" },
+    { name: "Kral Pop", url: "https://ssldyg.radyotvonline.com/kralpop/smil:kralpop.smil/playlist.m3u8" },
+    { name: "Kral FM", url: "https://ssldyg.radyotvonline.com/kralfm/smil:kralfm.smil/playlist.m3u8" },
     { name: "Slow Türk", url: "https://radyo.dogannet.tv/slowturk" },
-    { name: "Best FM", url: "http://46.20.7.126:80" },
-    { name: "Kral Pop", url: "http://kralpopwmp.radyotvonline.com:80" },
-    { name: "Number One", url: "http://n10101.cloudapp.net/80/stream/1/" },
-    { name: "Süper FM", url: "http://rtvlive.net/superfm" },
-    { name: "Virgin Radio", url: "http://rtvlive.net/virgin" }
+    { name: "Metro FM", url: "https://karnaval.as.live-streams.com/metrofm/playlist.m3u8" },
+    { name: "Joy FM", url: "https://karnaval.as.live-streams.com/joyfm/playlist.m3u8" },
+    { name: "Fenomen", url: "https://fenomen.listenlive.co/fenomen" },
+    { name: "Best FM", url: "https://bestfm.shoutcast.com.tr/;stream.mp3" },
+    { name: "Süper FM", url: "https://karnaval.as.live-streams.com/superfm/playlist.m3u8" },
+    { name: "Virgin Radio", url: "https://karnaval.as.live-streams.com/virginradioturkiye/playlist.m3u8" }
 ];
 
 module.exports = {
@@ -45,11 +45,16 @@ module.exports = {
 
         try {
             const result = await client.lavalink.search(radio.url);
-            if (!result || !result.data || (Array.isArray(result.data) && result.data.length === 0)) {
-                return message.reply("❌ Radyo yayınına şu an ulaşılamıyor.");
+            if (!result || result.loadType === 'error' || result.loadType === 'empty') {
+                const errMsg = result?.data?.message || "Yayın şu an aktif değil.";
+                return message.reply(`❌ **${radio.name}** yayınına bağlanılamadı: ${errMsg}`);
             }
 
-            const track = Array.isArray(result.data) ? result.data[0] : result.data;
+            const track = result.loadType === 'search' ? result.data[0] : (result.data.tracks ? result.data.tracks[0] : result.data);
+
+            if (!track || !track.encoded) {
+                return message.reply(`❌ **${radio.name}** yayını çözülemedi (Encoded data missing).`);
+            }
 
             let guildData = client.müzik.get(message.guild.id);
             if (!guildData) {
