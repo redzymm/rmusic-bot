@@ -17,12 +17,12 @@ class LavalinkManager {
             resumable: true,
             resumableTimeout: 60,
             reconnectTries: 10,
-            reconnectInterval: 5000,
+            reconnectInterval: 5,
             restTimeout: 60000
         });
 
         this.shoukaku.on('ready', (name) => {
-            console.log(`[LAVALINK] Node ${name} bağlandı ✅`);
+            console.log(`[LAVALINK] Node ${name} bağlandı ✅ (Ready Event)`);
         });
 
         this.shoukaku.on('error', (name, error) => {
@@ -36,6 +36,8 @@ class LavalinkManager {
         this.shoukaku.on('disconnect', (name, players, moved) => {
             console.warn(`[LAVALINK] Node ${name} disconnect - ${players.length} oynatıcı etkilendi`);
         });
+
+        console.log(`[LAVALINK] Shoukaku başlatıldı, düğümlere bağlanmaya çalışılıyor...`);
     }
 
     getNode() {
@@ -70,12 +72,14 @@ class LavalinkManager {
     }
 
     getPlayer(guildId) {
+        // Shoukaku v4: Players are stored directly in the shoukaku instance
         return this.shoukaku.players.get(guildId);
     }
 
     async setVolume(guildId, volume) {
         const player = this.getPlayer(guildId);
         if (!player) return;
+        // Lavalink filters volume: 1.0 is 100%
         await player.setFilters({ volume: volume / 100 });
     }
 
