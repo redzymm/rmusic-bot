@@ -1872,13 +1872,13 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
                     <div className="w-8 h-[2px] bg-brand-red" />
                     <span className="text-[10px] text-brand-red font-black uppercase tracking-[0.3em]">Core Configuration</span>
                 </div>
-                <h1 className="text-5xl font-black tracking-tighter uppercase">Settings <span className="text-brand-red">Hub</span></h1>
+                <h1 className="text-4xl font-black tracking-tighter uppercase">Settings <span className="text-brand-red">Hub</span></h1>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
                 {/* 1. Aesthetics Grid */}
-                <div className="bg-[#ffffff05] border border-white/5 p-6 rounded-[32px] space-y-5 border-white/5 lg:col-span-2">
+                <div className="bg-[#ffffff05] border border-white/5 p-4 rounded-2xl space-y-4 border-white/5 lg:col-span-2">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-brand-red/10 rounded-xl flex items-center justify-center text-brand-red">
@@ -1891,7 +1891,7 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {THEMES.map(t => {
                             const Icon = t.icon;
                             return (
@@ -1899,17 +1899,17 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
                                     key={t.name}
                                     onClick={() => applyTheme(t)}
                                     style={{
-                                        boxShadow: config.theme === t.name ? `0 0 40px ${t.glow}33` : 'none',
+                                        boxShadow: config.theme === t.name ? `0 0 30px ${t.glow}33` : 'none',
                                         borderColor: config.theme === t.name ? t.color : 'rgba(255,255,255,0.05)'
                                     }}
-                                    className={`p-4 rounded-2xl btn-animate flex flex-col items-center gap-3 border group relative overflow-hidden ${config.theme === t.name ? 'bg-white/10' : 'bg-white/5 hover:bg-white/10 hover:border-white/20'}`}
+                                    className={`p-3 rounded-xl btn-animate flex flex-col items-center gap-2 border group relative overflow-hidden ${config.theme === t.name ? 'bg-white/10' : 'bg-white/5 hover:bg-white/10 hover:border-white/20'}`}
                                 >
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${config.theme === t.name ? 'scale-110 neo-glow' : 'opacity-40 group-hover:opacity-100 group-hover:scale-105'}`} style={{ color: t.color, backgroundColor: `${t.color}15`, '--brand-glow': t.color }}>
-                                        <Icon size={24} />
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${config.theme === t.name ? 'scale-110 neo-glow' : 'opacity-40 group-hover:opacity-100 group-hover:scale-105'}`} style={{ color: t.color, backgroundColor: `${t.color}15`, '--brand-glow': t.color }}>
+                                        <Icon size={20} />
                                     </div>
-                                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all ${config.theme === t.name ? 'opacity-100' : 'opacity-30'}`}>{t.name}</span>
+                                    <span className={`text-[9px] font-black uppercase tracking-[0.1em] transition-all ${config.theme === t.name ? 'opacity-100' : 'opacity-30'}`}>{t.name}</span>
                                     {config.theme === t.name && (
-                                        <div className="absolute top-2 right-2 w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: t.color, boxShadow: `0 0 15px ${t.color}` }} />
+                                        <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: t.color, boxShadow: `0 0 10px ${t.color}` }} />
                                     )}
                                 </button>
                             );
@@ -1918,7 +1918,7 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
                 </div>
 
                 {/* 2. Prefix Settings */}
-                <div className="glass p-6 rounded-[32px] space-y-4 border-white/5">
+                <div className="glass p-4 rounded-2xl space-y-4 border-white/5">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500">
                             <Terminal size={20} />
@@ -1932,74 +1932,51 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
                         <input
                             value={localPrefix}
                             onChange={e => setLocalPrefix(e.target.value)}
-                            className="w-full bg-white/5 border border-white/5 p-4 rounded-2xl outline-none focus:border-brand-red focus:bg-white/10 transition-all font-black text-2xl text-center shadow-inner"
+                            className="w-full bg-white/5 border border-white/5 p-3 rounded-xl outline-none focus:border-brand-red focus:bg-white/10 transition-all font-black text-xl text-center shadow-inner"
                         />
                         <button
                             onClick={() => {
                                 setConfig(prev => ({ ...prev, prefix: localPrefix }));
                                 ipc.send('save-config', { ...config, prefix: localPrefix });
                             }}
-                            className="bg-brand-red px-6 rounded-2xl btn-animate font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-brand-red/20 text-white"
+                            className="bg-brand-red px-4 rounded-xl btn-animate font-black text-[10px] uppercase tracking-[0.1em] shadow-lg shadow-brand-red/20 text-white"
                         >
                             SET
                         </button>
                     </div>
                 </div>
 
-                {/* Remote Mode Settings */}
-                <div className="glass p-6 rounded-[32px] space-y-4 border-brand-red/10 bg-brand-red/5">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-brand-red/20 rounded-xl flex items-center justify-center text-brand-red">
-                            <Wifi size={20} />
-                        </div>
-                        <div>
-                            <h3 className="font-black text-sm uppercase tracking-widest">Dashboard Mode</h3>
-                            <p className="text-[10px] text-white/30 uppercase font-black">Local vs Remote</p>
-                        </div>
-                    </div>
-
-                    <div className="flex bg-white/5 p-1 rounded-xl gap-1">
-                        <button
-                            onClick={() => saveRemoteConfig({ ...remoteConfig, mode: 'local' })}
-                            className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${remoteConfig.mode === 'local' ? 'bg-brand-red text-white' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-                        >
-                            LOCAL (DEV)
-                        </button>
-                        <button
-                            onClick={() => saveRemoteConfig({ ...remoteConfig, mode: 'remote' })}
-                            className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${remoteConfig.mode === 'remote' ? 'bg-brand-red text-white' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-                        >
-                            REMOTE (VM)
-                        </button>
-                    </div>
-
-                    {remoteConfig.mode === 'remote' && (
-                        <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
-                            <div className="space-y-1">
-                                <label className="text-[9px] font-black uppercase tracking-widest text-white/20 ml-2">Server URL</label>
-                                <input
-                                    value={remoteConfig.serverUrl}
-                                    onChange={e => saveRemoteConfig({ ...remoteConfig, serverUrl: e.target.value })}
-                                    placeholder="http://vm-ip:3000"
-                                    className="w-full bg-white/5 border border-white/5 p-3 rounded-xl outline-none focus:border-brand-red font-bold text-xs"
-                                />
+                <div className="glass p-4 rounded-2xl gap-4 border-brand-red/10 bg-brand-red/5 flex flex-col justify-between">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-brand-red/20 rounded-xl flex items-center justify-center text-brand-red">
+                                <Wifi size={20} />
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-[9px] font-black uppercase tracking-widest text-white/20 ml-2">API Key</label>
-                                <input
-                                    type="password"
-                                    value={remoteConfig.apiKey}
-                                    onChange={e => saveRemoteConfig({ ...remoteConfig, apiKey: e.target.value })}
-                                    placeholder="your-secret-key"
-                                    className="w-full bg-white/5 border border-white/5 p-3 rounded-xl outline-none focus:border-brand-red font-bold text-xs"
-                                />
+                            <div>
+                                <h3 className="font-black text-sm uppercase tracking-widest">Dashboard Mode</h3>
+                                <p className="text-[10px] text-white/30 uppercase font-black">Local vs Remote</p>
                             </div>
                         </div>
-                    )}
+
+                        <div className="flex bg-white/5 p-1 rounded-xl gap-1">
+                            <button
+                                onClick={() => saveRemoteConfig({ ...remoteConfig, mode: 'local' })}
+                                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${remoteConfig.mode === 'local' ? 'bg-brand-red text-white' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                            >
+                                LOCAL (DEV)
+                            </button>
+                            <button
+                                onClick={() => saveRemoteConfig({ ...remoteConfig, mode: 'remote' })}
+                                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${remoteConfig.mode === 'remote' ? 'bg-brand-red text-white' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                            >
+                                REMOTE (VM)
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* 3. Discord Integration */}
-                <div className="glass p-6 rounded-[32px] space-y-4 border-[#5865F2]/20 bg-[#5865F2]/5">
+                <div className="glass p-4 rounded-2xl space-y-4 border-[#5865F2]/20 bg-[#5865F2]/5">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-[#5865F2]/20 rounded-xl flex items-center justify-center">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="#5865F2">
@@ -2020,7 +1997,7 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
 
 
                 {/* 4. Access Control */}
-                <div className={`glass p-6 rounded-[32px] space-y-4 border-white/5 ${isSystemAdmin ? 'border-green-500/20 col-span-1 lg:col-span-2' : ''}`}>
+                <div className={`glass p-4 rounded-2xl space-y-4 border-white/5`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 ${isSystemAdmin ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} rounded-xl flex items-center justify-center`}>
@@ -2036,13 +2013,13 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
                     <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center gap-4">
                         {discordUser ? (
                             <>
-                                <img src={`https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`} className="w-10 h-10 rounded-full border border-white/10" alt="" />
+                                <img src={`https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`} className="w-8 h-8 rounded-full border border-white/10" alt="" />
                                 <div>
-                                    <p className="font-bold text-xs">{discordUser.username}</p>
+                                    <p className="font-bold text-[10px]">{discordUser.username}</p>
                                 </div>
                                 <div className="ml-auto">
                                     {isSystemAdmin ? (
-                                        <span className="px-3 py-1 bg-green-500/20 text-green-500 rounded-full text-[9px] font-black uppercase tracking-widest">AKTİF ADMİN</span>
+                                        <span className="px-2 py-0.5 bg-green-500/20 text-green-500 rounded-full text-[8px] font-black uppercase tracking-widest whitespace-nowrap">ADMİN</span>
                                     ) : (
                                         <span className="px-3 py-1 bg-red-500/20 text-red-500 rounded-full text-[9px] font-black uppercase tracking-widest">YETKİSİZ</span>
                                     )}
@@ -2056,7 +2033,7 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
 
 
                 {/* 6. System Utilities */}
-                <div className="bg-red-500/5 border border-red-500/10 p-6 rounded-[32px] lg:col-span-3 flex flex-col md:flex-row items-center justify-between gap-6 pointer-events-auto">
+                <div className="bg-red-500/5 border border-red-500/10 p-4 rounded-2xl lg:col-span-3 flex flex-col md:flex-row items-center justify-between gap-6 pointer-events-auto">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-red-500/20 rounded-2xl flex items-center justify-center text-red-500 shadow-lg shadow-red-500/10">
                             <Activity size={24} />

@@ -69,4 +69,24 @@ module.exports = [
                 .setMinValue(1)
                 .setMaxValue(100)
         ),
+
+    new SlashCommandBuilder()
+        .setName('radio')
+        .setDescription('List and play live radio stations')
+        .addStringOption(opt =>
+            opt.setName('station')
+                .setDescription('Select a radio station')
+                .addChoices(
+                    { name: "Power Türk", value: "1" },
+                    { name: "Metro FM", value: "2" },
+                    { name: "Joy FM", value: "3" },
+                    { name: "Fenomen", value: "4" },
+                    { name: "Slow Türk", value: "5" },
+                    { name: "Best FM", value: "6" },
+                    { name: "Kral Pop", value: "7" },
+                    { name: "Number One", value: "8" },
+                    { name: "Süper FM", value: "9" },
+                    { name: "Virgin Radio", value: "10" }
+                )
+        ),
 ];

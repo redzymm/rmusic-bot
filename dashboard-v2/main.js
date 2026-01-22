@@ -406,6 +406,10 @@ ipcMain.on('window-control', (event, action, data) => {
 });
 
 ipcMain.handle('get-audio-settings', async () => {
+    if (isRemoteMode()) {
+        const result = await remoteRequest('/api/audio-settings');
+        if (!result.error) return result;
+    }
     const settingsPath = path.join(__dirname, '../data/settings.json');
     try {
         if (fs.existsSync(settingsPath)) {
@@ -422,6 +426,13 @@ ipcMain.handle('get-audio-settings', async () => {
 });
 
 ipcMain.handle('get-config', async () => {
+    if (isRemoteMode()) {
+        const result = await remoteRequest('/api/config');
+        if (!result.error) {
+            if (!result.adminPassword) result.adminPassword = '3131';
+            return result;
+        }
+    }
     const configPath = path.join(__dirname, '../data/ayarlar.json');
     try {
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -437,7 +448,11 @@ ipcMain.handle('get-config', async () => {
     }
 });
 
-ipcMain.on('save-config', (event, config) => {
+ipcMain.on('save-config', async (event, config) => {
+    if (isRemoteMode()) {
+        await remoteRequest('/api/config', 'POST', config);
+        return;
+    }
     const configPath = path.join(__dirname, '../data/ayarlar.json');
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     if (botProcess) botProcess.stdin.write(JSON.stringify({ cmd: 'reloadConfig' }) + '\n');
@@ -464,6 +479,10 @@ ipcMain.on('save-remote-config', (event, config) => {
 });
 
 ipcMain.handle('get-auto-responses', async () => {
+    if (isRemoteMode()) {
+        const result = await remoteRequest('/api/auto-responses');
+        if (!result.error) return result;
+    }
     const arPath = path.join(__dirname, '../data/auto_responses.json');
     try {
         if (fs.existsSync(arPath)) {
@@ -475,7 +494,11 @@ ipcMain.handle('get-auto-responses', async () => {
     return [];
 });
 
-ipcMain.on('save-auto-responses', (event, responses) => {
+ipcMain.on('save-auto-responses', async (event, responses) => {
+    if (isRemoteMode()) {
+        await remoteRequest('/api/auto-responses', 'POST', responses);
+        return;
+    }
     const arPath = path.join(__dirname, '../data/auto_responses.json');
     fs.writeFileSync(arPath, JSON.stringify(responses, null, 2));
     if (botProcess) botProcess.stdin.write(JSON.stringify({ cmd: 'reloadAutoResponses' }) + '\n');

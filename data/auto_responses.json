@@ -159,7 +159,75 @@
     ]
   },
   {
-    "trigger": "!dc",
-    "response": "https://discord.gg/NgrM3GA785"
+    "trigger": "hello",
+    "response": [
+      "Hello {user}!",
+      "Hi there! How can I help you today?",
+      "Greetings! Hope you're having a great day."
+    ]
+  },
+  {
+    "trigger": "hi",
+    "response": [
+      "Hi {user}!",
+      "Hello! Nice to see you.",
+      "Hey! What's up?"
+    ]
+  },
+  {
+    "trigger": "how are you",
+    "response": [
+      "I'm doing great, thank you for asking! How about you?",
+      "Everything is perfect! How are things on your end?",
+      "I'm feeling awesome today {user}!"
+    ]
+  },
+  {
+    "trigger": "thanks",
+    "response": [
+      "You're very welcome!",
+      "No problem at all!",
+      "Happy to help {user}!"
+    ]
+  },
+  {
+    "trigger": "thank you",
+    "response": [
+      "It's my pleasure!",
+      "You're welcome, {user}!",
+      "Anytime!"
+    ]
+  },
+  {
+    "trigger": "bye",
+    "response": [
+      "Goodbye! See you later.",
+      "Bye {user}, take care!",
+      "Have a great day!"
+    ]
+  },
+  {
+    "trigger": "good night",
+    "response": [
+      "Good night {user}, sweet dreams!",
+      "Sleep well!",
+      "See you tomorrow!"
+    ]
+  },
+  {
+    "trigger": "good morning",
+    "response": [
+      "Good morning! Have a productive day!",
+      "Morning {user}! Ready for some music?",
+      "Top of the morning to you!"
+    ]
+  },
+  {
+    "trigger": "help",
+    "response": [
+      "You can type `/help` or `!help` to see all my commands!",
+      "Need a hand? Check out the help menu!",
+      "I'm here to help! Use the help command for guidance."
+    ]
   }
 ]

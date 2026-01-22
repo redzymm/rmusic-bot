@@ -3,15 +3,15 @@ const { playNext } = require('./p');
 
 const radyolar = [
     { name: "Power Türk", url: "https://powerapp.listenlive.co/powerturk" },
-    { name: "Kral Pop", url: "https://ssldyg.radyotvonline.com/kralpop/smil:kralpop.smil/playlist.m3u8" },
-    { name: "Kral FM", url: "https://ssldyg.radyotvonline.com/kralfm/smil:kralfm.smil/playlist.m3u8" },
-    { name: "Slow Türk", url: "https://radyo.dogannet.tv/slowturk" },
-    { name: "Metro FM", url: "https://karnaval.as.live-streams.com/metrofm/playlist.m3u8" },
-    { name: "Joy FM", url: "https://karnaval.as.live-streams.com/joyfm/playlist.m3u8" },
+    { name: "Kral FM", url: "http://direk.kralfm.com.tr/" },
+    { name: "Süper FM", url: "http://superfm.canliyayinyap.com/;" },
+    { name: "Metro FM", url: "http://metrofm.canliyayinyap.com/;" },
+    { name: "Joy FM", url: "http://joyfm.canliyayinyap.com/;" },
     { name: "Fenomen", url: "https://fenomen.listenlive.co/fenomen" },
-    { name: "Best FM", url: "https://bestfm.shoutcast.com.tr/;stream.mp3" },
-    { name: "Süper FM", url: "https://karnaval.as.live-streams.com/superfm/playlist.m3u8" },
-    { name: "Virgin Radio", url: "https://karnaval.as.live-streams.com/virginradioturkiye/playlist.m3u8" }
+    { name: "Slow Türk", url: "https://radyo.dogannet.tv/slowturk" },
+    { name: "Best FM", url: "http://46.20.7.126:80/;" },
+    { name: "Virgin Radio", url: "http://virginradioturkiye.canliyayinyap.com/;" },
+    { name: "Kral Pop", url: "http://direk.kralpop.com.tr/" }
 ];
 
 module.exports = {

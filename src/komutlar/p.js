@@ -240,8 +240,10 @@ async function playNext(guildId, client) {
             throw new Error("Çalınacak ses verisi bulunamadı.");
         }
 
-        // Play the track - Lavalink v4 prefers top-level encoded string or object
-        await guildData.player.playTrack(trackToPlay);
+        // Play the track - Shoukaku v4 correct format: { encoded: string }
+        await guildData.player.playTrack({
+            encoded: trackToPlay
+        });
 
         console.log(`[PLAYER] Şimdi çalıyor: ${song.title}`);
 
