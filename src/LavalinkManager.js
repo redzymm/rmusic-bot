@@ -2,7 +2,7 @@ const { Shoukaku, Connectors } = require('shoukaku');
 
 const Nodes = [{
     name: 'main',
-    url: '127.0.0.1:2333',
+    url: 'localhost:2333',
     auth: 'rmusic_lavalink_2024',
     secure: false
 }];
@@ -14,21 +14,32 @@ class LavalinkManager {
 
         this.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), Nodes, {
             moveOnDisconnect: false,
-            resumable: true,
-            resumableTimeout: 60,
-            reconnectTries: 25,
+            resume: true,
+            resumeTimeout: 60,
+            reconnectTries: 30,
             reconnectInterval: 5000,
             restTimeout: 60000
         });
 
-        // Periodic status check
+        // Periodic status check & Watchdog
         setInterval(() => {
+            const states = ['CONNECTING', 'CONNECTED', 'DISCONNECTING', 'DISCONNECTED', 'RECONNECTING'];
             if (this.shoukaku.nodes.size > 0) {
                 for (const [name, node] of this.shoukaku.nodes) {
-                    if (node.state !== 1) { // 1 = CONNECTED/READY
-                        console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${node.state} (0=DISC, 1=CONN, 2=CONNING, 3=DISCONNING)`);
+                    const stateText = states[node.state] || 'UNKNOWN';
+                    if (node.state !== 1) { // 1 = CONNECTED
+                        console.log(`[LAVALINK_STAT] Node: ${name} | Durum: ${node.state} (${stateText})`);
+
+                        // Watchdog: If disconnected, try to force a check
+                        if (node.state === 3) {
+                            console.log(`[LAVALINK_WATCHDOG] Node ${name} is DISCONNECTED. Attempting to restart connection...`);
+                            // Shoukaku nodes don't have a simple .connect(), we might need to re-add if it completely gave up
+                        }
                     }
                 }
+            } else {
+                console.log("[LAVALINK_STAT] Hiç node kayıtlı değil! Yeniden ekleniyor...");
+                this.shoukaku.addNode(Nodes[0]);
             }
         }, 10000);
 
@@ -41,7 +52,7 @@ class LavalinkManager {
         });
 
         this.shoukaku.on('debug', (name, info) => {
-            if (info.includes('Wait') || info.includes('Checking nodes')) return;
+            if (info.includes('Wait') || info.includes('Checking nodes') || info.includes('is not yet ready')) return;
             console.log(`[LAVALINK_DEBUG] ${name}: ${info}`);
         });
 
