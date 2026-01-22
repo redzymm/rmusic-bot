@@ -29,6 +29,37 @@ module.exports = {
             if (message.guild.searchMsg) { try { await message.guild.searchMsg.delete(); } catch (e) { } }
             message.guild.searchMsg = await message.channel.send(`🔍 Aranıyor: **${query}**...`);
 
+            const play = require('play-dl');
+            let isSpotify = false;
+
+            // --- SPOTIFY HANDLER ---
+            if (query.includes('spotify.com')) {
+                try {
+                    if (play.is_authenticated()) { /* already ok */ }
+
+                    const sp_data = await play.spotify(query);
+                    if (sp_data.type === 'track') {
+                        query = `${sp_data.name} ${sp_data.artists[0].name}`;
+                    } else if (sp_data.type === 'playlist' || sp_data.type === 'album') {
+                        // For playlists, we'll fetch the first track for now to verify, 
+                        // but a full playlist load would require more complex logic.
+                        // Let's focus on tracks first for stability.
+                        const sp_tracks = await sp_data.all_tracks();
+                        if (sp_tracks.length > 0) {
+                            // We will process the first one and notify user if it's a playlist
+                            query = `${sp_tracks[0].name} ${sp_tracks[0].artists[0].name}`;
+                            if (sp_tracks.length > 1) {
+                                message.channel.send(`ℹ️ Spotify playlisti algılandı. İlk şarkıdan başlanıyor... (Playlist desteği optimize ediliyor)`);
+                            }
+                        }
+                    }
+                    isSpotify = true;
+                } catch (e) {
+                    console.error("[SPOTIFY_RESOLVE_ERR]", e);
+                }
+            }
+            // -----------------------
+
             // Search for the track
             let result = await client.lavalink.search(query);
 
@@ -200,9 +231,7 @@ async function playNext(guildId, client) {
 
         // Play the track
         await guildData.player.playTrack({
-            track: {
-                encoded: song.track.encoded
-            }
+            encoded: song.track.encoded
         });
 
         console.log(`[PLAYER] Şimdi çalıyor: ${song.title}`);
