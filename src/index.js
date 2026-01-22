@@ -1,3 +1,18 @@
+// Error handlers (MOVE TO TOP FOR EARLY CRASH VISIBILITY)
+process.on('uncaughtException', (err) => {
+    console.error(`[FATAL] ${err.message}\n${err.stack}`);
+    process.exit(1);
+});
+process.on('unhandledRejection', (reason) => console.error(`[REJECT] ${reason}`));
+
+// ANSI stripper
+const origLog = console.log, origErr = console.error;
+const strip = s => typeof s === 'string' ? s.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '') : s;
+console.log = (...a) => origLog(...a.map(strip));
+console.error = (...a) => origErr(...a.map(strip));
+
+console.log("[BOT] Ortam hazırlanıyor...");
+
 const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, AuditLogEvent } = require("discord.js");
 const initSqlJs = require("sql.js");
 const fs = require("fs");
@@ -10,26 +25,23 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const ayarlar = require("../data/ayarlar.json");
 const LavalinkManager = require("./LavalinkManager");
 
+console.log("[BOT] Ayarlar yüklendi.");
+
 // Use environment variables with fallback to config file
 const BOT_TOKEN = process.env.DISCORD_TOKEN || ayarlar.token;
 const AI_API_KEY = process.env.AI_API_KEY || ayarlar.aiApiKey;
-const ADMIN_ID = process.env.ADMIN_DISCORD_ID || (ayarlar.sysToken ? atob(ayarlar.sysToken) : null);
+let ADMIN_ID = null;
+try {
+    ADMIN_ID = process.env.ADMIN_DISCORD_ID || (ayarlar.sysToken ? atob(ayarlar.sysToken) : null);
+} catch (e) {
+    console.warn("[BOT] ADMIN_ID çözülemedi:", e.message);
+}
 
 // Encoding ayarları
 process.env.PYTHONIOENCODING = "utf-8";
 process.env.LANG = "en_US.UTF-8";
 if (process.stdout.setEncoding) process.stdout.setEncoding('utf8');
 if (process.stderr.setEncoding) process.stderr.setEncoding('utf8');
-
-// Error handlers (Move to top for crash visibility)
-process.on('uncaughtException', (err) => console.error(`[FATAL] ${err.message}\n${err.stack}`));
-process.on('unhandledRejection', (reason) => console.error(`[REJECT] ${reason}`));
-
-// ANSI stripper
-const origLog = console.log, origErr = console.error;
-const strip = s => typeof s === 'string' ? s.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '') : s;
-console.log = (...a) => origLog(...a.map(strip));
-console.error = (...a) => origErr(...a.map(strip));
 
 console.log("[BOT] Başlangıç prosedürü başlatıldı...");
 
