@@ -431,8 +431,7 @@ const slashToPrefix = {
     'help': 'help',
     'test': 'test',
     'prefix': 'prefix',
-    'clear': 'clear',
-    'radio': 'radyo'
+    'clear': 'clear'
 };
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -474,11 +473,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
     else if (commandName === 'clear') {
         const amount = interaction.options.getInteger('amount');
         if (amount) args.push(amount.toString());
-    }
-    // radio command - station option
-    else if (commandName === 'radio') {
-        const station = interaction.options.getString('station');
-        if (station) args.push(station);
     }
 
     // Yapay message objesi oluştur (mevcut komut yapısıyla uyumluluk için)
