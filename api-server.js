@@ -30,7 +30,10 @@ app.use(express.json());
 // API Key Authentication Middleware
 const authenticate = (req, res, next) => {
     const key = req.headers['x-api-key'] || req.query.apiKey;
+    console.log('[AUTH] Received key:', key ? key.substring(0, 10) + '...' : 'NONE');
+    console.log('[AUTH] Expected key:', API_KEY ? API_KEY.substring(0, 10) + '...' : 'NOT_SET');
     if (key !== API_KEY) {
+        console.log('[AUTH] Key mismatch! Full received:', key);
         return res.status(401).json({ error: 'Unauthorized: Invalid API Key' });
     }
     next();
