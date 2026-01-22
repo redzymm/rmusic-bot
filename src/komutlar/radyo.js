@@ -44,15 +44,24 @@ module.exports = {
         message.channel.send(`📻 **${radio.name}** canlı yayınına bağlanılıyor...`);
 
         try {
+            console.log(`[RADIO_DEBUG] Searching for: ${radio.url}`);
             const result = await client.lavalink.search(radio.url);
+            console.log(`[RADIO_DEBUG] LoadType: ${result?.loadType}`);
+
             if (!result || result.loadType === 'error' || result.loadType === 'empty') {
-                const errMsg = result?.data?.message || "Yayın şu an aktif değil.";
+                const errMsg = result?.data?.message || result?.exception?.message || "Yayın şu an aktif değil veya erişilemiyor.";
+                console.error(`[RADIO_ERR] Search failed for ${radio.name}:`, result);
                 return message.reply(`❌ **${radio.name}** yayınına bağlanılamadı: ${errMsg}`);
             }
 
-            const track = result.loadType === 'search' ? result.data[0] : (result.data.tracks ? result.data.tracks[0] : result.data);
+            const track = result.loadType === 'track' ? result.data : (result.data.tracks ? result.data.tracks[0] : (Array.isArray(result.data) ? result.data[0] : result.data));
 
-            if (!track || !track.encoded) {
+            if (!track) {
+                return message.reply(`❌ **${radio.name}** yayını için parça bulunamadı.`);
+            }
+
+            if (!track.encoded) {
+                console.error(`[RADIO_ERR] Encoded data missing for ${radio.name}:`, track);
                 return message.reply(`❌ **${radio.name}** yayını çözülemedi (Encoded data missing).`);
             }
 

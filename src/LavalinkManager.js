@@ -16,8 +16,8 @@ class LavalinkManager {
             moveOnDisconnect: false,
             resumable: true,
             resumableTimeout: 60,
-            reconnectTries: 10,
-            reconnectInterval: 5, // Logs showed "5000 seconds", so it likely expects seconds
+            reconnectTries: 15,
+            reconnectInterval: 5000,
             restTimeout: 60000
         });
 
@@ -69,6 +69,9 @@ class LavalinkManager {
         }
 
         const result = await node.rest.resolve(searchQuery);
+        if (result && result.loadType === 'empty') {
+            console.warn(`[LAVALINK_SEARCH] No matches found for: ${searchQuery}`);
+        }
         return result;
     }
 
