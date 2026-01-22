@@ -78,6 +78,20 @@ export default function App() {
         const saved = localStorage.getItem('discordUser');
         return saved ? JSON.parse(saved) : null;
     });
+    const [remoteConfig, setRemoteConfig] = useState({ mode: 'local', serverUrl: '', apiKey: '' });
+
+    useEffect(() => {
+        const loadConfig = async () => {
+            const rc = await ipc.invoke('get-remote-config');
+            if (rc) setRemoteConfig(rc);
+        };
+        loadConfig();
+    }, []);
+
+    const saveRemoteConfig = (newConfig) => {
+        setRemoteConfig(newConfig);
+        ipc.send('save-remote-config', newConfig);
+    };
 
     const isSystemAdmin = discordUser && config && config.sysToken && String(discordUser.id) === String(atob(config.sysToken));
     const audioRef = React.useRef(new Audio());
@@ -589,7 +603,7 @@ export default function App() {
                             {activeTab === 'Logs' && <LogsView logs={logs} onSimulateLog={(l) => setLogs(p => [...p.slice(-49), l])} onClearLogs={() => setLogs([])} />}
                             {activeTab === 'Commands' && <CommandsView config={config} setConfig={saveConfig} killAll={killAll} botInfo={botData} isSystemAdmin={isSystemAdmin} />}
                             {activeTab === 'AutoResponse' && <AutoResponseView responses={autoResponses} setResponses={(r) => { setAutoResponses(r); ipc.send('save-auto-responses', r); }} isSystemAdmin={isSystemAdmin} />}
-                            {activeTab === 'Settings' && <SettingsView config={config} setConfig={saveConfig} isSystemAdmin={isSystemAdmin} discordUser={discordUser} />}
+                            {activeTab === 'Settings' && <SettingsView config={config} setConfig={saveConfig} isSystemAdmin={isSystemAdmin} discordUser={discordUser} remoteConfig={remoteConfig} saveRemoteConfig={saveRemoteConfig} />}
                         </motion.div>
                     </AnimatePresence>
                 </main>
@@ -1838,7 +1852,7 @@ const AutoResponseView = React.memo(({ responses, setResponses }) => {
     );
 });
 
-const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser }) => {
+const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser, remoteConfig, saveRemoteConfig }) => {
     if (!config) return null;
     const [localPrefix, setLocalPrefix] = useState(config.prefix || '!');
 
@@ -1930,6 +1944,58 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
                             SET
                         </button>
                     </div>
+                </div>
+
+                {/* Remote Mode Settings */}
+                <div className="glass p-6 rounded-[32px] space-y-4 border-brand-red/10 bg-brand-red/5">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-brand-red/20 rounded-xl flex items-center justify-center text-brand-red">
+                            <Wifi size={20} />
+                        </div>
+                        <div>
+                            <h3 className="font-black text-sm uppercase tracking-widest">Dashboard Mode</h3>
+                            <p className="text-[10px] text-white/30 uppercase font-black">Local vs Remote</p>
+                        </div>
+                    </div>
+
+                    <div className="flex bg-white/5 p-1 rounded-xl gap-1">
+                        <button
+                            onClick={() => saveRemoteConfig({ ...remoteConfig, mode: 'local' })}
+                            className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${remoteConfig.mode === 'local' ? 'bg-brand-red text-white' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                        >
+                            LOCAL (DEV)
+                        </button>
+                        <button
+                            onClick={() => saveRemoteConfig({ ...remoteConfig, mode: 'remote' })}
+                            className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${remoteConfig.mode === 'remote' ? 'bg-brand-red text-white' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                        >
+                            REMOTE (VM)
+                        </button>
+                    </div>
+
+                    {remoteConfig.mode === 'remote' && (
+                        <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-white/20 ml-2">Server URL</label>
+                                <input
+                                    value={remoteConfig.serverUrl}
+                                    onChange={e => saveRemoteConfig({ ...remoteConfig, serverUrl: e.target.value })}
+                                    placeholder="http://vm-ip:3000"
+                                    className="w-full bg-white/5 border border-white/5 p-3 rounded-xl outline-none focus:border-brand-red font-bold text-xs"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-white/20 ml-2">API Key</label>
+                                <input
+                                    type="password"
+                                    value={remoteConfig.apiKey}
+                                    onChange={e => saveRemoteConfig({ ...remoteConfig, apiKey: e.target.value })}
+                                    placeholder="your-secret-key"
+                                    className="w-full bg-white/5 border border-white/5 p-3 rounded-xl outline-none focus:border-brand-red font-bold text-xs"
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* 3. Discord Integration */}
@@ -2028,7 +2094,7 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
                 </p>
                 <div className="h-[1px] flex-1 bg-white/5" />
             </div>
-        </div>
+        </div >
     );
 });
 

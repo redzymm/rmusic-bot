@@ -9,6 +9,20 @@ const WebSocket = require('ws');
 // Initialize @electron/remote
 remoteMain.initialize();
 
+// Single Instance Lock
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+    app.quit();
+} else {
+    app.on('second-instance', (event, commandLine, workingDirectory) => {
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.show();
+            mainWindow.focus();
+        }
+    });
+}
+
 // ========== REMOTE MODE CONFIGURATION ==========
 let remoteConfig = { mode: 'local', serverUrl: '', apiKey: '' };
 let remoteWs = null;
@@ -427,6 +441,26 @@ ipcMain.on('save-config', (event, config) => {
     const configPath = path.join(__dirname, '../data/ayarlar.json');
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     if (botProcess) botProcess.stdin.write(JSON.stringify({ cmd: 'reloadConfig' }) + '\n');
+});
+
+ipcMain.handle('get-remote-config', async () => {
+    return remoteConfig;
+});
+
+ipcMain.on('save-remote-config', (event, config) => {
+    remoteConfig = config;
+    const configPath = path.join(__dirname, '../data/remote-config.json');
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+    // Reconnect if mode changed to remote
+    if (isRemoteMode()) {
+        connectRemoteWebSocket();
+    } else {
+        if (remoteWs) {
+            remoteWs.close();
+            remoteWs = null;
+        }
+    }
 });
 
 ipcMain.handle('get-auto-responses', async () => {

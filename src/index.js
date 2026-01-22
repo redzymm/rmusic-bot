@@ -161,8 +161,9 @@ async function initDatabase() {
 
     const lockExists = db.exec("SELECT lockID FROM locks WHERE lockID = 'active_bot'");
     if (lockExists.length > 0) {
-        console.error("CRITICAL_ERROR: Dosya baska bir islem tarafindan kullanildigi icin bu islem dosyaya erisemiyor. (Başka bir Bot açık olabilir!)");
-        setTimeout(() => process.exit(1), 3000);
+        console.error(`[CRITICAL] DOUBLE_INSTANCE_DETECTED (Current PID: ${process.pid})`);
+        console.error("Başka bir bot instance'ı hala aktif. Lütfen tüm süreçleri temizleyin.");
+        setTimeout(() => process.exit(1), 1000);
         return;
     }
 
