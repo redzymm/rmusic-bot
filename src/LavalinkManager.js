@@ -33,8 +33,32 @@ class LavalinkManager {
         console.log(`[LAVALINK] Kullanılan Bot ID: ${this.client.user.id}`);
 
         try {
-            console.log("[LAVALINK] Shoukaku objesi oluşturuluyor...");
-            const shoukaku = new Shoukaku(new Connectors.DiscordJS(this.client), Nodes, {
+            console.log("[LAVALINK] Universal Connector Patch uygulanıyor...");
+            const connector = new Connectors.DiscordJS(this.client);
+
+            // YAMA 1: Shoukaku v4 Connectors artık .getId()'yi farklı bekliyor olabilir, manuel zorluyoruz.
+            connector.getId = () => this.client.user?.id;
+
+            // YAMA 2: Kazagumo v3, v4 connector'ında olmayan .set() metodunu arıyor.
+            connector.set = (sh) => { if (sh) connector.shoukaku = sh; };
+
+            // YAMA 3: 'Cannot read properties of undefined (reading listen)' hatasını önlemek için dummy ekliyoruz.
+            if (!connector.listen) connector.listen = () => { /* No-op */ };
+
+            console.log("[LAVALINK] Kazagumo ana sınıfı oluşturuluyor...");
+            this.kazagumo = new Kazagumo({
+                defaultSearchEngine: 'youtube',
+                plugins: [
+                    new Spotify({
+                        clientId: process.env.SPOTIFY_CLIENT_ID || '',
+                        clientSecret: process.env.SPOTIFY_CLIENT_SECRET || ''
+                    })
+                ],
+                send: (guildId, payload) => {
+                    const guild = this.client.guilds.cache.get(guildId);
+                    if (guild) guild.shard.send(payload);
+                }
+            }, connector, Nodes, {
                 moveOnDisconnect: false,
                 resume: true,
                 resumeTimeout: 60,
@@ -43,42 +67,32 @@ class LavalinkManager {
                 restTimeout: 60000
             });
 
-            console.log("[LAVALINK] Kazagumo başlatılıyor...");
-            this.kazagumo = new Kazagumo({
-                defaultSearchEngine: 'youtube',
-                plugins: [
-                    new Spotify({
-                        clientId: process.env.SPOTIFY_CLIENT_ID || '',
-                        clientSecret: process.env.SPOTIFY_CLIENT_SECRET || ''
-                    }),
-                    new Plugins.PlayerOnly(shoukaku)
-                ],
-                send: (guildId, payload) => {
-                    const guild = this.client.guilds.cache.get(guildId);
-                    if (guild) guild.shard.send(payload);
-                }
-            });
+            // MANUEL NODE EKLEME (Bazı versiyonlarda constructor'dan geçmiyor)
+            if (this.kazagumo.shoukaku.nodes.size === 0) {
+                console.log("[LAVALINK] Düğüm otomatik yüklenmedi, manuel ekleniyor...");
+                Nodes.forEach(node => this.kazagumo.shoukaku.addNode(node));
+            }
 
-            console.log(`[LAVALINK] Shoukaku düğüm sayısı: ${shoukaku.nodes.size}`);
+            console.log(`[LAVALINK] Shoukaku düğüm sayısı: ${this.kazagumo.shoukaku.nodes.size}`);
 
             // --- Shoukaku Node Events ---
-            shoukaku.on('ready', (name) => {
+            this.kazagumo.shoukaku.on('ready', (name) => {
                 console.log(`[LAVALINK] Node ${name} HAZIR ✅`);
             });
 
-            shoukaku.on('error', (name, error) => {
+            this.kazagumo.shoukaku.on('error', (name, error) => {
                 console.error(`[LAVALINK] Node ${name} hatası ❌:`, error);
             });
 
-            shoukaku.on('close', (name, code, reason) => {
+            this.kazagumo.shoukaku.on('close', (name, code, reason) => {
                 console.warn(`[LAVALINK] Node ${name} kapandı (Kod: ${code}, Sebep: ${reason})`);
             });
 
-            shoukaku.on('disconnect', (name, players, moved) => {
+            this.kazagumo.shoukaku.on('disconnect', (name, players, moved) => {
                 console.warn(`[LAVALINK] Node ${name} bağlantısı kesildi.`);
             });
 
-            shoukaku.on('debug', (name, info) => {
+            this.kazagumo.shoukaku.on('debug', (name, info) => {
                 if (info.includes('Socket') || info.includes('Sever') || info.includes('Authenticating'))
                     console.log(`[SHOUKAKU_DEBUG] ${name}: ${info}`);
             });
