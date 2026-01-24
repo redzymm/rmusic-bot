@@ -3,7 +3,14 @@ const fs = require('fs');
 const path = require('path');
 
 // Load env vars
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const envPath = path.join(__dirname, '../.env');
+require('dotenv').config({ path: envPath });
+
+console.log(`[DEBUG] Loading env from: ${envPath}`);
+console.log(`[DEBUG] File exists: ${fs.existsSync(envPath)}`);
+const rawToken = process.env.DISCORD_TOKEN;
+console.log(`[DEBUG] Loaded Token: ${rawToken ? rawToken.substring(0, 5) + '...' : 'UNDEFINED'}`);
+console.log(`[DEBUG] Config Token: ${ayarlar.token ? 'PRESENT' : 'MISSING'}`);
 
 /**
  * Discord Slash Commands Deploy Script
@@ -23,6 +30,8 @@ const isGlobal = process.argv.includes('--global');
 async function deployCommands() {
     const commands = slashCommands.map(cmd => cmd.toJSON());
     const token = process.env.DISCORD_TOKEN || ayarlar.token;
+
+    console.log(`[DEBUG] Final Token to use: ${token ? token.substring(0, 5) + '...' : 'NULL'}`);
 
     if (!token) {
         console.error('❌ DISCORD_TOKEN bulunamadı! .env dosyasını kontrol edin.');
