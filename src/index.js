@@ -1,19 +1,22 @@
+// DIAGNOSTIC LOG (MUST BE FIRST)
+console.log("[DIAGNOSTIC] index.js execution started");
+
 // Load environment variables verification (MUST BE FIRST)
 const path = require("path");
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // Error handlers (MOVE TO TOP FOR EARLY CRASH VISIBILITY)
+const origLog = console.log, origErr = console.error;
 process.on('uncaughtException', (err) => {
-    console.error(`[FATAL] ${err.message}\n${err.stack}`);
+    origErr(`[FATAL] ${err.message}\n${err.stack}`);
     process.exit(1);
 });
-process.on('unhandledRejection', (reason) => console.error(`[REJECT] ${reason}`));
+process.on('unhandledRejection', (reason) => origErr(`[REJECT] ${reason}`));
 
-// ANSI stripper
-const origLog = console.log, origErr = console.error;
+// ANSI stripper removed temporarily for debugging
 const strip = s => typeof s === 'string' ? s.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '') : s;
-console.log = (...a) => origLog(...a.map(strip));
-console.error = (...a) => origErr(...a.map(strip));
+// console.log override removed
+// console.error override removed
 
 console.log("[BOT] Ortam hazırlanıyor...");
 
