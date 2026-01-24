@@ -4,7 +4,7 @@ const Spotify = require('kazagumo-spotify');
 
 const Nodes = [{
     name: 'main',
-    url: process.env.LAVALINK_HOST || '127.0.0.1:2333',
+    url: process.env.LAVALINK_HOST || 'localhost:2333',
     auth: process.env.LAVALINK_PASSWORD || 'rmusic_lavalink_2024',
     secure: false
 }];
@@ -48,6 +48,8 @@ class LavalinkManager {
                 restTimeout: 60000
             });
 
+            console.log(`[LAVALINK] Shoukaku düğüm sayısı: ${this.kazagumo.shoukaku.nodes.size}`);
+
             // --- Kazagumo Events ---
             this.kazagumo.on('playerStart', (player, track) => {
                 console.log(`[LAVALINK] Şarkı başladı: ${track.title} (Guild: ${player.guildId})`);
@@ -84,8 +86,7 @@ class LavalinkManager {
             });
 
             this.kazagumo.shoukaku.on('debug', (name, info) => {
-                if (info.includes('Socket') || info.includes('Sever') || info.includes('Authenticating'))
-                    console.log(`[SHOUKAKU_DEBUG] ${name}: ${info}`);
+                console.log(`[SHOUKAKU_DEBUG] ${name}: ${info}`);
             });
 
             console.log('[LAVALINK] Kazagumo hazır.');
