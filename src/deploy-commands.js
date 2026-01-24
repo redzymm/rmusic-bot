@@ -2,10 +2,19 @@ const { REST, Routes } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
-// Load env vars
+// 1. Load env vars FIRST
 const envPath = path.join(__dirname, '../.env');
 require('dotenv').config({ path: envPath });
 
+// 2. Load config SECOND (Safe load)
+let ayarlar = {};
+try {
+    ayarlar = require('../data/ayarlar.json');
+} catch (e) {
+    ayarlar = {};
+}
+
+// 3. Debug Logs (Now safe)
 console.log(`[DEBUG] Loading env from: ${envPath}`);
 console.log(`[DEBUG] File exists: ${fs.existsSync(envPath)}`);
 const rawToken = process.env.DISCORD_TOKEN;
@@ -16,15 +25,7 @@ console.log(`[DEBUG] Config Token: ${ayarlar.token ? 'PRESENT' : 'MISSING'}`);
  * Discord Slash Commands Deploy Script
  */
 
-let ayarlar = {};
-try {
-    ayarlar = require('../data/ayarlar.json');
-} catch (e) {
-    ayarlar = {};
-}
-
 const slashCommands = require('./slashCommands.js');
-
 const isGlobal = process.argv.includes('--global');
 
 async function deployCommands() {

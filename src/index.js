@@ -1,3 +1,7 @@
+// Load environment variables verification (MUST BE FIRST)
+const path = require("path");
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
 // Error handlers (MOVE TO TOP FOR EARLY CRASH VISIBILITY)
 process.on('uncaughtException', (err) => {
     console.error(`[FATAL] ${err.message}\n${err.stack}`);
@@ -16,11 +20,10 @@ console.log("[BOT] Ortam hazırlanıyor...");
 const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, AuditLogEvent } = require("discord.js");
 const initSqlJs = require("sql.js");
 const fs = require("fs");
-const path = require("path");
+// const path = require("path"); // Moved to top
 const { spawn, execSync } = require("child_process");
 
-// Load environment variables from .env file
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+// Load environment variables from .env file (Moved to top)
 
 // Safely load config or use defaults
 let ayarlar = {};
