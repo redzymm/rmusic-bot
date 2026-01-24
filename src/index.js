@@ -92,9 +92,9 @@ function startLavalink() {
 
     try {
         lavalinkProcess = spawn("java", [
-            "-Xmx384M",
-            "-Xms64M",
-            "-XX:+UseG1GC",
+            "-Xmx512M",
+            "-Xms128M",
+            "-XX:+UseSerialGC", // SerialGC is much faster and lighter for small VMs
             "-jar",
             "Lavalink.jar"
         ], {
@@ -1000,8 +1000,14 @@ process.on("exit", () => { if (db) { db.run("DELETE FROM locks WHERE lockID = 'a
         await initDatabase();
         console.log("[STARTUP] Veritabanı hazır. Login deneniyor...");
 
+        // Startup watchdog
+        const watchdog = setTimeout(() => {
+            console.warn("[STARTUP_WARN] Bot 30 saniyedir 'Ready' olamadı. Discord bağlantısı veya Token sorunu olabilir!");
+        }, 30000);
+
         await client.login(BOT_TOKEN);
-        console.log("[STARTUP] Login fonksiyonu çağrıldı, Ready bekleniyor...");
+        clearTimeout(watchdog);
+        console.log("[STARTUP] Login fonksiyonu çağrıldı.");
     } catch (e) {
         console.error("[FATAL_START]", e.message);
     }

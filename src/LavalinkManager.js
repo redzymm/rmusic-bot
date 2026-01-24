@@ -22,9 +22,10 @@ class LavalinkManager {
     async init() {
         if (this.kazagumo) return;
 
-        console.log(`[LAVALINK] Kazagumo başlatılıyor... (Node: ${Nodes[0].url})`);
+        console.log(`[LAVALINK] Kazagumo/Shoukaku başlatılıyor... (Node: ${Nodes[0].url})`);
 
         try {
+            console.log("[LAVALINK] Shoukaku objesi oluşturuluyor...");
             const shoukaku = new Shoukaku(new Connectors.DiscordJS(this.client), Nodes, {
                 moveOnDisconnect: false,
                 resume: true,
