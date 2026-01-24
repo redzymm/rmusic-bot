@@ -15,13 +15,6 @@ const cors = require('cors');
 // Load environment variables
 // Load environment variables
 require('dotenv').config({ path: path.join(__dirname, '.env') });
-console.log('[DEBUG] API Server Env Loaded.');
-console.log('[DEBUG] ADMIN_DISCORD_ID present:', !!process.env.ADMIN_DISCORD_ID);
-if (process.env.ADMIN_DISCORD_ID) {
-    console.log('[DEBUG] ADMIN_DISCORD_ID value:', process.env.ADMIN_DISCORD_ID.trim());
-} else {
-    console.log('[DEBUG] ADMIN_DISCORD_ID IS MISSING IN .ENV');
-}
 
 // Configuration - use environment variables with secure defaults
 const PORT = process.env.API_PORT || 3001;
