@@ -5,7 +5,7 @@ const Spotify = require('kazagumo-spotify');
 const Nodes = [{
     name: 'main',
     url: process.env.LAVALINK_HOST || '127.0.0.1:2333',
-    auth: process.env.LAVALINK_PASSWORD || 'rmusic_lavalink_2024',
+    auth: process.env.LAVALINK_PASSWORD || 'youshallnotpass',
     secure: false
 }];
 
@@ -84,7 +84,7 @@ class LavalinkManager {
             });
 
             this.kazagumo.shoukaku.on('debug', (name, info) => {
-                if (info.includes('Socket') || info.includes('Sever'))
+                if (info.includes('Socket') || info.includes('Sever') || info.includes('Authenticating'))
                     console.log(`[SHOUKAKU_DEBUG] ${name}: ${info}`);
             });
 
