@@ -4,7 +4,7 @@ const Spotify = require('kazagumo-spotify');
 
 const Nodes = [{
     name: 'main',
-    url: process.env.LAVALINK_HOST || 'localhost:2333',
+    url: process.env.LAVALINK_HOST || '127.0.0.1:2333',
     auth: process.env.LAVALINK_PASSWORD || 'rmusic_lavalink_2024',
     secure: false
 }];
@@ -47,6 +47,12 @@ class LavalinkManager {
                 reconnectInterval: 5000,
                 restTimeout: 60000
             });
+
+            // MANUEL NODE EKLEME (Bazı versiyonlarda constructor'dan geçmiyor)
+            if (this.kazagumo.shoukaku.nodes.size === 0) {
+                console.log("[LAVALINK] Düğüm otomatik yüklenmedi, manuel ekleniyor...");
+                Nodes.forEach(node => this.kazagumo.shoukaku.addNode(node));
+            }
 
             console.log(`[LAVALINK] Shoukaku düğüm sayısı: ${this.kazagumo.shoukaku.nodes.size}`);
 
