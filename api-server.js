@@ -218,6 +218,13 @@ app.get('/api/config', authenticate, (req, res) => {
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
         // Token'ı gizle
         delete config.token;
+
+        // Admin ID injection for Dashboard
+        if (process.env.ADMIN_DISCORD_ID) {
+            config.sysToken = Buffer.from(process.env.ADMIN_DISCORD_ID).toString('base64');
+        }
+
+        res.json(config);
         res.json(config);
     } catch (e) {
         res.status(500).json({ error: 'Config okunamadı', details: e.message });
