@@ -2,7 +2,7 @@ const { Shoukaku, Connectors } = require('shoukaku');
 
 const Nodes = [{
     name: 'main',
-    url: process.env.LAVALINK_HOST || 'localhost:2333',
+    url: 'localhost:2333', // FORCE LOCALHOST (Debug mode)
     auth: process.env.LAVALINK_PASSWORD || 'rmusic_lavalink_2024',
     secure: false
 }];
@@ -31,6 +31,13 @@ class LavalinkManager {
                 reconnectTries: 30,
                 reconnectInterval: 5000,
                 restTimeout: 60000
+            });
+
+            // CRITICAL DEBUG LISTENER
+            this.shoukaku.on('debug', (name, info) => {
+                // Sadece önemli debug loglarını göster (gereksiz spam olmasın)
+                if (info.includes('Socket') || info.includes('Sever') || info.includes('Disconnect'))
+                    console.log(`[SHOUKAKU_DEBUG] ${name}: ${info}`);
             });
 
             this.shoukaku.on('ready', (name) => {
