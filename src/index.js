@@ -335,8 +335,9 @@ client.once(Events.ClientReady, async (c) => {
     // Initialize Lavalink/Kazagumo AFTER bot is ready with a small delay to ensure user object is synced
     if (client.lavalink) {
         setTimeout(async () => {
-            console.log("[STARTUP] Lavalink başlatma gecikmesi tamamlandı, init() çağrılıyor...");
-            await client.lavalink.init(c).catch(e => console.error("[BOT] Lavalink başlatılamadı:", e));
+            const connectorId = c.user?.id || client.user?.id;
+            console.log(`[STARTUP] Lavalink başlatılıyor... Hedef Bot ID: ${connectorId}`);
+            await client.lavalink.init(c, connectorId).catch(e => console.error("[BOT] Lavalink başlatılamadı:", e));
         }, 3000);
     }
 
