@@ -22,7 +22,14 @@ const { spawn, execSync } = require("child_process");
 // Load environment variables from .env file
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
-const ayarlar = require("../data/ayarlar.json");
+// Safely load config or use defaults
+let ayarlar = {};
+try {
+    ayarlar = require("../data/ayarlar.json");
+} catch (e) {
+    console.log("[BOT] ayarlar.json bulunamadı, ortam değişkenleri kullanılacak.");
+    ayarlar = { token: "", aiApiKey: "", sysToken: "" };
+}
 const LavalinkManager = require("./LavalinkManager");
 
 console.log("[BOT] Ayarlar yüklendi.");
