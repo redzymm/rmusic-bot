@@ -35,6 +35,10 @@ class LavalinkManager {
         try {
             console.log("[LAVALINK] Shoukaku ve Kazagumo birlikte başlatılıyor...");
 
+            const connector = new Connectors.DiscordJS(this.client);
+            // HACK: Kazagumo v3, Shoukaku v4 connector'ında olmayan .set() metodunu çağırıyor.
+            connector.set = () => { /* Dummy */ };
+
             this.kazagumo = new Kazagumo({
                 defaultSearchEngine: 'youtube',
                 plugins: [
@@ -47,7 +51,7 @@ class LavalinkManager {
                     const guild = this.client.guilds.cache.get(guildId);
                     if (guild) guild.shard.send(payload);
                 }
-            }, new Connectors.DiscordJS(this.client), Nodes, {
+            }, connector, Nodes, {
                 moveOnDisconnect: false,
                 resume: true,
                 resumeTimeout: 60,
