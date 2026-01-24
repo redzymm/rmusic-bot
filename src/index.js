@@ -333,9 +333,23 @@ client.once(Events.ClientReady, async (c) => {
     // if (!ayarlar.slash_commands_deployed) { ... } removed
 
     // Initialize Lavalink AFTER bot is ready (Ensures UserID is available)
+    // Initialize Lavalink AFTER bot is ready (Ensures UserID is available)
+    // Retry logic: Wait 15s first, then retry every 5s if failed
     if (client.lavalink) {
-        console.log("[BOT] Lavalink bağlantısı kuruluyor...");
-        await client.lavalink.init();
+        const connectToLavalink = async (isRetry = false) => {
+            if (!isRetry) console.log("[BOT] Lavalink için 15 saniye bekleniyor...");
+
+            try {
+                await client.lavalink.init();
+                console.log("[BOT] Lavalink bağlantısı BAŞARILI!");
+            } catch (e) {
+                console.error("[BOT] Lavalink bağlanamadı. 5 saniye sonra tekrar deneniyor...");
+                setTimeout(() => connectToLavalink(true), 5000);
+            }
+        };
+
+        // Initial 15s delay
+        setTimeout(() => connectToLavalink(false), 15000);
     }
     const sendStatus = () => {
         const memUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(0);
