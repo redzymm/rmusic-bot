@@ -2,7 +2,7 @@ const { Shoukaku, Connectors } = require('shoukaku');
 
 const Nodes = [{
     name: 'main',
-    url: process.env.LAVALINK_HOST || '127.0.0.1:2333',
+    url: process.env.LAVALINK_HOST || 'localhost:2333',
     auth: process.env.LAVALINK_PASSWORD || 'rmusic_lavalink_2024',
     secure: false
 }];
@@ -34,7 +34,11 @@ class LavalinkManager {
             });
 
             this.shoukaku.on('ready', (name) => {
-                console.log(`[LAVALINK] Node ${name} bağlandı ✅`);
+                console.log(`[LAVALINK] Node ${name} HAZIR (Ready Event) ✅`);
+            });
+
+            this.shoukaku.on('nodeConnect', (node) => {
+                console.log(`[LAVALINK] Node ${node.name} BAĞLANDI (Socket Connected) 🔗`);
             });
 
             this.shoukaku.on('error', (name, error) => {
