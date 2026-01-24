@@ -25,21 +25,13 @@ class LavalinkManager {
         console.log(`[LAVALINK] Kazagumo/Shoukaku başlatılıyor... (Node: ${Nodes[0].url})`);
 
         try {
-            console.log("[LAVALINK] Shoukaku objesi oluşturuluyor...");
-            const shoukaku = new Shoukaku(new Connectors.DiscordJS(this.client), Nodes, {
-                moveOnDisconnect: false,
-                resume: true,
-                resumeTimeout: 60,
-                reconnectTries: 30,
-                reconnectInterval: 5000,
-                restTimeout: 60000
-            });
+            console.log("[LAVALINK] Shoukaku ve Kazagumo birlikte başlatılıyor...");
 
             this.kazagumo = new Kazagumo({
                 defaultSearchEngine: 'youtube',
                 plugins: [
                     new Spotify({
-                        clientId: process.env.SPOTIFY_CLIENT_ID || '', // Optional
+                        clientId: process.env.SPOTIFY_CLIENT_ID || '',
                         clientSecret: process.env.SPOTIFY_CLIENT_SECRET || ''
                     })
                 ],
@@ -47,7 +39,14 @@ class LavalinkManager {
                     const guild = this.client.guilds.cache.get(guildId);
                     if (guild) guild.shard.send(payload);
                 }
-            }, shoukaku);
+            }, new Connectors.DiscordJS(this.client), Nodes, {
+                moveOnDisconnect: false,
+                resume: true,
+                resumeTimeout: 60,
+                reconnectTries: 30,
+                reconnectInterval: 5000,
+                restTimeout: 60000
+            });
 
             // --- Kazagumo Events ---
             this.kazagumo.on('playerStart', (player, track) => {
