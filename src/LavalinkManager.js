@@ -30,22 +30,9 @@ class LavalinkManager {
             return;
         }
 
-        console.log(`[LAVALINK] Kullanılan Bot ID: ${this.client.user.id}`);
-
         try {
-            console.log("[LAVALINK] Universal Connector Patch uygulanıyor...");
-            const connector = new Connectors.DiscordJS(this.client);
+            console.log("[LAVALINK] Kazagumo ve Shoukaku (v3) başlatılıyor...");
 
-            // YAMA 1: Shoukaku v4 Connectors artık .getId()'yi farklı bekliyor olabilir, manuel zorluyoruz.
-            connector.getId = () => this.client.user?.id;
-
-            // YAMA 2: Kazagumo v3, v4 connector'ında olmayan .set() metodunu arıyor.
-            connector.set = (sh) => { if (sh) connector.shoukaku = sh; };
-
-            // YAMA 3: 'Cannot read properties of undefined (reading listen)' hatasını önlemek için dummy ekliyoruz.
-            if (!connector.listen) connector.listen = () => { /* No-op */ };
-
-            console.log("[LAVALINK] Kazagumo ana sınıfı oluşturuluyor...");
             this.kazagumo = new Kazagumo({
                 defaultSearchEngine: 'youtube',
                 plugins: [
@@ -58,7 +45,7 @@ class LavalinkManager {
                     const guild = this.client.guilds.cache.get(guildId);
                     if (guild) guild.shard.send(payload);
                 }
-            }, connector, Nodes, {
+            }, new Connectors.DiscordJS(this.client), Nodes, {
                 moveOnDisconnect: false,
                 resume: true,
                 resumeTimeout: 60,
@@ -67,15 +54,7 @@ class LavalinkManager {
                 restTimeout: 60000
             });
 
-            // MANUEL NODE EKLEME (Bazı versiyonlarda constructor'dan geçmiyor)
-            if (this.kazagumo.shoukaku.nodes.size === 0) {
-                console.log("[LAVALINK] Düğüm otomatik yüklenmedi, manuel ekleniyor...");
-                Nodes.forEach(node => this.kazagumo.shoukaku.addNode(node));
-            }
-
-            console.log(`[LAVALINK] Shoukaku düğüm sayısı: ${this.kazagumo.shoukaku.nodes.size}`);
-
-            // --- Shoukaku Node Events ---
+            // Shoukaku (via Kazagumo) Node Events
             this.kazagumo.shoukaku.on('ready', (name) => {
                 console.log(`[LAVALINK] Node ${name} HAZIR ✅`);
             });
@@ -88,16 +67,12 @@ class LavalinkManager {
                 console.warn(`[LAVALINK] Node ${name} kapandı (Kod: ${code}, Sebep: ${reason})`);
             });
 
-            this.kazagumo.shoukaku.on('disconnect', (name, players, moved) => {
-                console.warn(`[LAVALINK] Node ${name} bağlantısı kesildi.`);
-            });
-
             this.kazagumo.shoukaku.on('debug', (name, info) => {
                 if (info.includes('Socket') || info.includes('Sever') || info.includes('Authenticating'))
                     console.log(`[SHOUKAKU_DEBUG] ${name}: ${info}`);
             });
 
-            // --- Kazagumo Events ---
+            // Kazagumo Events
             this.kazagumo.on('playerStart', (player, track) => {
                 console.log(`[LAVALINK] Şarkı başladı: ${track.title} (Guild: ${player.guildId})`);
             });
