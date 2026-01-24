@@ -9,6 +9,25 @@ const WebSocket = require('ws');
 // Initialize @electron/remote
 remoteMain.initialize();
 
+// Robust .env loading
+const envPaths = [
+    path.join(__dirname, '../.env'), // Dev mode standard
+    path.join(process.cwd(), '../.env'), // CWD based
+    path.join(__dirname, '../../.env'), // One level deeper?
+    path.resolve('c:/Users/aliha/OneDrive/Desktop/REDZYMM/bot/.env') // Absolute fallback
+];
+
+let envLoaded = false;
+for (const p of envPaths) {
+    if (fs.existsSync(p)) {
+        require('dotenv').config({ path: p });
+        console.log(`[ENV] Loaded from: ${p}`);
+        envLoaded = true;
+        break;
+    }
+}
+if (!envLoaded) console.warn('[ENV] FATAL: .env file not found in any known location!');
+
 // Single Instance Lock
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -24,7 +43,11 @@ if (!gotTheLock) {
 }
 
 // ========== REMOTE MODE CONFIGURATION ==========
-let remoteConfig = { mode: 'local', serverUrl: '', apiKey: '' };
+let remoteConfig = {
+    mode: 'local',
+    serverUrl: process.env.REMOTE_SERVER_IP || 'http://35.187.186.246:3001',
+    apiKey: process.env.API_SECRET_KEY || 'rmusic-x7k9m2p4v8n1q3w5y6z0-secure-2026'
+};
 let remoteWs = null;
 let isRemoteConnected = false;
 
@@ -32,7 +55,14 @@ function loadRemoteConfig() {
     try {
         const configPath = path.join(__dirname, '../data/remote-config.json');
         if (fs.existsSync(configPath)) {
-            remoteConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            const fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            // Merge file config (mostly for 'mode') but FORCE env vars for connection details
+            remoteConfig = {
+                ...remoteConfig,
+                ...fileConfig,
+                serverUrl: process.env.REMOTE_SERVER_IP || 'http://35.187.186.246:3001',
+                apiKey: process.env.API_SECRET_KEY || 'rmusic-x7k9m2p4v8n1q3w5y6z0-secure-2026'
+            };
             console.log('[REMOTE] Config loaded:', remoteConfig.mode, remoteConfig.serverUrl);
         }
     } catch (e) {
@@ -437,6 +467,12 @@ ipcMain.handle('get-config', async () => {
     try {
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
         if (!config.adminPassword) config.adminPassword = '3131';
+
+        // Inject sysToken for Local Admin Auth
+        if (process.env.ADMIN_DISCORD_ID) {
+            config.sysToken = Buffer.from(process.env.ADMIN_DISCORD_ID).toString('base64');
+        }
+
         return config;
     } catch (e) {
         return {

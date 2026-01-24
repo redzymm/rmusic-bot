@@ -332,28 +332,25 @@ client.once(Events.ClientReady, async (c) => {
     // Slash command deployment is now handled manually or via npm script to prevent startup crashes
     // if (!ayarlar.slash_commands_deployed) { ... } removed
 
-    // Initialize Lavalink AFTER bot is ready (Ensures UserID is available)
-    // Retry logic: Try immediately, then retry every 5s if failed
-    // Initialize Lavalink AFTER bot is ready
-    console.log("[BOT] Lavalink durumu kontrol ediliyor...");
+    // Initialize Lavalink/Kazagumo AFTER bot is ready
     if (client.lavalink) {
-        (async function tryConnect() {
-            try {
-                console.log("[BOT] Lavalink -> init() çağrılıyor...");
-                await client.lavalink.init();
-                console.log("[BOT] Lavalink -> init() bitti (Promise resolved).");
-            } catch (e) {
-                console.error(`[BOT] Lavalink BAĞLANTI HATASI: ${e.message}`);
-                console.log("[BOT] 5 saniye sonra tekrar deneniyor...");
-                setTimeout(tryConnect, 5000);
-            }
-        })();
-    } else {
-        console.error("[BOT] FATAL: client.lavalink tanımlı değil!");
+        client.lavalink.init().catch(e => console.error("[BOT] Lavalink başlatılamadı:", e));
     }
+
     const sendStatus = () => {
         const memUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(0);
         const cpuUsed = (os.loadavg()[0] * 10).toFixed(0);
+
+        // Get voice channel activity from Kazagumo
+        const voiceChannels = client.lavalink?.kazagumo?.players.map(player => {
+            const guild = client.guilds.cache.get(player.guildId);
+            const channel = guild?.channels.cache.get(player.voiceId);
+            return {
+                guildName: guild?.name || "Bilinmiyor",
+                channelName: channel?.name || "Bilinmiyor",
+                userCount: channel?.members.filter(m => !m.user.bot).size || 0
+            };
+        }) || [];
 
         console.log("DASHBOARD_DATA:" + JSON.stringify({
             type: "status",
@@ -372,14 +369,7 @@ client.once(Events.ClientReady, async (c) => {
                 name: g.name,
                 icon: g.iconURL({ extension: 'png', size: 64 }) || "https://cdn.discordapp.com/embed/avatars/0.png"
             })),
-            // Voice Channel Activity
-            voiceChannels: client.guilds.cache
-                .filter(g => g.members.me?.voice?.channel)
-                .map(g => ({
-                    guildName: g.name,
-                    channelName: g.members.me.voice.channel.name,
-                    userCount: g.members.me.voice.channel.members.filter(m => !m.user.bot).size
-                })),
+            voiceChannels: voiceChannels,
             commands: Array.from(new Set(client.commands.values())).map(cmd => ({
                 name: cmd.name,
                 description: cmd.description
@@ -952,12 +942,11 @@ process.stdin.on("data", (data) => {
                 if (client.filters.hasOwnProperty(fid)) {
                     client.filters[fid] = !client.filters[fid];
 
-                    const pCommand = client.commands?.get('p');
-                    if (pCommand && typeof pCommand.buildFilters === 'function') {
+                    if (LavalinkManager && typeof LavalinkManager.buildFilters === 'function') {
                         try {
-                            const newFilters = pCommand.buildFilters(client);
-                            client.müzik.forEach((data, guildId) => {
-                                client.lavalink.setFilters(guildId, newFilters);
+                            const newFilters = LavalinkManager.buildFilters(client);
+                            client.lavalink.kazagumo?.players.forEach((player) => {
+                                player.setFilters(newFilters);
                             });
                         } catch (e) {
                             console.error("[DASHBOARD_FILTER_ERR]", e.message);
@@ -971,12 +960,11 @@ process.stdin.on("data", (data) => {
                 const [bid, val] = json.value.split(":").map(Number);
                 client.equalizer[bid] = val;
 
-                const pCommand = client.commands?.get('p');
-                if (pCommand && typeof pCommand.buildFilters === 'function') {
+                if (LavalinkManager && typeof LavalinkManager.buildFilters === 'function') {
                     try {
-                        const newFilters = pCommand.buildFilters(client);
-                        client.müzik.forEach((data, guildId) => {
-                            client.lavalink.setFilters(guildId, newFilters);
+                        const newFilters = LavalinkManager.buildFilters(client);
+                        client.lavalink.kazagumo?.players.forEach((player) => {
+                            player.setFilters(newFilters);
                         });
                     } catch (e) {
                         console.error("[DASHBOARD_EQ_ERR]", e.message);

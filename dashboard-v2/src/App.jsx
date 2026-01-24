@@ -568,8 +568,8 @@ export default function App() {
                 </div>
 
                 <main className="flex-1 p-4 pt-10 overflow-y-auto custom-scroll">
-                    {/* Global Admin Authentication Gate */}
-                    {!isSystemAdmin ? (
+                    {/* Global Admin Authentication Gate (Allow Settings always) */}
+                    {!isSystemAdmin && activeTab !== 'Settings' ? (
                         <div className="h-full flex flex-col items-center justify-center space-y-8">
                             <div className="text-center space-y-4">
                                 <div className="w-20 h-20 mx-auto bg-brand-red/10 rounded-full flex items-center justify-center ring-4 ring-brand-red/20">
@@ -2019,6 +2019,7 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
                         </div>
                     </div>
                 </div>
+                {/* Remote Connection Config (Hidden/Background) */}
 
                 {/* 3. Discord Integration */}
                 <div className="glass p-4 rounded-2xl space-y-4 border-[#5865F2]/20 bg-[#5865F2]/5">

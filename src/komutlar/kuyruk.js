@@ -4,25 +4,24 @@ module.exports = {
     description: "Sunucudaki şarkı sırasını gösterir.",
     run: async (message, args, client) => {
         try {
-            const guildData = client.müzik.get(message.guild.id);
+            const player = client.lavalink.getPlayer(message.guild.id);
 
-            if (!guildData || guildData.queue.length === 0) {
+            if (!player || !player.queue || player.queue.length === 0 && !player.queue.current) {
                 return message.channel.send("❌ Şu anda kuyruk boş.");
             }
 
-            const tracks = guildData.queue;
-            const current = tracks[0];
-            const nextTracks = tracks.slice(1);
+            const current = player.queue.current;
+            const tracks = player.queue; // Kazagumo queue is an array-like object
 
-            let embedText = `🎵 **Şu an çalıyor:** [${current.title}](${current.url})\n`;
-            embedText += `👤 **İsteyen:** ${current.requester}\n\n`;
+            let embedText = `🎵 **Şu an çalıyor:** [${current.title}](${current.uri})\n`;
+            embedText += `👤 **İsteyen:** ${current.requester?.tag || "Bilinmiyor"}\n\n`;
 
-            if (nextTracks.length > 0) {
+            if (tracks.length > 0) {
                 embedText += `📜 **Sıradaki Şarkılar:**\n`;
-                const list = nextTracks.slice(0, 10).map((t, i) => `${i + 1}. **${t.title}** - *${t.requester}*`).join('\n');
+                const list = tracks.slice(0, 10).map((t, i) => `${i + 1}. **${t.title}** - *${t.requester?.tag || "Bilinmiyor"}*`).join('\n');
                 embedText += list;
-                if (nextTracks.length > 10) {
-                    embedText += `\n...ve **${nextTracks.length - 10}** şarkı daha.`;
+                if (tracks.length > 10) {
+                    embedText += `\n...ve **${tracks.length - 10}** şarkı daha.`;
                 }
             } else {
                 embedText += `✨ Kuyrukta başka şarkı yok.`;
@@ -33,7 +32,7 @@ module.exports = {
                     title: `${message.guild.name} - Şarkı Kuyruğu`,
                     description: embedText,
                     color: 0x5865F2,
-                    thumbnail: { url: current.thumbnail }
+                    thumbnail: { url: current.thumbnail || null }
                 }]
             });
 

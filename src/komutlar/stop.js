@@ -3,16 +3,14 @@ module.exports = {
     aliases: ["dur", "leave", "dc", "kapat"],
     description: "Müziği durdurur ve kanaldan çıkar.",
     run: async (message, args, client) => {
-        const data = client.müzik.get(message.guild.id);
+        const player = client.lavalink.getPlayer(message.guild.id);
 
-        if (!data) {
-            return message.reply("❌ Şu an çalan bir şarkı yok.");
+        if (!player) {
+            return message.reply("❌ Şu an aktif bir bağlantı yok.");
         }
 
         try {
-            // Destroy the Lavalink player
-            await client.lavalink.destroyPlayer(message.guild.id);
-            client.müzik.delete(message.guild.id);
+            await player.destroy();
             message.channel.send("⏹️ Müzik durduruldu ve kanaldan çıkıldı.");
         } catch (e) {
             console.error(e);

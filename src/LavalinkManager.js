@@ -1,8 +1,10 @@
 const { Shoukaku, Connectors } = require('shoukaku');
+const { Kazagumo, Plugins } = require('kazagumo');
+const Spotify = require('kazagumo-spotify');
 
 const Nodes = [{
     name: 'main',
-    url: 'localhost:2333', // FORCE LOCALHOST (Debug mode)
+    url: process.env.LAVALINK_HOST || 'localhost:2333',
     auth: process.env.LAVALINK_PASSWORD || 'rmusic_lavalink_2024',
     secure: false
 }];
@@ -10,21 +12,20 @@ const Nodes = [{
 class LavalinkManager {
     constructor(client) {
         this.client = client;
-        this.shoukaku = null;
-        console.log('[LAVALINK] LavalinkManager yüklendi, Discord bağlantısı bekleniyor...');
+        this.kazagumo = null;
+        console.log('[LAVALINK] KazagumoManager yüklendi, Discord bağlantısı bekleniyor...');
     }
 
     /**
-     * Initialize Shoukaku connection. 
-     * This should be called AFTER the client is ready to ensure we have a valid UserId.
+     * Initialize Kazagumo and Shoukaku.
      */
     async init() {
-        if (this.shoukaku) return;
+        if (this.kazagumo) return;
 
-        console.log(`[LAVALINK] Shoukaku başlatılıyor... (Node: ${Nodes[0].url})`);
+        console.log(`[LAVALINK] Kazagumo başlatılıyor... (Node: ${Nodes[0].url})`);
 
         try {
-            this.shoukaku = new Shoukaku(new Connectors.DiscordJS(this.client), Nodes, {
+            const shoukaku = new Shoukaku(new Connectors.DiscordJS(this.client), Nodes, {
                 moveOnDisconnect: false,
                 resume: true,
                 resumeTimeout: 60,
@@ -33,86 +34,115 @@ class LavalinkManager {
                 restTimeout: 60000
             });
 
-            // CRITICAL DEBUG LISTENER
-            this.shoukaku.on('debug', (name, info) => {
-                // Sadece önemli debug loglarını göster (gereksiz spam olmasın)
-                if (info.includes('Socket') || info.includes('Sever') || info.includes('Disconnect'))
+            this.kazagumo = new Kazagumo({
+                defaultSearchEngine: 'youtube',
+                plugins: [
+                    new Spotify({
+                        clientId: process.env.SPOTIFY_CLIENT_ID || '', // Optional
+                        clientSecret: process.env.SPOTIFY_CLIENT_SECRET || ''
+                    })
+                ],
+                send: (guildId, payload) => {
+                    const guild = this.client.guilds.cache.get(guildId);
+                    if (guild) guild.shard.send(payload);
+                }
+            }, shoukaku);
+
+            // --- Kazagumo Events ---
+            this.kazagumo.on('playerStart', (player, track) => {
+                console.log(`[LAVALINK] Şarkı başladı: ${track.title} (Guild: ${player.guildId})`);
+            });
+
+            this.kazagumo.on('playerEmpty', (player) => {
+                console.log(`[LAVALINK] Kuyruk bitti (Guild: ${player.guildId})`);
+                // Auto-destroy player after 1 minute of inactivity happens in command logic or here
+            });
+
+            this.kazagumo.on('playerError', (player, error) => {
+                console.error(`[LAVALINK] Oyuncu hatası:`, error);
+            });
+
+            this.kazagumo.on('playerResolveError', (player, track, error) => {
+                console.error(`[LAVALINK] Şarkı çözümleme hatası:`, error);
+            });
+
+            // --- Shoukaku Node Events (via Kazagumo.shoukaku) ---
+            this.kazagumo.shoukaku.on('ready', (name) => {
+                console.log(`[LAVALINK] Node ${name} HAZIR ✅`);
+            });
+
+            this.kazagumo.shoukaku.on('error', (name, error) => {
+                console.error(`[LAVALINK] Node ${name} hatası ❌:`, error);
+            });
+
+            this.kazagumo.shoukaku.on('debug', (name, info) => {
+                if (info.includes('Socket') || info.includes('Sever'))
                     console.log(`[SHOUKAKU_DEBUG] ${name}: ${info}`);
             });
 
-            this.shoukaku.on('ready', (name) => {
-                console.log(`[LAVALINK] Node ${name} HAZIR (Ready Event) ✅`);
-            });
-
-            this.shoukaku.on('nodeConnect', (node) => {
-                console.log(`[LAVALINK] Node ${node.name} BAĞLANDI (Socket Connected) 🔗`);
-            });
-
-            this.shoukaku.on('error', (name, error) => {
-                console.error(`[LAVALINK] Node ${name} hatası ❌:`, error.message || error);
-            });
-
-            this.shoukaku.on('close', (name, code, reason) => {
-                console.warn(`[LAVALINK] Node ${name} bağlantı kapandı: ${code} - ${reason}`);
-            });
-
-            this.shoukaku.on('disconnect', (name) => {
-                console.warn(`[LAVALINK] Node ${name} kesildi.`);
-            });
-
-            console.log('[LAVALINK] Shoukaku hazır.');
+            console.log('[LAVALINK] Kazagumo hazır.');
         } catch (err) {
-            console.error('[LAVALINK_FATAL] Shoukaku başlatılamadı:', err.message);
+            console.error('[LAVALINK_FATAL] Kazagumo başlatılamadı:', err.message);
         }
     }
 
-    getNode() {
-        if (!this.shoukaku) return null;
-        return this.shoukaku.options.nodeResolver(this.shoukaku.nodes);
+    /**
+     * Search for tracks.
+     */
+    async search(query, requester) {
+        if (!this.kazagumo) throw new Error('Kazagumo hazır değil');
+        return await this.kazagumo.search(query, { requester: requester });
     }
 
-    async search(query, source = 'youtube') {
-        const node = this.getNode();
-        if (!node) throw new Error('Lavalink bağlantısı hazır değil');
-
-        let searchQuery = query;
-        if (!query.startsWith('http')) {
-            searchQuery = source === 'youtube' ? `ytsearch:${query}` : `scsearch:${query}`;
-        }
-
-        return await node.rest.resolve(searchQuery);
+    /**
+     * Get or Create a player.
+     */
+    async createPlayer(options) {
+        if (!this.kazagumo) throw new Error('Kazagumo hazır değil');
+        return await this.kazagumo.createPlayer(options);
     }
 
-    async createPlayer(guildId, channelId, textChannelId) {
-        if (!this.shoukaku) throw new Error('Lavalink bağlantısı hazır değil');
-
-        const player = await this.shoukaku.joinVoiceChannel({
-            guildId: guildId,
-            channelId: channelId,
-            shardId: this.client.shard?.id || 0,
-            deaf: true
-        });
-
-        player.textChannelId = textChannelId;
-        return player;
+    /**
+     * Destroy a player.
+     */
+    async destroyPlayer(guildId) {
+        const player = this.kazagumo?.players.get(guildId);
+        if (player) await player.destroy();
     }
 
     getPlayer(guildId) {
-        return this.shoukaku?.players.get(guildId);
+        return this.kazagumo?.players.get(guildId);
     }
 
-    async setVolume(guildId, volume) {
-        const player = this.getPlayer(guildId);
-        if (player) await player.setFilters({ volume: volume / 100 });
-    }
+    static buildFilters(client) {
+        const filters = {};
+        const vol = (client.globalVolume || 100) / 100;
+        filters.volume = vol;
 
-    async setFilters(guildId, filters) {
-        const player = this.getPlayer(guildId);
-        if (player) await player.setFilters(filters);
-    }
+        if (client.equalizer && client.equalizer.some(g => g !== 0)) {
+            const bands = client.equalizer.map((gain, i) => ({
+                band: i,
+                gain: gain / 100
+            }));
+            filters.equalizer = bands;
+        }
 
-    async destroyPlayer(guildId) {
-        if (this.shoukaku) await this.shoukaku.leaveVoiceChannel(guildId);
+        if (client.filters?.nightcore) {
+            filters.timescale = { speed: 1.2, pitch: 1.2, rate: 1.0 };
+        } else if (client.filters?.vaporwave) {
+            filters.timescale = { speed: 0.85, pitch: 1.2, rate: 1.0 };
+        }
+
+        if (client.filters?.["8d"]) {
+            filters.rotation = { rotationHz: 0.2 };
+        }
+
+        if (client.filters?.bassboost) {
+            const bassEq = [{ band: 0, gain: 0.6 }, { band: 1, gain: 0.5 }, { band: 2, gain: 0.3 }];
+            filters.equalizer = [...(filters.equalizer || []), ...bassEq];
+        }
+
+        return filters;
     }
 }
 
