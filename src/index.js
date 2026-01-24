@@ -1008,8 +1008,12 @@ process.on("exit", () => { if (db) { db.run("DELETE FROM locks WHERE lockID = 'a
 // START
 (async () => {
     try {
+        console.log("[STARTUP] Veritabanı başlatılıyor (initDatabase)...");
         await initDatabase();
+        console.log("[STARTUP] Veritabanı hazır. Login deneniyor...");
+
         await client.login(BOT_TOKEN);
+        console.log("[STARTUP] Login fonksiyonu çağrıldı, Ready bekleniyor...");
     } catch (e) {
         console.error("[FATAL_START]", e.message);
     }
