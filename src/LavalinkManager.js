@@ -19,10 +19,18 @@ class LavalinkManager {
     /**
      * Initialize Kazagumo and Shoukaku.
      */
-    async init() {
+    async init(readyClient) {
         if (this.kazagumo) return;
+        if (readyClient) this.client = readyClient;
 
         console.log(`[LAVALINK] Kazagumo/Shoukaku başlatılıyor... (Node: ${Nodes[0].url})`);
+
+        if (!this.client.user) {
+            console.error("[LAVALINK_FATAL] Bot ID'si bulunamadı (client.user null)! Connector başlatılamaz.");
+            return;
+        }
+
+        console.log(`[LAVALINK] Kullanılan Bot ID: ${this.client.user.id}`);
 
         try {
             console.log("[LAVALINK] Shoukaku ve Kazagumo birlikte başlatılıyor...");
@@ -56,25 +64,7 @@ class LavalinkManager {
 
             console.log(`[LAVALINK] Shoukaku düğüm sayısı: ${this.kazagumo.shoukaku.nodes.size}`);
 
-            // --- Kazagumo Events ---
-            this.kazagumo.on('playerStart', (player, track) => {
-                console.log(`[LAVALINK] Şarkı başladı: ${track.title} (Guild: ${player.guildId})`);
-            });
-
-            this.kazagumo.on('playerEmpty', (player) => {
-                console.log(`[LAVALINK] Kuyruk bitti (Guild: ${player.guildId})`);
-                // Auto-destroy player after 1 minute of inactivity happens in command logic or here
-            });
-
-            this.kazagumo.on('playerError', (player, error) => {
-                console.error(`[LAVALINK] Oyuncu hatası:`, error);
-            });
-
-            this.kazagumo.on('playerResolveError', (player, track, error) => {
-                console.error(`[LAVALINK] Şarkı çözümleme hatası:`, error);
-            });
-
-            // --- Shoukaku Node Events (via Kazagumo.shoukaku) ---
+            // --- Shoukaku Node Events ---
             this.kazagumo.shoukaku.on('ready', (name) => {
                 console.log(`[LAVALINK] Node ${name} HAZIR ✅`);
             });
@@ -93,6 +83,19 @@ class LavalinkManager {
 
             this.kazagumo.shoukaku.on('debug', (name, info) => {
                 console.log(`[SHOUKAKU_DEBUG] ${name}: ${info}`);
+            });
+
+            // --- Kazagumo Events ---
+            this.kazagumo.on('playerStart', (player, track) => {
+                console.log(`[LAVALINK] Şarkı başladı: ${track.title} (Guild: ${player.guildId})`);
+            });
+
+            this.kazagumo.on('playerEmpty', (player) => {
+                console.log(`[LAVALINK] Kuyruk bitti (Guild: ${player.guildId})`);
+            });
+
+            this.kazagumo.on('playerError', (player, error) => {
+                console.error(`[LAVALINK] Oyuncu hatası:`, error);
             });
 
             console.log('[LAVALINK] Kazagumo hazır.');

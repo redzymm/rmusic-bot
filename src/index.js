@@ -332,9 +332,12 @@ client.once(Events.ClientReady, async (c) => {
     // Slash command deployment is now handled manually or via npm script to prevent startup crashes
     // if (!ayarlar.slash_commands_deployed) { ... } removed
 
-    // Initialize Lavalink/Kazagumo AFTER bot is ready
+    // Initialize Lavalink/Kazagumo AFTER bot is ready with a small delay to ensure user object is synced
     if (client.lavalink) {
-        client.lavalink.init().catch(e => console.error("[BOT] Lavalink başlatılamadı:", e));
+        setTimeout(async () => {
+            console.log("[STARTUP] Lavalink başlatma gecikmesi tamamlandı, init() çağrılıyor...");
+            await client.lavalink.init(c).catch(e => console.error("[BOT] Lavalink başlatılamadı:", e));
+        }, 3000);
     }
 
     const sendStatus = () => {
