@@ -341,8 +341,8 @@ client.once(Events.ClientReady, async (c) => {
         const memUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(0);
         const cpuUsed = (os.loadavg()[0] * 10).toFixed(0);
 
-        // Get voice channel activity from Kazagumo
-        const voiceChannels = client.lavalink?.kazagumo?.players.map(player => {
+        // Get voice channel activity from Kazagumo (players is a Map, convert to Array first)
+        const voiceChannels = Array.from(client.lavalink?.kazagumo?.players.values() || []).map(player => {
             const guild = client.guilds.cache.get(player.guildId);
             const channel = guild?.channels.cache.get(player.voiceId);
             return {
