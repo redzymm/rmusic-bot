@@ -4,7 +4,7 @@ const Spotify = require('kazagumo-spotify');
 
 const Nodes = [{
     name: 'main',
-    url: process.env.LAVALINK_HOST || 'localhost:2333',
+    url: process.env.LAVALINK_HOST || '127.0.0.1:2333',
     auth: process.env.LAVALINK_PASSWORD || 'rmusic_lavalink_2024',
     secure: false
 }];
@@ -73,6 +73,14 @@ class LavalinkManager {
 
             this.kazagumo.shoukaku.on('error', (name, error) => {
                 console.error(`[LAVALINK] Node ${name} hatası ❌:`, error);
+            });
+
+            this.kazagumo.shoukaku.on('close', (name, code, reason) => {
+                console.warn(`[LAVALINK] Node ${name} kapandı (Kod: ${code}, Sebep: ${reason})`);
+            });
+
+            this.kazagumo.shoukaku.on('disconnect', (name, players, moved) => {
+                console.warn(`[LAVALINK] Node ${name} bağlantısı kesildi.`);
             });
 
             this.kazagumo.shoukaku.on('debug', (name, info) => {
