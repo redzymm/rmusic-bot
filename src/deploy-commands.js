@@ -99,5 +99,9 @@ async function getFirstGuildId(rest, clientId) {
     }
 }
 
-// Script'i çalıştır
-deployCommands();
+// Script'i sadece doğrudan çalıştırıldığında başlat (require edildiğinde değil)
+if (require.main === module) {
+    deployCommands();
+}
+
+module.exports = { deployCommands };
