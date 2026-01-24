@@ -4,7 +4,7 @@ const Spotify = require('kazagumo-spotify');
 
 const Nodes = [{
     name: 'main',
-    url: process.env.LAVALINK_HOST || 'localhost:2333',
+    url: process.env.LAVALINK_HOST || '127.0.0.1:2333',
     auth: process.env.LAVALINK_PASSWORD || 'rmusic_lavalink_2024',
     secure: false
 }];
@@ -54,13 +54,20 @@ class LavalinkManager {
                 restTimeout: 60000
             });
 
-            console.log(`[LAVALINK] Kazagumo objesi keys: ${Object.keys(this.kazagumo)}`);
-            if (this.kazagumo.shoukaku) {
-                console.log(`[LAVALINK] Shoukaku objesi bulundu. Keys: ${Object.keys(this.kazagumo.shoukaku)}`);
-                console.log(`[LAVALINK] Shoukaku node sayısı: ${this.kazagumo.shoukaku.nodes.size}`);
-            } else {
-                console.error("[LAVALINK_ERROR] Kazagumo içinde Shoukaku bulunamadı!");
+            // MANUEL NODE EKLEME (V3'te constructor bazen kaçırabiliyor)
+            if (this.kazagumo.shoukaku.nodes.size === 0) {
+                console.log("[LAVALINK] Düğüm bulunamadı, manuel ekleniyor...");
+                for (const node of Nodes) {
+                    try {
+                        this.kazagumo.shoukaku.addNode(node);
+                        console.log(`[LAVALINK] Düğüm manuel eklendi: ${node.name}`);
+                    } catch (e) {
+                        console.error(`[LAVALINK] Düğüm ekleme hatası (${node.name}):`, e.message);
+                    }
+                }
             }
+
+            console.log(`[LAVALINK] Shoukaku node sayısı: ${this.kazagumo.shoukaku.nodes.size}`);
 
             // Shoukaku (via Kazagumo) Node Events
             this.kazagumo.shoukaku.on('ready', (name) => {
