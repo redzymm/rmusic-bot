@@ -2,24 +2,34 @@ const { REST, Routes } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
+// Load env vars
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
 /**
  * Discord Slash Commands Deploy Script
- * Bu script slash komutlarını Discord API'ye kaydeder.
- * 
- * Kullanım:
- *   node src/deploy-commands.js          -> Guild-specific (anında aktif)
- *   node src/deploy-commands.js --global -> Global (1 saat gecikme)
  */
 
-const ayarlar = require('../data/ayarlar.json');
+let ayarlar = {};
+try {
+    ayarlar = require('../data/ayarlar.json');
+} catch (e) {
+    ayarlar = {};
+}
+
 const slashCommands = require('./slashCommands.js');
 
 const isGlobal = process.argv.includes('--global');
 
 async function deployCommands() {
     const commands = slashCommands.map(cmd => cmd.toJSON());
+    const token = process.env.DISCORD_TOKEN || ayarlar.token;
 
-    const rest = new REST({ version: '10' }).setToken(ayarlar.token);
+    if (!token) {
+        console.error('❌ DISCORD_TOKEN bulunamadı! .env dosyasını kontrol edin.');
+        process.exit(1);
+    }
+
+    const rest = new REST({ version: '10' }).setToken(token);
 
     try {
         console.log(`🚀 ${commands.length} slash komutu kaydediliyor...`);
@@ -39,11 +49,10 @@ async function deployCommands() {
             );
         } else {
             // Guild-specific komutlar (anında aktif)
-            // İlk sunucuyu al veya config'den oku
-            const guildId = ayarlar.test_guild_id || await getFirstGuildId(rest, clientId);
+            const guildId = process.env.TEST_GUILD_ID || ayarlar.test_guild_id || await getFirstGuildId(rest, clientId);
 
             if (!guildId) {
-                console.error('❌ Sunucu ID bulunamadı! ayarlar.json\'a "test_guild_id" ekleyin.');
+                console.error('❌ Sunucu ID bulunamadı! .env içinde TEST_GUILD_ID tanımlayın.');
                 process.exit(1);
             }
 
@@ -59,15 +68,18 @@ async function deployCommands() {
         console.log('\n📋 Kaydedilen komutlar:');
         data.forEach(cmd => console.log(`   /${cmd.name} - ${cmd.description}`));
 
-        // ayarlar.json'u güncelle
-        ayarlar.slash_commands_deployed = true;
-        ayarlar.slash_deploy_mode = isGlobal ? 'global' : 'guild';
-        ayarlar.slash_deploy_date = new Date().toISOString();
-
-        fs.writeFileSync(
-            path.join(__dirname, '../data/ayarlar.json'),
-            JSON.stringify(ayarlar, null, 2)
-        );
+        // ayarlar.json'u güncelle (Eğer varsa)
+        if (Object.keys(ayarlar).length > 0) {
+            try {
+                ayarlar.slash_commands_deployed = true;
+                ayarlar.slash_deploy_mode = isGlobal ? 'global' : 'guild';
+                ayarlar.slash_deploy_date = new Date().toISOString();
+                fs.writeFileSync(
+                    path.join(__dirname, '../data/ayarlar.json'),
+                    JSON.stringify(ayarlar, null, 2)
+                );
+            } catch (e) { }
+        }
 
     } catch (error) {
         console.error('❌ Komut kaydı sırasında hata:', error);
