@@ -326,14 +326,8 @@ client.lavalink = new LavalinkManager(client);
 client.once(Events.ClientReady, async (c) => {
     console.log(`[BOT] ${c.user.tag} aktif!`);
 
-    // Deploy slash commands if not already deployed
-    if (!ayarlar.slash_commands_deployed) {
-        try {
-            require("./deploy-commands");
-        } catch (e) {
-            console.error("[DEPLOY_ERR]", e.message);
-        }
-    }
+    // Slash command deployment is now handled manually or via npm script to prevent startup crashes
+    // if (!ayarlar.slash_commands_deployed) { ... } removed
 
     // Initialize Lavalink AFTER bot is ready (Ensures UserID is available)
     if (client.lavalink) {
