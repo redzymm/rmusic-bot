@@ -33,25 +33,8 @@ class LavalinkManager {
         console.log(`[LAVALINK] Kullanılan Bot ID: ${this.client.user.id}`);
 
         try {
-            console.log("[LAVALINK] Shoukaku ve Kazagumo birlikte başlatılıyor...");
-
-            const connector = new Connectors.DiscordJS(this.client);
-            // HACK: Kazagumo v3, Shoukaku v4 connector'ında olmayan .set() metodunu çağırıyor.
-            connector.set = () => { /* Dummy */ };
-
-            this.kazagumo = new Kazagumo({
-                defaultSearchEngine: 'youtube',
-                plugins: [
-                    new Spotify({
-                        clientId: process.env.SPOTIFY_CLIENT_ID || '',
-                        clientSecret: process.env.SPOTIFY_CLIENT_SECRET || ''
-                    })
-                ],
-                send: (guildId, payload) => {
-                    const guild = this.client.guilds.cache.get(guildId);
-                    if (guild) guild.shard.send(payload);
-                }
-            }, connector, Nodes, {
+            console.log("[LAVALINK] Shoukaku objesi oluşturuluyor...");
+            const shoukaku = new Shoukaku(new Connectors.DiscordJS(this.client), Nodes, {
                 moveOnDisconnect: false,
                 resume: true,
                 resumeTimeout: 60,
@@ -60,33 +43,44 @@ class LavalinkManager {
                 restTimeout: 60000
             });
 
-            // MANUEL NODE EKLEME (Bazı versiyonlarda constructor'dan geçmiyor)
-            if (this.kazagumo.shoukaku.nodes.size === 0) {
-                console.log("[LAVALINK] Düğüm otomatik yüklenmedi, manuel ekleniyor...");
-                Nodes.forEach(node => this.kazagumo.shoukaku.addNode(node));
-            }
+            console.log("[LAVALINK] Kazagumo başlatılıyor...");
+            this.kazagumo = new Kazagumo({
+                defaultSearchEngine: 'youtube',
+                plugins: [
+                    new Spotify({
+                        clientId: process.env.SPOTIFY_CLIENT_ID || '',
+                        clientSecret: process.env.SPOTIFY_CLIENT_SECRET || ''
+                    }),
+                    new Plugins.PlayerOnly(shoukaku)
+                ],
+                send: (guildId, payload) => {
+                    const guild = this.client.guilds.cache.get(guildId);
+                    if (guild) guild.shard.send(payload);
+                }
+            });
 
-            console.log(`[LAVALINK] Shoukaku düğüm sayısı: ${this.kazagumo.shoukaku.nodes.size}`);
+            console.log(`[LAVALINK] Shoukaku düğüm sayısı: ${shoukaku.nodes.size}`);
 
             // --- Shoukaku Node Events ---
-            this.kazagumo.shoukaku.on('ready', (name) => {
+            shoukaku.on('ready', (name) => {
                 console.log(`[LAVALINK] Node ${name} HAZIR ✅`);
             });
 
-            this.kazagumo.shoukaku.on('error', (name, error) => {
+            shoukaku.on('error', (name, error) => {
                 console.error(`[LAVALINK] Node ${name} hatası ❌:`, error);
             });
 
-            this.kazagumo.shoukaku.on('close', (name, code, reason) => {
+            shoukaku.on('close', (name, code, reason) => {
                 console.warn(`[LAVALINK] Node ${name} kapandı (Kod: ${code}, Sebep: ${reason})`);
             });
 
-            this.kazagumo.shoukaku.on('disconnect', (name, players, moved) => {
+            shoukaku.on('disconnect', (name, players, moved) => {
                 console.warn(`[LAVALINK] Node ${name} bağlantısı kesildi.`);
             });
 
-            this.kazagumo.shoukaku.on('debug', (name, info) => {
-                console.log(`[SHOUKAKU_DEBUG] ${name}: ${info}`);
+            shoukaku.on('debug', (name, info) => {
+                if (info.includes('Socket') || info.includes('Sever') || info.includes('Authenticating'))
+                    console.log(`[SHOUKAKU_DEBUG] ${name}: ${info}`);
             });
 
             // --- Kazagumo Events ---
