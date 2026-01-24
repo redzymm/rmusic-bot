@@ -54,6 +54,14 @@ class LavalinkManager {
                 restTimeout: 60000
             });
 
+            console.log(`[LAVALINK] Kazagumo objesi keys: ${Object.keys(this.kazagumo)}`);
+            if (this.kazagumo.shoukaku) {
+                console.log(`[LAVALINK] Shoukaku objesi bulundu. Keys: ${Object.keys(this.kazagumo.shoukaku)}`);
+                console.log(`[LAVALINK] Shoukaku node sayısı: ${this.kazagumo.shoukaku.nodes.size}`);
+            } else {
+                console.error("[LAVALINK_ERROR] Kazagumo içinde Shoukaku bulunamadı!");
+            }
+
             // Shoukaku (via Kazagumo) Node Events
             this.kazagumo.shoukaku.on('ready', (name) => {
                 console.log(`[LAVALINK] Node ${name} HAZIR ✅`);
