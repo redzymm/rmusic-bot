@@ -25,22 +25,25 @@ class LavalinkManager {
         if (readyClient) this.client = readyClient;
 
         const botId = forceId || this.client.user?.id;
-        console.log(`[LAVALINK] Başlatılıyor... Bot ID: ${botId}`);
+        console.log(`[LAVALINK] Başlatılıyor... Bot ID: ${botId || 'BEKLENİYOR'}`);
 
         if (!botId) {
-            console.error("[LAVALINK_FATAL] Bot ID'si bulunamadı!");
+            console.error("[LAVALINK_FATAL] Bot ID'si henüz hazır değil! 5 saniye sonra tekrar denenecek...");
+            setTimeout(() => this.init(readyClient, forceId), 5000);
             return;
         }
 
         try {
             console.log("[LAVALINK] Shoukaku v4 ve Kazagumo v3 bağlantısı kuruluyor...");
 
+            // Give the client a moment to sync its internal state
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
             // Standard Shoukaku v4 Connector
             const connector = new Connectors.DiscordJS(this.client);
 
             this.kazagumo = new Kazagumo({
                 defaultSearchEngine: 'youtube',
-                userId: botId, // Explicitly provide botId
                 plugins: [
                     new Spotify({
                         clientId: process.env.SPOTIFY_CLIENT_ID || '',
@@ -51,13 +54,14 @@ class LavalinkManager {
                     const guild = this.client.guilds.cache.get(guildId);
                     if (guild) guild.shard.send(payload);
                 }
-            }, connector, [], { // Start with empty node list in constructor
+            }, connector, [], {
                 moveOnDisconnect: false,
                 resume: true,
                 resumeTimeout: 60,
                 reconnectTries: 100,
-                reconnectInterval: 5000, // standard ms for Shoukaku v4
-                restTimeout: 60000
+                reconnectInterval: 5000,
+                restTimeout: 60000,
+                id: botId // DEFINITIVE FIX: Pass ID to Shoukaku options
             });
 
             // Manually add nodes to ensure they are picked up correctly in v4
