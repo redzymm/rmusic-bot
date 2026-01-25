@@ -53,7 +53,7 @@ class LavalinkManager {
                 resume: true,
                 resumeTimeout: 60,
                 reconnectTries: 30,
-                reconnectInterval: 5000,
+                reconnectInterval: 5, // Shoukaku v3 treats this as seconds
                 restTimeout: 60000
             });
 
