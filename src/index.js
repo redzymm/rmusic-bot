@@ -8,9 +8,6 @@ const emergencyLog = (msg) => {
 };
 emergencyLog("index.js execution started (Emergency)");
 
-// DIAGNOSTIC LOG (MUST BE FIRST)
-console.log("[DIAGNOSTIC] index.js execution started");
-
 // Load environment variables verification (MUST BE FIRST)
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
