@@ -101,9 +101,8 @@ function startLavalink() {
 
     try {
         lavalinkProcess = spawn("java", [
-            "-Xmx512M",
-            "-Xms128M",
-            "-XX:+UseSerialGC", // SerialGC is much faster and lighter for small VMs
+            "-Xmx1G",
+            "-Xms256M",
             "-jar",
             "Lavalink.jar"
         ], {
@@ -345,9 +344,9 @@ client.once(Events.ClientReady, async (c) => {
     if (client.lavalink) {
         setTimeout(async () => {
             const connectorId = c.user?.id || client.user?.id;
-            console.log(`[STARTUP] Lavalink başlatılıyor... Hedef Bot ID: ${connectorId}`);
+            console.log(`[STARTUP] Lavalink bağlanıyor... Hedef Bot ID: ${connectorId}`);
             await client.lavalink.init(c, connectorId).catch(e => console.error("[BOT] Lavalink başlatılamadı:", e));
-        }, 3000);
+        }, 12000); // 12 saniye bekle (Java v4'ün ısınması için)
     }
 
     const sendStatus = () => {
