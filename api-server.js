@@ -81,18 +81,25 @@ function broadcast(data) {
 }
 
 // Send log to all clients with duplicate suppression
-let lastLogLine = '';
-let lastLogTime = 0;
+const logHistory = new Set();
+const MAX_HISTORY = 10;
 
 function sendLog(text, isError = false) {
     const clean = text.trim();
     if (!clean) return;
 
-    // Suppress exact duplicates within 1 second to prevent spam
-    if (clean === lastLogLine && Date.now() - lastLogTime < 1000) return;
+    // Check if we've seen this exact log very recently (within the last few lines)
+    if (logHistory.has(clean)) return;
 
-    lastLogLine = clean;
-    lastLogTime = Date.now();
+    // Manage history size
+    logHistory.add(clean);
+    if (logHistory.size > MAX_HISTORY) {
+        const first = logHistory.values().next().value;
+        logHistory.delete(first);
+    }
+
+    // Clear history item after 3 seconds to allow it again later if it's legitimate
+    setTimeout(() => logHistory.delete(clean), 3000);
 
     broadcast({ type: 'log', text, isError, timestamp: Date.now() });
 }

@@ -97,6 +97,13 @@ async function remoteRequest(endpoint, method = 'GET', body = null) {
 function connectRemoteWebSocket() {
     if (!isRemoteMode()) return;
 
+    // Safety: Close existing if any
+    if (remoteWs) {
+        console.log('[REMOTE] Closing existing WebSocket before new connection');
+        remoteWs.terminate();
+        remoteWs = null;
+    }
+
     const wsUrl = remoteConfig.serverUrl.replace('http', 'ws') + `/ws?apiKey=${remoteConfig.apiKey}`;
     console.log('[REMOTE] Connecting WebSocket:', wsUrl);
 
