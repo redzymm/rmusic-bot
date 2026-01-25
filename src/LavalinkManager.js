@@ -69,7 +69,7 @@ class LavalinkManager {
             });
 
             this.kazagumo.shoukaku.on('debug', (name, info) => {
-                if (info.includes('Socket') || info.includes('Sever') || info.includes('Authenticating'))
+                if (info.includes('Socket') || info.includes('Sever') || info.includes('Authenticating') || info.includes('reconnect') || info.includes('Retrying'))
                     console.log(`[SHOUKAKU_DEBUG] ${name}: ${info}`);
             });
 

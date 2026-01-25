@@ -114,8 +114,8 @@ function startLavalink() {
 
         const logFilter = (data) => {
             const str = data.toString();
-            // Silence Spring Boot / INFO logs to keep dashboard clean
-            if (str.includes(" INFO ") || str.includes("DEBUG") || str.includes("Sentry")) {
+            // Silence INFO, DEBUG, and WARN logs to keep dashboard clean
+            if (str.includes(" INFO ") || str.includes("DEBUG") || str.includes("WARN") || str.includes("Sentry")) {
                 if (!str.includes("Lavalink is ready") && !str.includes("started on port")) return;
             }
             console.log(`[LAVALINK_OUT] ${str.trim()}`);
@@ -357,7 +357,7 @@ client.once(Events.ClientReady, async (c) => {
             const connectorId = c.user?.id || client.user?.id;
             console.log(`[STARTUP] Lavalink bağlanıyor... Hedef Bot ID: ${connectorId}`);
             await client.lavalink.init(c, connectorId).catch(e => console.error("[BOT] Lavalink başlatılamadı:", e));
-        }, 35000); // 35 saniye bekle (Lavalink v4'ün tam hazır olması için)
+        }, 5000); // 5 saniyede bir denemeye başlar (Shoukaku otomatik retry yapacak)
     }
 
     const sendStatus = () => {
