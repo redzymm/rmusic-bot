@@ -1,5 +1,6 @@
 const { Shoukaku, Connectors } = require('shoukaku');
 const { Kazagumo, Plugins } = require('kazagumo');
+const { EmbedBuilder } = require('discord.js');
 const Spotify = require('kazagumo-spotify');
 
 const Nodes = [{
