@@ -450,7 +450,8 @@ const slashToPrefix = {
     'help': 'help',
     'test': 'test',
     'prefix': 'prefix',
-    'clear': 'clear'
+    'clear': 'clear',
+    'autoplay': 'autoplay'
 };
 
 client.on(Events.InteractionCreate, async (interaction) => {

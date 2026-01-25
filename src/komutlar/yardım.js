@@ -31,7 +31,7 @@ module.exports = {
                 .addFields(
                     {
                         name: "🎵 Music Commands",
-                        value: `\`${prefix}p [name/link]\` - Play a song or playlist.\n\`${prefix}skip\` - Skip the current song.\n\`${prefix}stop\` - Stop playback and clear queue.\n\`${prefix}queue\` - Show the current queue.\n\`${prefix}reset\` - Clear the current queue.`
+                        value: `\`${prefix}p [name/link]\` - Play a song or playlist.\n\`${prefix}skip\` - Skip the current song.\n\`${prefix}stop\` - Stop playback and clear queue.\n\`${prefix}autoplay\` - Toggle continuous play mod.\n\`${prefix}queue\` - Show the current queue.\n\`${prefix}reset\` - Clear the current queue.`
                     },
                     {
                         name: "⚙️ Settings & Management",
@@ -53,7 +53,7 @@ module.exports = {
                 .addFields(
                     {
                         name: "🎵 Müzik Komutları",
-                        value: `\`${prefix}p [isim/link]\` - İstediğin şarkıyı çalar.\n\`${prefix}skip\` - Çalan şarkıyı atlar.\n\`${prefix}stop\` - Müziği tamamen durdurur.\n\`${prefix}kuyruk\` - Sıradaki şarkıları listeler.\n\`${prefix}sıfırla\` - Mevcut kuyruğu temizler.`
+                        value: `\`${prefix}p [isim/link]\` - İstediğin şarkıyı çalar.\n\`${prefix}skip\` - Çalan şarkıyı atlar.\n\`${prefix}stop\` - Müziği tamamen durdurur.\n\`${prefix}autoplay\` - Otomatik oynatmayı açar/kapatır.\n\`${prefix}kuyruk\` - Sıradaki şarkıları listeler.\n\`${prefix}sıfırla\` - Mevcut kuyruğu temizler.`
                     },
                     {
                         name: "⚙️ Yönetim & Ayarlar",
