@@ -58,6 +58,9 @@ wss.on('connection', (ws, req) => {
         return;
     }
 
+    ws.isAlive = true;
+    ws.on('pong', () => { ws.isAlive = true; });
+
     wsClients.add(ws);
     console.log('[WS] Client connected. Total:', wsClients.size);
 
@@ -68,16 +71,40 @@ wss.on('connection', (ws, req) => {
         wsClients.delete(ws);
         console.log('[WS] Client disconnected. Total:', wsClients.size);
     });
+
+    ws.on('error', (err) => {
+        console.error('[WS_CLIENT_ERR]', err.message);
+        wsClients.delete(ws);
+    });
 });
+
+// Purge stale connections every 30 seconds
+const heartbeatInterval = setInterval(() => {
+    wss.clients.forEach((ws) => {
+        if (ws.isAlive === false) {
+            wsClients.delete(ws);
+            return ws.terminate();
+        }
+        ws.isAlive = false;
+        ws.ping();
+    });
+}, 30000);
+
+wss.on('close', () => clearInterval(heartbeatInterval));
 
 // Broadcast to all WebSocket clients
 function broadcast(data) {
     const message = JSON.stringify(data);
+    let count = 0;
     wsClients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
             client.send(message);
+            count++;
+        } else {
+            wsClients.delete(client); // Cleanup if not open but still in Set
         }
     });
+    // console.log(`[WS] Broadcasted ${data.type} to ${count} clients.`);
 }
 
 // Send log to all clients with duplicate suppression and spam filtering
