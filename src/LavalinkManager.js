@@ -136,8 +136,45 @@ class LavalinkManager {
                     }
                     const msg = await channel.send({ embeds: [embed] }).catch(() => null);
                     player.data.set('lastNp', msg);
+                    player.data.set('drop_killer_fired', false); // Yeni şarkıda sıfırla
                 }
                 player.data.set('autoplay_last', track); // Autoplay için son şarkıyı kaydet
+
+                // Spotify Preload: Sıradaki şarkı Spotify ise önceden hazırla
+                if (player.queue.length > 0) {
+                    const next = player.queue[0];
+                    if (next.uri?.includes('spotify')) {
+                        console.log(`[LAVALINK_PRELOAD] Spotify ön yüklemesi başlatıldı: ${next.title}`);
+                        this.search(`${next.author} ${next.title}`, 'Preload').catch(() => null);
+                    }
+                }
+            });
+
+            // "Drop-Killer" Logic: Şarkı %80'deyken hazırlık yap
+            this.kazagumo.on('playerUpdate', async (player, data) => {
+                if (!player.queue.current || !data.state?.position) return;
+
+                const position = data.state.position;
+                const duration = player.queue.current.length;
+                if (!duration || duration < 30000) return; // 30 sn'den kısa şarkılarda yapma
+
+                // %80 kontrolü ve sadece 1 kez tetiklenmesi için bayrak
+                if (position > (duration * 0.8) && !player.data.get('drop_killer_fired')) {
+                    player.data.set('drop_killer_fired', true);
+
+                    if (player.queue.length === 0 && player.data.get('autoplay')) {
+                        console.log(`[LAVALINK_DROP_KILLER] Autoplay için ön arama yapılıyor...`);
+                        const lastTrack = player.queue.current;
+                        const query = `${lastTrack.author} ${lastTrack.title} related`;
+                        this.search(query, 'DropKiller').catch(() => null);
+                    }
+
+                    // Kuyruktaki ilk şarkıyı da preload et (eğer hala edilmediyse)
+                    if (player.queue.length > 0) {
+                        const next = player.queue[0];
+                        this.search(`${next.author} ${next.title}`, 'DropKiller').catch(() => null);
+                    }
+                }
             });
 
             this.kazagumo.on('playerEmpty', (player) => {

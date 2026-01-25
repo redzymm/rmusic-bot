@@ -27,10 +27,10 @@ lavalink:
       rotation: true
       channelMix: true
       lowPass: true
-    bufferDurationMs: 1000
-    frameBufferDurationMs: 10000 # Premium Buffer: VM gecikmelerini tamamen yutar
-    opusEncodingQuality: 10 # En yüksek kalite
-    resamplingQuality: MEDIUM # VM CPU dostu premium denge
+    bufferDurationMs: 400
+    frameBufferDurationMs: 5000
+    opusEncodingQuality: 8 # Expert "En İyi Denge" Ayarı
+    resamplingQuality: HIGH # Discord teknik sınırlarına tam uyumlu yüksek kalite
     trackStuckThresholdMs: 10000
     useSeekGhosting: true
     youtubePlaylistLoadLimit: 100
