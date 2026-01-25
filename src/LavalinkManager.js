@@ -36,14 +36,16 @@ class LavalinkManager {
         try {
             console.log("[LAVALINK] Shoukaku v4 ve Kazagumo v3 bağlantısı kuruluyor...");
 
-            // Give the client a moment to sync its internal state
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Ensure botId is a string and give Discord.js more time to sync on limited VMs
+            const finalBotId = String(botId);
+            await new Promise(resolve => setTimeout(resolve, 2000));
 
             // Standard Shoukaku v4 Connector
             const connector = new Connectors.DiscordJS(this.client);
 
             this.kazagumo = new Kazagumo({
                 defaultSearchEngine: 'youtube',
+                userId: finalBotId, // Layer 1: Kazagumo Internal Check
                 plugins: [
                     new Spotify({
                         clientId: process.env.SPOTIFY_CLIENT_ID || '',
@@ -61,7 +63,7 @@ class LavalinkManager {
                 reconnectTries: 100,
                 reconnectInterval: 5000,
                 restTimeout: 60000,
-                id: botId // DEFINITIVE FIX: Pass ID to Shoukaku options
+                id: finalBotId // Layer 2: Shoukaku Manager Check
             });
 
             // Manually add nodes to ensure they are picked up correctly in v4
