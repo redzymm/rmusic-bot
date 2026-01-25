@@ -107,13 +107,23 @@ class LavalinkManager {
 
                 const channel = this.client.channels.cache.get(textChannelId);
                 if (channel) {
+                    // Pre-calculate duration string
+                    const duration = track.isStream ? '🔴 Canlı Yayın' : this.formatMS(track.length);
+
                     const embed = new EmbedBuilder()
-                        .setTitle("🎵 Şimdi Çalıyor")
-                        .setDescription(`**[${track.title}](${track.uri})**`)
+                        .setAuthor({ name: 'Şu Anda Oynatılıyor', iconURL: 'https://cdn.discordapp.com/emojis/980415302634455080.gif' })
+                        .setTitle(`${track.title}`)
+                        .setURL(track.uri)
                         .setThumbnail(track.thumbnail || null)
-                        .addFields({ name: "👤 İsteyen", value: track.requester?.tag || "Bilinmiyor", inline: true })
-                        .setColor(0x5865F2)
-                        .setFooter({ text: "RMusic Ultra • Kazagumo", iconURL: this.client.user.displayAvatarURL() });
+                        .addFields(
+                            { name: '👤 Sanatçı', value: `\`${track.author}\``, inline: true },
+                            { name: '⏳ Süre', value: `\`${duration}\``, inline: true },
+                            { name: '👤 İsteyen', value: `${track.requester}`, inline: true }
+                        )
+                        .setColor('#5865F2')
+                        .setImage('https://media.discordapp.net/attachments/970363065606451241/992455502621003826/music-bar.gif') // Şık görsel bar
+                        .setFooter({ text: `RMusic Premium • Kazagumo v3 • Shoukaku v4`, iconURL: this.client.user.displayAvatarURL() })
+                        .setTimestamp();
 
                     // Store last NP message to delete later if needed
                     const lastNp = player.data.get('lastNp');
@@ -130,7 +140,12 @@ class LavalinkManager {
                 const textChannelId = player.data.get('textChannelId');
                 if (textChannelId) {
                     const channel = this.client.channels.cache.get(textChannelId);
-                    if (channel) channel.send("ℹ️ Kuyruk bitti, ayrılıyorum...").catch(() => null);
+                    if (channel) {
+                        const embed = new EmbedBuilder()
+                            .setDescription('✨ **Kuyruk tamamlandı.** Müzik motoru dinlenmeye çekiliyor.')
+                            .setColor('#2F3136');
+                        channel.send({ embeds: [embed] }).catch(() => null);
+                    }
                 }
                 player.destroy();
             });
@@ -158,6 +173,13 @@ class LavalinkManager {
 
     getPlayer(guildId) {
         return this.kazagumo?.players.get(guildId);
+    }
+
+    formatMS(ms) {
+        const s = Math.floor((ms / 1000) % 60);
+        const m = Math.floor((ms / (1000 * 60)) % 60);
+        const h = Math.floor((ms / (1000 * 60 * 60)) % 24);
+        return h > 0 ? `${h}:${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}` : `${m}:${s < 10 ? '0' + s : s}`;
     }
 
     static buildFilters(client) {

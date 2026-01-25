@@ -934,7 +934,8 @@ process.stdin.on("data", (data) => {
                     try {
                         const newFilters = LavalinkManager.buildFilters(client);
                         client.lavalink.kazagumo?.players.forEach((player) => {
-                            player.setFilters(newFilters);
+                            // Kazagumo v3 player object uses player.shoukaku.filter for Shoukaku v4
+                            player.shoukaku.filter(newFilters);
                         });
                     } catch (e) {
                         console.error("[DASHBOARD_VOLUME_ERR]", e.message);
@@ -952,7 +953,8 @@ process.stdin.on("data", (data) => {
                         try {
                             const newFilters = LavalinkManager.buildFilters(client);
                             client.lavalink.kazagumo?.players.forEach((player) => {
-                                player.setFilters(newFilters);
+                                // Kazagumo v3 player object uses player.shoukaku.filter for Shoukaku v4
+                                player.shoukaku.filter(newFilters);
                             });
                         } catch (e) {
                             console.error("[DASHBOARD_FILTER_ERR]", e.message);
@@ -970,7 +972,8 @@ process.stdin.on("data", (data) => {
                     try {
                         const newFilters = LavalinkManager.buildFilters(client);
                         client.lavalink.kazagumo?.players.forEach((player) => {
-                            player.setFilters(newFilters);
+                            // Kazagumo v3 player object uses player.shoukaku.filter for Shoukaku v4
+                            player.shoukaku.filter(newFilters);
                         });
                     } catch (e) {
                         console.error("[DASHBOARD_EQ_ERR]", e.message);

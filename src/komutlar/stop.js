@@ -1,3 +1,5 @@
+const { EmbedBuilder } = require('discord.js');
+
 module.exports = {
     name: "stop",
     aliases: ["dur", "leave", "dc", "kapat"],
@@ -11,7 +13,10 @@ module.exports = {
 
         try {
             await player.destroy();
-            message.channel.send("⏹️ Müzik durduruldu ve kanaldan çıkıldı.");
+            const embed = new EmbedBuilder()
+                .setDescription('⏹️ **Müzik durduruldu ve kanaldan çıkıldı.**')
+                .setColor('#ED4245');
+            message.channel.send({ embeds: [embed] });
         } catch (e) {
             console.error(e);
             message.reply("❌ Durdururken bir hata oluştu.");

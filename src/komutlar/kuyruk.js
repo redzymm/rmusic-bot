@@ -1,3 +1,5 @@
+const { EmbedBuilder } = require('discord.js');
+
 module.exports = {
     name: "kuyruk",
     aliases: ["q", "queue", "sıradaki"],
@@ -6,35 +8,39 @@ module.exports = {
         try {
             const player = client.lavalink.getPlayer(message.guild.id);
 
-            if (!player || !player.queue || player.queue.length === 0 && !player.queue.current) {
-                return message.channel.send("❌ Şu anda kuyruk boş.");
+            if (!player || !player.queue || (player.queue.length === 0 && !player.queue.current)) {
+                const embed = new EmbedBuilder()
+                    .setDescription('❌ **Şu anda kuyruk boş.**')
+                    .setColor('#ED4245');
+                return message.channel.send({ embeds: [embed] });
             }
 
             const current = player.queue.current;
-            const tracks = player.queue; // Kazagumo queue is an array-like object
+            const tracks = player.queue;
 
-            let embedText = `🎵 **Şu an çalıyor:** [${current.title}](${current.uri})\n`;
-            embedText += `👤 **İsteyen:** ${current.requester?.tag || "Bilinmiyor"}\n\n`;
+            const embed = new EmbedBuilder()
+                .setAuthor({ name: `${message.guild.name} - Şarkı Kuyruğu`, iconURL: 'https://cdn.discordapp.com/emojis/980415302634455080.gif' })
+                .setColor('#5865F2')
+                .setThumbnail(current.thumbnail || null);
+
+            let embedText = `✨ **Şu An Çalıyor:**\n`;
+            embedText += `┕ [${current.title}](${current.uri}) - \`${current.author}\`\n\n`;
 
             if (tracks.length > 0) {
                 embedText += `📜 **Sıradaki Şarkılar:**\n`;
-                const list = tracks.slice(0, 10).map((t, i) => `${i + 1}. **${t.title}** - *${t.requester?.tag || "Bilinmiyor"}*`).join('\n');
+                const list = tracks.slice(0, 10).map((t, i) => `\`${i + 1}.\` [${t.title}](${t.uri}) | \`${t.requester?.tag || "Bilinmiyor"}\``).join('\n');
                 embedText += list;
                 if (tracks.length > 10) {
-                    embedText += `\n...ve **${tracks.length - 10}** şarkı daha.`;
+                    embedText += `\n\n...ve **${tracks.length - 10}** şarkı daha.`;
                 }
             } else {
-                embedText += `✨ Kuyrukta başka şarkı yok.`;
+                embedText += `✨ **Kuyrukta başka şarkı yok.**`;
             }
 
-            message.channel.send({
-                embeds: [{
-                    title: `${message.guild.name} - Şarkı Kuyruğu`,
-                    description: embedText,
-                    color: 0x5865F2,
-                    thumbnail: { url: current.thumbnail || null }
-                }]
-            });
+            embed.setDescription(embedText);
+            embed.setFooter({ text: `Kuyrukta toplam ${tracks.length} şarkı mevcut.`, iconURL: client.user.displayAvatarURL() });
+
+            message.channel.send({ embeds: [embed] });
 
         } catch (error) {
             console.error(error);

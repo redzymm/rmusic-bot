@@ -1,3 +1,5 @@
+const { EmbedBuilder } = require('discord.js');
+
 module.exports = {
     name: "skip",
     aliases: ["s", "atla", "geç"],
@@ -11,7 +13,10 @@ module.exports = {
 
         try {
             await player.skip();
-            message.channel.send("⏭️ Şarkı atlandı!");
+            const embed = new EmbedBuilder()
+                .setDescription('⏭️ **Şarkı başarıyla atlandı!**')
+                .setColor('#5865F2');
+            message.channel.send({ embeds: [embed] });
         } catch (e) {
             console.error(e);
             message.reply("❌ Atlanırken bir hata oluştu.");
