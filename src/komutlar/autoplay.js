@@ -19,7 +19,9 @@ module.exports = {
         }
 
         const currentState = player.data.get('autoplay') || false;
-        player.data.set('autoplay', !currentState);
+        const newState = !currentState;
+        player.data.set('autoplay', newState);
+        client.globalAutoplay = newState; // Sync with dashboard global state
 
         const embed = new EmbedBuilder()
             .setTitle(player.data.get('autoplay') ? '✅ Otomatik Oynatma Açıldı' : '❌ Otomatik Oynatma Kapatıldı')

@@ -172,6 +172,7 @@ const client = new Client({
 // Müzik takibi ve Filtreler
 client.müzik = new Map();
 client.globalVolume = 100;
+client.globalAutoplay = false;
 client.filters = { "8d": false, "bassboost": false, "nightcore": false };
 client.equalizer = Array(10).fill(0);
 client.disabledCommands = ayarlar.disabled_commands || [];
@@ -268,6 +269,7 @@ function saveSettings() {
         const settingsPath = path.join(dataDir, "settings.json");
         const data = {
             volume: client.globalVolume,
+            autoplay: client.globalAutoplay,
             filters: client.filters,
             equalizer: client.equalizer
         };
@@ -352,16 +354,17 @@ client.once(Events.ClientReady, async (c) => {
         const memUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(0);
         const cpuUsed = (os.loadavg()[0] * 10).toFixed(0);
 
-        // Get voice channel activity from Kazagumo (players is a Map, convert to Array first)
         const voiceChannels = Array.from(client.lavalink?.kazagumo?.players.values() || []).map(player => {
             const guild = client.guilds.cache.get(player.guildId);
             const channel = guild?.channels.cache.get(player.voiceId);
             return {
+                guildId: player.guildId,
                 guildName: guild?.name || "Bilinmiyor",
                 channelName: channel?.name || "Bilinmiyor",
-                userCount: channel?.members.filter(m => !m.user.bot).size || 0
+                userCount: channel?.members.filter(m => !m.user.bot).size || 0,
+                autoplay: player.data.get('autoplay') || false
             };
-        }) || [];
+        });
 
         console.log("DASHBOARD_DATA:" + JSON.stringify({
             type: "status",
@@ -373,6 +376,7 @@ client.once(Events.ClientReady, async (c) => {
             cpu: cpuUsed,
             ram: memUsed,
             volume: client.globalVolume,
+            autoplay: client.globalAutoplay,
             filters: client.filters,
             equalizer: client.equalizer,
             songProgress: null,
@@ -988,6 +992,14 @@ process.stdin.on("data", (data) => {
                         console.error("[DASHBOARD_EQ_ERR]", e.message);
                     }
                 }
+                saveSettings();
+            }
+
+            if (json.cmd === "autoplay") {
+                client.globalAutoplay = !client.globalAutoplay;
+                client.lavalink.kazagumo?.players.forEach((player) => {
+                    player.data.set('autoplay', client.globalAutoplay);
+                });
                 saveSettings();
             }
 
