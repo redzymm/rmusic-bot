@@ -84,10 +84,11 @@ function startLavalink() {
 
     try {
         lavalinkProcess = spawn("java", [
-            "-Xmx512M",
-            "-Xms128M",
-            "-XX:+UseSerialGC",
-            "-XX:TieredStopAtLevel=1", // Faster startup for limited VMs
+            "-Xms512M",
+            "-Xmx1024M",
+            "-XX:+UseG1GC",
+            "-XX:MaxGCPauseMillis=50",
+            "-XX:+AlwaysPreTouch",
             "-jar",
             "Lavalink.jar"
         ], {
