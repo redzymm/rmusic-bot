@@ -50,14 +50,20 @@ class LavalinkManager {
                     const guild = this.client.guilds.cache.get(guildId);
                     if (guild) guild.shard.send(payload);
                 }
-            }, connector, Nodes, {
+            }, connector, [], { // Start with empty node list in constructor
                 moveOnDisconnect: false,
                 resume: true,
                 resumeTimeout: 60,
-                reconnectTries: 30,
-                reconnectInterval: 5, // Set to 5 (if seconds: 5s, if ms: 5ms). Prevents 83min delay if interpreted as seconds.
-                restTimeout: 30000
+                reconnectTries: 100,
+                reconnectInterval: 5000, // standard ms for Shoukaku v4
+                restTimeout: 60000
             });
+
+            // Manually add nodes to ensure they are picked up correctly in v4
+            console.log("[LAVALINK] Node listesi ekleniyor...");
+            for (const node of Nodes) {
+                this.kazagumo.shoukaku.addNode(node);
+            }
 
             // Shoukaku (v4) Events
             this.kazagumo.shoukaku.on('ready', (name) => {

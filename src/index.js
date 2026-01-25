@@ -1,28 +1,9 @@
-// EMERGENCY LOGGER (BYPASS ALL)
 const fs = require('fs');
 const path = require('path');
-const emergencyLog = (msg) => {
-    try {
-        fs.appendFileSync(path.join(__dirname, '../emergency.log'), `[${new Date().toISOString()}] ${msg}\n`);
-    } catch (e) { }
-};
-emergencyLog("index.js execution started (Emergency)");
-
-// Load environment variables verification (MUST BE FIRST)
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
-
-// Error handlers (MOVE TO TOP FOR EARLY CRASH VISIBILITY)
-const origLog = console.log, origErr = console.error;
-process.on('uncaughtException', (err) => {
-    origErr(`[FATAL] ${err.message}\n${err.stack}`);
-    process.exit(1);
-});
-process.on('unhandledRejection', (reason) => origErr(`[REJECT] ${reason}`));
-
-// ANSI stripper removed temporarily for debugging
-const strip = s => typeof s === 'string' ? s.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '') : s;
-// console.log override removed
-// console.error override removed
+const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, AuditLogEvent } = require("discord.js");
+const initSqlJs = require("sql.js");
+const { spawn, execSync } = require("child_process");
+const os = require("os");
 
 console.log("[BOT] Ortam hazırlanıyor...");
 
@@ -352,13 +333,11 @@ client.once(Events.ClientReady, async (c) => {
     // Slash command deployment is now handled manually or via npm script to prevent startup crashes
     // if (!ayarlar.slash_commands_deployed) { ... } removed
 
-    // Initialize Lavalink/Kazagumo AFTER bot is ready with a small delay to ensure user object is synced
+    // Initialize Lavalink/Kazagumo immediately
     if (client.lavalink) {
-        setTimeout(async () => {
-            const connectorId = c.user?.id || client.user?.id;
-            console.log(`[STARTUP] Lavalink bağlanıyor... Hedef Bot ID: ${connectorId}`);
-            await client.lavalink.init(c, connectorId).catch(e => console.error("[BOT] Lavalink başlatılamadı:", e));
-        }, 5000); // 5 saniyede bir denemeye başlar (Shoukaku otomatik retry yapacak)
+        const connectorId = c.user?.id || client.user?.id;
+        console.log(`[STARTUP] Lavalink bağlanıyor... Hedef Bot ID: ${connectorId}`);
+        client.lavalink.init(c, connectorId).catch(e => console.error("[BOT] Lavalink başlatılamadı:", e));
     }
 
     const sendStatus = () => {
