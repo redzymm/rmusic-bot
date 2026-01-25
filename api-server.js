@@ -129,19 +129,22 @@ app.post('/api/bot/start', authenticate, (req, res) => {
 
     botProcess.stdout.on('data', (data) => {
         const str = data.toString('utf8');
-        console.log(`[BOT_STDOUT] ${str.trim()}`);
+        const lines = str.split('\n');
 
-        // Parse dashboard data
-        if (str.includes('DASHBOARD_DATA:')) {
-            const rawPart = str.split('DASHBOARD_DATA:')[1].split('\n')[0];
-            try {
-                botInfo = JSON.parse(rawPart.trim());
-                broadcast({ type: 'bot-info', info: botInfo });
-            } catch (e) { }
-            return;
+        for (const line of lines) {
+            const cleanLine = line.trim();
+            if (!cleanLine) continue;
+
+            if (cleanLine.includes('DASHBOARD_DATA:')) {
+                try {
+                    const rawPart = cleanLine.split('DASHBOARD_DATA:')[1];
+                    botInfo = JSON.parse(rawPart.trim());
+                    broadcast({ type: 'bot-info', info: botInfo });
+                } catch (e) { }
+            } else {
+                sendLog(line);
+            }
         }
-
-        sendLog(str);
     });
 
     botProcess.stderr.on('data', (data) => {
