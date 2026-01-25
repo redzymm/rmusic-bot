@@ -413,6 +413,7 @@ client.once(Events.ClientReady, async (c) => {
             ram: memUsed,
             volume: client.globalVolume,
             autoplay: client.globalAutoplay,
+            perfMode: (process.env.VM_PERFORMANCE_MODE || "LOW").toUpperCase(), // Mod bilgisini ekle
             filters: client.filters,
             equalizer: client.equalizer,
             songProgress: null,
