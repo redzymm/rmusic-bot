@@ -103,7 +103,8 @@ function startLavalink() {
         lavalinkProcess = spawn("java", [
             "-Xmx512M",
             "-Xms128M",
-            "-XX:+UseSerialGC", // Low RAM optimized
+            "-XX:+UseSerialGC",
+            "-XX:TieredStopAtLevel=1", // Faster startup for limited VMs
             "-jar",
             "Lavalink.jar"
         ], {
@@ -111,7 +112,16 @@ function startLavalink() {
             stdio: ["ignore", "pipe", "pipe"]
         });
 
-        lavalinkProcess.stdout.on("data", (data) => console.log(`[LAVALINK_OUT] ${data}`));
+        const logFilter = (data) => {
+            const str = data.toString();
+            // Silence Spring Boot / INFO logs to keep dashboard clean
+            if (str.includes(" INFO ") || str.includes("DEBUG") || str.includes("Sentry")) {
+                if (!str.includes("Lavalink is ready") && !str.includes("started on port")) return;
+            }
+            console.log(`[LAVALINK_OUT] ${str.trim()}`);
+        };
+
+        lavalinkProcess.stdout.on("data", logFilter);
         lavalinkProcess.stderr.on("data", (data) => console.error(`[LAVALINK_ERR] ${data}`));
 
         lavalinkProcess.on("exit", (code) => {
@@ -347,7 +357,7 @@ client.once(Events.ClientReady, async (c) => {
             const connectorId = c.user?.id || client.user?.id;
             console.log(`[STARTUP] Lavalink bağlanıyor... Hedef Bot ID: ${connectorId}`);
             await client.lavalink.init(c, connectorId).catch(e => console.error("[BOT] Lavalink başlatılamadı:", e));
-        }, 12000); // 12 saniye bekle (Java v4'ün ısınması için)
+        }, 35000); // 35 saniye bekle (Lavalink v4'ün tam hazır olması için)
     }
 
     const sendStatus = () => {
