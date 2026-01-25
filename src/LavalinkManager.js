@@ -67,7 +67,7 @@ class LavalinkManager {
                 resume: true,
                 resumeTimeout: 60,
                 reconnectTries: 100,
-                reconnectInterval: 5000,
+                reconnectInterval: 5, // KESİN DÜZELTME: Logda saniye olduğu ispatlandı. 5000 -> 5 yapıldı.
                 restTimeout: 60000,
                 id: finalBotId // Layer 2: Shoukaku Manager Check
             });
