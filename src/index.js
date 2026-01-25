@@ -82,13 +82,20 @@ function startLavalink() {
 
     console.log("[LAVALINK] Sunucu başlatılıyor... (java -jar Lavalink.jar)");
 
+    // CRITICAL FIX: Kill any existing orphans on 1GB RAM VM before starting
+    try {
+        if (process.platform !== "win32") {
+            execSync("pkill -9 java || true");
+            console.log("[LAVALINK] Eski Java süreçleri temizlendi.");
+        }
+    } catch (e) { }
+
     try {
         lavalinkProcess = spawn("java", [
-            "-Xms512M",
-            "-Xmx1024M",
+            "-Xms128M",
+            "-Xmx384M", // 1GB RAM VM için güvenli sınır (Node + OS payı bırakıldı)
             "-XX:+UseG1GC",
             "-XX:MaxGCPauseMillis=50",
-            "-XX:+AlwaysPreTouch",
             "-jar",
             "Lavalink.jar"
         ], {
@@ -935,8 +942,8 @@ process.stdin.on("data", (data) => {
                     try {
                         const newFilters = LavalinkManager.buildFilters(client);
                         client.lavalink.kazagumo?.players.forEach((player) => {
-                            // Kazagumo v3 player object uses player.shoukaku.filter for Shoukaku v4
-                            player.shoukaku.filter(newFilters);
+                            // Shoukaku v4 API: setFilters
+                            player.shoukaku.setFilters(newFilters);
                         });
                     } catch (e) {
                         console.error("[DASHBOARD_VOLUME_ERR]", e.message);
@@ -954,8 +961,8 @@ process.stdin.on("data", (data) => {
                         try {
                             const newFilters = LavalinkManager.buildFilters(client);
                             client.lavalink.kazagumo?.players.forEach((player) => {
-                                // Kazagumo v3 player object uses player.shoukaku.filter for Shoukaku v4
-                                player.shoukaku.filter(newFilters);
+                                // Shoukaku v4 API: setFilters
+                                player.shoukaku.setFilters(newFilters);
                             });
                         } catch (e) {
                             console.error("[DASHBOARD_FILTER_ERR]", e.message);
@@ -973,8 +980,8 @@ process.stdin.on("data", (data) => {
                     try {
                         const newFilters = LavalinkManager.buildFilters(client);
                         client.lavalink.kazagumo?.players.forEach((player) => {
-                            // Kazagumo v3 player object uses player.shoukaku.filter for Shoukaku v4
-                            player.shoukaku.filter(newFilters);
+                            // Shoukaku v4 API: setFilters
+                            player.shoukaku.setFilters(newFilters);
                         });
                     } catch (e) {
                         console.error("[DASHBOARD_EQ_ERR]", e.message);
