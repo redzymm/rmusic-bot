@@ -147,6 +147,7 @@ const cleanup = () => {
     if (lavalinkProcess) {
         console.log("[LAVALINK] Sunucu kapatılıyor...");
         lavalinkProcess.kill();
+        lavalinkProcess = null; // Prevent double execution
     }
 };
 
