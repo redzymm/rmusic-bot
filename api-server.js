@@ -83,6 +83,9 @@ function broadcast(data) {
 // Send log to all clients with duplicate suppression and spam filtering
 const logHistory = new Set();
 const MAX_HISTORY = 10;
+let lastSentLog = "";
+let lastSentTime = 0;
+
 const SPAM_PATTERNS = [
     '[DEBUG]',
     '[INFO]',
@@ -108,8 +111,17 @@ function sendLog(text, isError = false) {
     // Filter out known spam patterns
     if (SPAM_PATTERNS.some(pattern => clean.includes(pattern))) return;
 
-    // Check if we've seen this exact log very recently (within the last few lines)
+    // Strict throttle: Block exact same message if sent within 5 seconds
+    const now = Date.now();
+    if (clean === lastSentLog && (now - lastSentTime < 5000)) {
+        return;
+    }
+
+    // Secondary History Check
     if (logHistory.has(clean)) return;
+
+    lastSentLog = clean;
+    lastSentTime = now;
 
     // Manage history size
     logHistory.add(clean);
@@ -118,10 +130,10 @@ function sendLog(text, isError = false) {
         logHistory.delete(first);
     }
 
-    // Clear history item after 3 seconds to allow it again later if it's legitimate
-    setTimeout(() => logHistory.delete(clean), 3000);
+    // Clear history item after 10 seconds (extended)
+    setTimeout(() => logHistory.delete(clean), 10000);
 
-    broadcast({ type: 'log', text, isError, timestamp: Date.now() });
+    broadcast({ type: 'log', text, isError, timestamp: now });
 }
 
 // ========== API ROUTES ==========
@@ -141,10 +153,13 @@ app.get('/api/bot/status', authenticate, (req, res) => {
 });
 
 // Start bot
+let isStarting = false;
 app.post('/api/bot/start', authenticate, (req, res) => {
-    if (botProcess) {
-        return res.json({ success: false, message: 'Bot zaten çalışıyor' });
+    if (botProcess || isStarting) {
+        return res.json({ success: false, message: 'Bot zaten çalışıyor veya başlatılıyor' });
     }
+
+    isStarting = true;
 
     const botPath = path.join(__dirname, 'src/index.js');
 
@@ -160,8 +175,10 @@ app.post('/api/bot/start', authenticate, (req, res) => {
             cwd: __dirname,
             env: { ...process.env, FORCE_COLOR: 'true', PYTHONIOENCODING: 'utf-8' }
         });
+        isStarting = false;
         sendLog(`[SYSTEM] İşlem ID (PID): ${botProcess.pid} oluşturuldu.`);
     } catch (spawnErr) {
+        isStarting = false;
         console.error(`[API_SPAWN_ERR] Spawn failed: ${spawnErr.message}`);
         return res.status(500).json({ success: false, message: 'Bot başlatılamadı: ' + spawnErr.message });
     }
