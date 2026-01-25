@@ -114,13 +114,14 @@ app.post('/api/bot/start', authenticate, (req, res) => {
     }
 
     console.log(`[API] Bot başlatılıyor: ${botPath}`);
-    console.log(`[API] CWD: ${__dirname}`);
+    sendLog(`[SYSTEM] Bot süreci başlatılıyor: ${path.basename(botPath)}`);
 
     try {
         botProcess = spawn('node', [botPath], {
             cwd: __dirname,
             env: { ...process.env, FORCE_COLOR: 'true', PYTHONIOENCODING: 'utf-8' }
         });
+        sendLog(`[SYSTEM] İşlem ID (PID): ${botProcess.pid} oluşturuldu.`);
     } catch (spawnErr) {
         console.error(`[API_SPAWN_ERR] Spawn failed: ${spawnErr.message}`);
         return res.status(500).json({ success: false, message: 'Bot başlatılamadı: ' + spawnErr.message });
