@@ -1,8 +1,17 @@
+// EMERGENCY LOGGER (BYPASS ALL)
+const fs = require('fs');
+const path = require('path');
+const emergencyLog = (msg) => {
+    try {
+        fs.appendFileSync(path.join(__dirname, '../emergency.log'), `[${new Date().toISOString()}] ${msg}\n`);
+    } catch (e) { }
+};
+emergencyLog("index.js execution started (Emergency)");
+
 // DIAGNOSTIC LOG (MUST BE FIRST)
 console.log("[DIAGNOSTIC] index.js execution started");
 
 // Load environment variables verification (MUST BE FIRST)
-const path = require("path");
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // Error handlers (MOVE TO TOP FOR EARLY CRASH VISIBILITY)
@@ -22,8 +31,8 @@ console.log("[BOT] Ortam hazırlanıyor...");
 
 const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, AuditLogEvent } = require("discord.js");
 const initSqlJs = require("sql.js");
-const fs = require("fs");
-// const path = require("path"); // Moved to top
+// const fs = require("fs"); // Already declared above
+// const path = require("path"); // Already declared above
 const { spawn, execSync } = require("child_process");
 
 // Load environment variables from .env file (Moved to top)
