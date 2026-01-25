@@ -69,8 +69,8 @@ class LavalinkManager {
             });
 
             this.kazagumo.shoukaku.on('debug', (name, info) => {
-                if (info.includes('Socket') || info.includes('Sever') || info.includes('Authenticating') || info.includes('reconnect') || info.includes('Retrying'))
-                    console.log(`[SHOUKAKU_DEBUG] ${name}: ${info}`);
+                // Show all connection related debug info to prove 5s retry is active
+                console.log(`[LAVALINK_DEBUG] ${name}: ${info}`);
             });
 
             // Kazagumo Events
