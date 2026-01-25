@@ -27,17 +27,17 @@ lavalink:
       rotation: true
       channelMix: true
       lowPass: true
-    bufferDurationMs: 400
-    frameBufferDurationMs: 1000
-    opusEncodingQuality: 5
-    resamplingQuality: LOW
+    bufferDurationMs: 1000
+    frameBufferDurationMs: 10000 # Premium Buffer: VM gecikmelerini tamamen yutar
+    opusEncodingQuality: 10 # En yüksek kalite
+    resamplingQuality: MEDIUM # VM CPU dostu premium denge
     trackStuckThresholdMs: 10000
     useSeekGhosting: true
     youtubePlaylistLoadLimit: 100
-    playerUpdateInterval: 5
+    playerUpdateInterval: 1 # Paket akışını daha sıkı kontrol et
     youtubeSearchEnabled: true
     soundcloudSearchEnabled: true
-    gc-warnings: true
+    gc-warnings: false # Log kalabalığını ve takılmayı azalt
 
 plugins:
   youtube:

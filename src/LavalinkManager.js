@@ -66,10 +66,10 @@ class LavalinkManager {
             }, connector, [], {
                 moveOnDisconnect: false,
                 resume: true,
-                resumeTimeout: 60,
+                resumeTimeout: 120, // Oturum kurtarma süresini artır
                 reconnectTries: 100,
                 reconnectInterval: 5, // KESİN DÜZELTME: Logda saniye olduğu ispatlandı. 5000 -> 5 yapıldı.
-                restTimeout: 60000,
+                restTimeout: 90000, // API yanıt süresini ağ gecikmelerine karşı esnet
                 id: finalBotId // Layer 2: Shoukaku Manager Check
             });
 
