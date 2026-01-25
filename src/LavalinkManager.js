@@ -55,8 +55,8 @@ class LavalinkManager {
                 resume: true,
                 resumeTimeout: 60,
                 reconnectTries: 30,
-                reconnectInterval: 5000, // v4 uses milliseconds
-                restTimeout: 60000
+                reconnectInterval: 5, // Set to 5 (if seconds: 5s, if ms: 5ms). Prevents 83min delay if interpreted as seconds.
+                restTimeout: 30000
             });
 
             // Shoukaku (v4) Events
@@ -69,7 +69,7 @@ class LavalinkManager {
             });
 
             this.kazagumo.shoukaku.on('debug', (name, info) => {
-                // Show all connection related debug info to prove 5s retry is active
+                // Show ALL logs to prove reconnection attempts are happening
                 console.log(`[LAVALINK_DEBUG] ${name}: ${info}`);
             });
 
