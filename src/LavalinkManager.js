@@ -98,12 +98,40 @@ class LavalinkManager {
             });
 
             // Kazagumo Events
-            this.kazagumo.on('playerStart', (player, track) => {
+            this.kazagumo.on('playerStart', async (player, track) => {
                 console.log(`[LAVALINK] Şarkı başladı: ${track.title} (Guild: ${player.guildId})`);
+
+                const textChannelId = player.data.get('textChannelId');
+                if (!textChannelId) return;
+
+                const channel = this.client.channels.cache.get(textChannelId);
+                if (channel) {
+                    const embed = new EmbedBuilder()
+                        .setTitle("🎵 Şimdi Çalıyor")
+                        .setDescription(`**[${track.title}](${track.uri})**`)
+                        .setThumbnail(track.thumbnail || null)
+                        .addFields({ name: "👤 İsteyen", value: track.requester?.tag || "Bilinmiyor", inline: true })
+                        .setColor(0x5865F2)
+                        .setFooter({ text: "RMusic Ultra • Kazagumo", iconURL: this.client.user.displayAvatarURL() });
+
+                    // Store last NP message to delete later if needed
+                    const lastNp = player.data.get('lastNp');
+                    if (lastNp) {
+                        try { await lastNp.delete(); } catch (e) { }
+                    }
+                    const msg = await channel.send({ embeds: [embed] }).catch(() => null);
+                    player.data.set('lastNp', msg);
+                }
             });
 
             this.kazagumo.on('playerEmpty', (player) => {
                 console.log(`[LAVALINK] Kuyruk bitti (Guild: ${player.guildId})`);
+                const textChannelId = player.data.get('textChannelId');
+                if (textChannelId) {
+                    const channel = this.client.channels.cache.get(textChannelId);
+                    if (channel) channel.send("ℹ️ Kuyruk bitti, ayrılıyorum...").catch(() => null);
+                }
+                player.destroy();
             });
 
             console.log('[LAVALINK] Kazagumo hazır.');

@@ -45,11 +45,10 @@ module.exports = {
                     textId: message.channel.id,
                     deaf: true
                 });
-
-                // Attach text channel ID for event messages
-                player.data.set('textChannelId', message.channel.id);
-                setupPlayerEvents(player, client);
             }
+
+            // Attach text channel ID for event messages (Global Manager will use this)
+            player.data.set('textChannelId', message.channel.id);
 
             // Add to queue
             if (result.type === 'PLAYLIST') {
@@ -62,7 +61,7 @@ module.exports = {
                 const track = result.tracks[0];
                 track.setRequester(message.author);
                 player.queue.add(track);
-                if (player.queue.length > 0) {
+                if (player.queue.length > 1) {
                     await message.channel.send(`✅ Kuyruğa eklendi: **${track.title}**`);
                 }
             }
@@ -79,39 +78,3 @@ module.exports = {
         }
     }
 };
-
-function setupPlayerEvents(player, client) {
-    player.on('start', async (track) => {
-        const textChannelId = player.data.get('textChannelId');
-        const channel = client.channels.cache.get(textChannelId);
-
-        if (channel) {
-            const embed = new EmbedBuilder()
-                .setTitle("🎵 Şimdi Çalıyor")
-                .setDescription(`**[${track.title}](${track.uri})**`)
-                .setThumbnail(track.thumbnail)
-                .addFields({ name: "👤 İsteyen", value: track.requester?.tag || "Bilinmiyor", inline: true })
-                .setColor(0x5865F2)
-                .setFooter({ text: "RMusic Ultra • Kazagumo", iconURL: client.user.displayAvatarURL() });
-
-            // Store last NP message to delete later if needed
-            if (player.data.get('lastNp')) {
-                try { await player.data.get('lastNp').delete(); } catch (e) { }
-            }
-            const msg = await channel.send({ embeds: [embed] }).catch(() => null);
-            player.data.set('lastNp', msg);
-        }
-    });
-
-    player.on('end', () => {
-        console.log(`[KAZAGUMO] Player bitti. Guild: ${player.guildId}`);
-    });
-
-    player.on('empty', () => {
-        const textChannelId = player.data.get('textChannelId');
-        const channel = client.channels.cache.get(textChannelId);
-        if (channel) channel.send("ℹ️ Kuyruk bitti, ayrılıyorum...").catch(() => null);
-        player.destroy();
-    });
-}
-
