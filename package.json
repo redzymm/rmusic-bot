@@ -13,7 +13,6 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/voice": "0.16.0",
-    "@distube/yt-dlp": "^2.0.1",
     "@snazzah/davey": "^0.1.9",
     "cors": "^2.8.5",
     "discord.js": "^14.14.1",
@@ -23,7 +22,6 @@
     "kazagumo": "3.4.0",
     "kazagumo-spotify": "^2.1.1",
     "libsodium-wrappers": "^0.7.13",
-    "play-dl": "^1.9.7",
     "shoukaku": "4.2.0",
     "sql.js": "^1.10.0",
     "tweetnacl": "^1.0.3",
