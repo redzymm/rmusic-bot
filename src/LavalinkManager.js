@@ -9,20 +9,6 @@ const Nodes = [{
     secure: false
 }];
 
-/**
- * Custom Shoukaku Connector for v3.
- * Forces the Bot ID to resolve "UserId missing" errors.
- */
-class CustomDiscordJSConnector extends Connectors.DiscordJS {
-    constructor(client, botId) {
-        super(client);
-        this.forcedId = botId;
-    }
-    getId() {
-        return this.forcedId || super.getId();
-    }
-}
-
 class LavalinkManager {
     constructor(client) {
         this.client = client;
@@ -38,18 +24,17 @@ class LavalinkManager {
         if (readyClient) this.client = readyClient;
 
         const botId = forceId || this.client.user?.id;
-        console.log(`[LAVALINK] Başlatılıyor... Verilen Bot ID: ${botId}`);
+        console.log(`[LAVALINK] Başlatılıyor... Hedef ID: ${botId}`);
 
         if (!botId) {
-            console.error("[LAVALINK_FATAL] Bot ID'si bulunamadı! Başlatılamaz.");
+            console.error("[LAVALINK_FATAL] Bot ID'si bulunamadı!");
             return;
         }
 
         try {
-            console.log("[LAVALINK] Kazagumo ve Shoukaku (v3) başlatılıyor...");
+            console.log("[LAVALINK] Kazagumo ve Shoukaku (v3) kuruluyor...");
 
-            // Custom connector with forced ID
-            const connector = new CustomDiscordJSConnector(this.client, botId);
+            const connector = new Connectors.DiscordJS(this.client);
 
             this.kazagumo = new Kazagumo({
                 defaultSearchEngine: 'youtube',
@@ -63,7 +48,7 @@ class LavalinkManager {
                     const guild = this.client.guilds.cache.get(guildId);
                     if (guild) guild.shard.send(payload);
                 }
-            }, connector, [], { // Start with empty nodes
+            }, connector, [], { // Start with empty nodes to avoid constructor race condition
                 moveOnDisconnect: false,
                 resume: true,
                 resumeTimeout: 60,
@@ -72,20 +57,24 @@ class LavalinkManager {
                 restTimeout: 60000
             });
 
-            // MANUEL NODE EKLEME (Init sonrası, hata riskini azaltır)
-            console.log("[LAVALINK] Düğümler ekleniyor...");
+            // KRİTİK FİX: Shoukaku v3'te ID capture bazen başarısız oluyor. 
+            // Burada manuel olarak ID'yi ENJEKTE ediyoruz.
+            this.kazagumo.shoukaku.id = botId;
+
+            console.log("[LAVALINK] Düğümler manuel olarak ekleniyor...");
             for (const node of Nodes) {
                 try {
+                    // Shoukaku'nun içindeki ID'yi bir kez daha kontrol edip force ediyoruz
+                    if (!this.kazagumo.shoukaku.id) this.kazagumo.shoukaku.id = botId;
+
                     this.kazagumo.shoukaku.addNode(node);
-                    console.log(`[LAVALINK] Düğüm başarıyla kaydedildi: ${node.name}`);
+                    console.log(`[LAVALINK] Düğüm kaydedildi: ${node.name}`);
                 } catch (e) {
                     console.error(`[LAVALINK_ERROR] Düğüm eklenemedi (${node.name}):`, e.message);
                 }
             }
 
-            console.log(`[LAVALINK] Toplam Shoukaku düğümü: ${this.kazagumo.shoukaku.nodes.size}`);
-
-            // Shoukaku (via Kazagumo) Node Events
+            // Node Events
             this.kazagumo.shoukaku.on('ready', (name) => {
                 console.log(`[LAVALINK] Node ${name} HAZIR ✅`);
             });
@@ -95,7 +84,7 @@ class LavalinkManager {
             });
 
             this.kazagumo.shoukaku.on('debug', (name, info) => {
-                if (info.includes('Socket') || info.includes('Sever') || info.includes('Authenticating') || info.includes('Handshake'))
+                if (info.includes('Socket') || info.includes('Sever') || info.includes('Authenticating'))
                     console.log(`[SHOUKAKU_DEBUG] ${name}: ${info}`);
             });
 
@@ -104,35 +93,22 @@ class LavalinkManager {
                 console.log(`[LAVALINK] Şarkı başladı: ${track.title} (Guild: ${player.guildId})`);
             });
 
-            this.kazagumo.on('playerEmpty', (player) => {
-                console.log(`[LAVALINK] Kuyruk bitti (Guild: ${player.guildId})`);
-            });
-
             console.log('[LAVALINK] Kazagumo hazır.');
         } catch (err) {
             console.error('[LAVALINK_FATAL] Kazagumo başlatılamadı:', err.message);
         }
     }
 
-    /**
-     * Search for tracks.
-     */
     async search(query, requester) {
         if (!this.kazagumo) throw new Error('Kazagumo hazır değil');
         return await this.kazagumo.search(query, { requester: requester });
     }
 
-    /**
-     * Get or Create a player.
-     */
     async createPlayer(options) {
         if (!this.kazagumo) throw new Error('Kazagumo hazır değil');
         return await this.kazagumo.createPlayer(options);
     }
 
-    /**
-     * Destroy a player.
-     */
     async destroyPlayer(guildId) {
         const player = this.kazagumo?.players.get(guildId);
         if (player) await player.destroy();
