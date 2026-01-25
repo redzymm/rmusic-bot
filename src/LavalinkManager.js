@@ -3,6 +3,10 @@ const { Kazagumo, Plugins } = require('kazagumo');
 const { EmbedBuilder } = require('discord.js');
 const Spotify = require('kazagumo-spotify');
 
+// Premium UX: YouTube Search Cache
+const ytCache = new Map();
+const CACHE_TTL = 1000 * 60 * 15; // 15 dakika önbellekte tut
+
 const Nodes = [{
     name: 'main',
     url: process.env.LAVALINK_HOST || '127.0.0.1:2333',
@@ -133,6 +137,7 @@ class LavalinkManager {
                     const msg = await channel.send({ embeds: [embed] }).catch(() => null);
                     player.data.set('lastNp', msg);
                 }
+                player.data.set('autoplay_last', track); // Autoplay için son şarkıyı kaydet
             });
 
             this.kazagumo.on('playerEmpty', (player) => {
@@ -150,6 +155,25 @@ class LavalinkManager {
                 player.destroy();
             });
 
+            this.kazagumo.on('playerEnd', async (player) => {
+                // Autoplay Logic
+                if (player.queue.length === 0 && player.data.get('autoplay')) {
+                    const lastTrack = player.data.get('autoplay_last') || player.queue.current;
+                    if (!lastTrack) return;
+
+                    console.log(`[LAVALINK] Autoplay tetiklendi. Referans: ${lastTrack.title}`);
+                    const query = `${lastTrack.author} ${lastTrack.title} related`;
+                    const result = await this.search(query, 'Autoplay');
+
+                    if (result && result.tracks.length > 0) {
+                        const nextTrack = result.tracks[0];
+                        nextTrack.requester = 'RMusic Autoplay';
+                        player.queue.add(nextTrack);
+                        player.play();
+                    }
+                }
+            });
+
             console.log('[LAVALINK] Kazagumo hazır.');
         } catch (err) {
             console.error('[LAVALINK_FATAL] Kazagumo başlatılamadı:', err.message);
@@ -158,7 +182,25 @@ class LavalinkManager {
 
     async search(query, requester) {
         if (!this.kazagumo) throw new Error('Kazagumo hazır değil');
-        return await this.kazagumo.search(query, { requester: requester });
+
+        const cacheKey = query.toLowerCase().trim();
+        const cached = ytCache.get(cacheKey);
+
+        if (cached && (Date.now() - cached.time < CACHE_TTL)) {
+            console.log(`[LAVALINK_CACHE] Sonuç önbellekten getirildi: ${query}`);
+            return cached.data;
+        }
+
+        const result = await this.kazagumo.search(query, { requester: requester });
+
+        // Sadece başarılı ve anlamlı sonuçları cache'le
+        if (result && result.tracks.length > 0) {
+            ytCache.set(cacheKey, { data: result, time: Date.now() });
+            // Cache temizliği: Çok büyümesini engelle
+            if (ytCache.size > 100) ytCache.delete(ytCache.keys().next().value);
+        }
+
+        return result;
     }
 
     async createPlayer(options) {
