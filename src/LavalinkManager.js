@@ -3,17 +3,21 @@ const { Kazagumo, Plugins } = require('kazagumo');
 const { EmbedBuilder } = require('discord.js');
 const Spotify = require('kazagumo-spotify');
 
+const { SERVERS, LAVALINK_PASSWORD } = require('./configs/servers');
+
 // Premium UX: YouTube Search Cache
 const ytCache = new Map();
 const CACHE_TTL = 1000 * 60 * 15; // 15 dakika önbellekte tut
 
-const Nodes = [{
-    name: 'main',
-    url: process.env.LAVALINK_HOST || '127.0.0.1:2333',
-    auth: process.env.LAVALINK_PASSWORD || 'rmusic_lavalink_2024',
-    secure: false,
-    followRedirects: true
-}];
+function getNodes() {
+    return [{
+        name: 'main',
+        url: process.env.LAVALINK_HOST || SERVERS.LOCAL.url,
+        auth: LAVALINK_PASSWORD,
+        secure: false,
+        followRedirects: true
+    }];
+}
 
 class LavalinkManager {
     constructor(client) {
@@ -84,9 +88,12 @@ class LavalinkManager {
 
             // Manually add nodes to ensure they are picked up correctly in v4
             console.log("[LAVALINK] Node listesi ekleniyor...");
-            for (const node of Nodes) {
+            for (const node of getNodes()) {
                 this.kazagumo.shoukaku.addNode(node);
             }
+
+            // İlk modu belirle
+            this.client.activeServerMode = process.env.LAVALINK_HOST ? 'REMOTE_ENV' : 'LOCAL';
 
             // Shoukaku (v4) Events
             this.kazagumo.shoukaku.on('ready', (name) => {
@@ -214,6 +221,44 @@ class LavalinkManager {
             console.log('[LAVALINK] Kazagumo hazır.');
         } catch (err) {
             console.error('[LAVALINK_FATAL] Kazagumo başlatılamadı:', err.message);
+        }
+    }
+
+    async switchServer(mode) {
+        if (!this.kazagumo || !this.kazagumo.shoukaku) return { success: false, message: 'Lavalink hazır değil.' };
+
+        const server = SERVERS[mode];
+        if (!server) return { success: false, message: 'Geçersiz sunucu modu.' };
+
+        console.log(`[LAVALINK] Sunucu değiştiriliyor: ${mode} (${server.url})`);
+
+        try {
+            // Mevcut node'ları temizle
+            const currentNodes = Array.from(this.kazagumo.shoukaku.nodes.keys());
+            for (const nodeName of currentNodes) {
+                this.kazagumo.shoukaku.removeNode(nodeName);
+            }
+
+            // Yeni node ekle
+            const newNode = {
+                name: 'main',
+                url: server.url,
+                auth: LAVALINK_PASSWORD,
+                secure: false,
+                followRedirects: true
+            };
+
+            this.kazagumo.shoukaku.addNode(newNode);
+
+            // Performans modunu güncelle (Kalite ayarları için)
+            process.env.VM_PERFORMANCE_MODE = server.perfMode;
+            this.client.activeServerMode = mode;
+
+            console.log(`[LAVALINK] Sunucu başarıyla değiştirildi: ${mode}`);
+            return { success: true, message: `${server.name} aktif edildi.` };
+        } catch (e) {
+            console.error('[LAVALINK_ERR] Sunucu değiştirme hatası:', e);
+            return { success: false, message: `Hata: ${e.message}` };
         }
     }
 

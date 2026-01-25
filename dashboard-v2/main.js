@@ -499,12 +499,19 @@ ipcMain.handle('get-remote-config', async () => {
 });
 
 ipcMain.on('save-remote-config', (event, config) => {
+    // Check if URL actually changed to avoid redundant reconnects
+    const urlChanged = config.serverUrl !== remoteConfig.serverUrl;
     remoteConfig = config;
     const configPath = path.join(__dirname, '../data/remote-config.json');
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-    // Reconnect if mode changed to remote
+    // Reconnect if mode is remote and either URL changed or we weren't connected
     if (isRemoteMode()) {
+        if (urlChanged && remoteWs) {
+            console.log('[REMOTE] URL changed, closing old connection...');
+            remoteWs.close();
+            remoteWs = null;
+        }
         connectRemoteWebSocket();
     } else {
         if (remoteWs) {

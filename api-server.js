@@ -230,7 +230,6 @@ app.get('/api/config', authenticate, (req, res) => {
         }
 
         res.json(config);
-        res.json(config);
     } catch (e) {
         res.status(500).json({ error: 'Config okunamadı', details: e.message });
     }

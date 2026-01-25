@@ -367,6 +367,51 @@ fs.readdirSync(komutlarPath)
         }
     });
 
+const sendStatus = () => {
+    if (!client.user) return; // Wait for ready
+    const memUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(0);
+    const cpuUsed = (os.loadavg()[0] * 10).toFixed(0);
+
+    const voiceChannels = Array.from(client.lavalink?.kazagumo?.players.values() || []).map(player => {
+        const guild = client.guilds.cache.get(player.guildId);
+        const channel = guild?.channels.cache.get(player.voiceId);
+        return {
+            guildId: player.guildId,
+            guildName: guild?.name || "Bilinmiyor",
+            channelName: channel?.name || "Bilinmiyor",
+            userCount: channel?.members.filter(m => !m.user.bot).size || 0,
+            autoplay: player.data.get('autoplay') || false
+        };
+    });
+
+    console.log("DASHBOARD_DATA:" + JSON.stringify({
+        type: "status",
+        username: client.user.username,
+        tag: client.user.tag,
+        avatar: client.user.displayAvatarURL({ extension: 'png', size: 128 }),
+        ping: client.ws.ping,
+        guilds: client.guilds.cache.size,
+        cpu: cpuUsed,
+        ram: memUsed,
+        volume: client.globalVolume,
+        autoplay: client.globalAutoplay,
+        activeServer: client.activeServerMode || "LOCAL", // Mevcut sunucuyu gönder
+        perfMode: (process.env.VM_PERFORMANCE_MODE || "LOW").toUpperCase(), // Mod bilgisini ekle
+        filters: client.filters,
+        equalizer: client.equalizer,
+        songProgress: null,
+        guildList: client.guilds.cache.map(g => ({
+            name: g.name,
+            icon: g.iconURL({ extension: 'png', size: 64 }) || "https://cdn.discordapp.com/embed/avatars/0.png"
+        })),
+        voiceChannels: voiceChannels,
+        commands: Array.from(new Set(client.commands.values())).map(cmd => ({
+            name: cmd.name,
+            description: cmd.description
+        }))
+    }));
+};
+
 /* =======================
    READY
  ======================= */
@@ -386,52 +431,8 @@ client.once(Events.ClientReady, async (c) => {
         client.lavalink.init(c, connectorId).catch(e => console.error("[BOT] Lavalink başlatılamadı:", e));
     }
 
-    const sendStatus = () => {
-        const memUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(0);
-        const cpuUsed = (os.loadavg()[0] * 10).toFixed(0);
-
-        const voiceChannels = Array.from(client.lavalink?.kazagumo?.players.values() || []).map(player => {
-            const guild = client.guilds.cache.get(player.guildId);
-            const channel = guild?.channels.cache.get(player.voiceId);
-            return {
-                guildId: player.guildId,
-                guildName: guild?.name || "Bilinmiyor",
-                channelName: channel?.name || "Bilinmiyor",
-                userCount: channel?.members.filter(m => !m.user.bot).size || 0,
-                autoplay: player.data.get('autoplay') || false
-            };
-        });
-
-        console.log("DASHBOARD_DATA:" + JSON.stringify({
-            type: "status",
-            username: client.user.username,
-            tag: client.user.tag,
-            avatar: client.user.displayAvatarURL({ extension: 'png', size: 128 }),
-            ping: client.ws.ping,
-            guilds: client.guilds.cache.size,
-            cpu: cpuUsed,
-            ram: memUsed,
-            volume: client.globalVolume,
-            autoplay: client.globalAutoplay,
-            perfMode: (process.env.VM_PERFORMANCE_MODE || "LOW").toUpperCase(), // Mod bilgisini ekle
-            filters: client.filters,
-            equalizer: client.equalizer,
-            songProgress: null,
-            guildList: client.guilds.cache.map(g => ({
-                name: g.name,
-                icon: g.iconURL({ extension: 'png', size: 64 }) || "https://cdn.discordapp.com/embed/avatars/0.png"
-            })),
-            voiceChannels: voiceChannels,
-            commands: Array.from(new Set(client.commands.values())).map(cmd => ({
-                name: cmd.name,
-                description: cmd.description
-            }))
-        }));
-    };
-
-    sendStatus();
     saveSettings(); // Ensure settings file exists with current values
-    setInterval(sendStatus, 10000); // 10 saniyede bir gönder (Performans optimizasyonu)
+    setInterval(() => { if (typeof sendStatus === 'function') sendStatus(); }, 10000); // 10 saniyede bir gönder (Performans optimizasyonu)
 
     // Dinamik Bot Durumu (Presence) Dönüşümü
     const statuses = [
@@ -1049,6 +1050,17 @@ process.stdin.on("data", (data) => {
 
             if (json.cmd === "reloadAutoResponses") {
                 loadAutoResponses();
+            }
+
+            if (json.cmd === "switchServer") {
+                const mode = json.value; // LOCAL, LOW_VM, HIGH_VM
+                if (client.lavalink && typeof client.lavalink.switchServer === 'function') {
+                    client.lavalink.switchServer(mode).then(res => {
+                        console.log(`[DASHBOARD] Sunucu Değişimi: ${res.message}`);
+                        // Durumu hemen güncelle ki panelde buton değişsin
+                        sendStatus();
+                    });
+                }
             }
         }
     } catch (e) {

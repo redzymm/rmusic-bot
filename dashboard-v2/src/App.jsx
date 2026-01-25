@@ -58,6 +58,265 @@ const THEMES = [
     { name: 'Gold Pulse', color: '#ffcc00', rgb: '255 204 0', glow: 'rgba(255, 204, 0, 0.4)', icon: Crown }
 ];
 
+const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser, remoteConfig, saveRemoteConfig, botData }) => {
+    if (!config) return null;
+    const [localPrefix, setLocalPrefix] = useState(config.prefix || '!');
+
+    const applyTheme = (t) => {
+        document.documentElement.style.setProperty('--brand-rgb', t.rgb);
+        document.documentElement.style.setProperty('--brand-color', t.color);
+        document.documentElement.style.setProperty('--brand-glow', t.glow);
+        const newConfig = { ...config, theme: t.name };
+        setConfig(newConfig);
+        ipc.send('save-config', newConfig);
+    };
+
+    return (
+        <div className="space-y-8">
+            <header>
+                <div className="flex items-center gap-4 mb-2">
+                    <div className="w-8 h-[2px] bg-brand-red" />
+                    <span className="text-[10px] text-brand-red font-black uppercase tracking-[0.3em]">Core Configuration</span>
+                </div>
+                <h1 className="text-4xl font-black tracking-tighter uppercase">Settings <span className="text-brand-red">Hub</span></h1>
+            </header>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                {/* 1. Aesthetics Grid */}
+                <div className="bg-[#ffffff05] border border-white/5 p-4 rounded-2xl space-y-4 border-white/5 lg:col-span-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-brand-red/10 rounded-xl flex items-center justify-center text-brand-red">
+                                <Palette size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-sm uppercase tracking-widest">Aesthetics Studio</h3>
+                                <p className="text-[10px] text-white/30 uppercase font-black">Design & Themes</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {THEMES.map(t => {
+                            const Icon = t.icon;
+                            return (
+                                <button
+                                    key={t.name}
+                                    onClick={() => applyTheme(t)}
+                                    style={{
+                                        boxShadow: config.theme === t.name ? `0 0 30px ${t.glow}33` : 'none',
+                                        borderColor: config.theme === t.name ? t.color : 'rgba(255,255,255,0.05)'
+                                    }}
+                                    className={`p-3 rounded-xl btn-animate flex flex-col items-center gap-2 border group relative overflow-hidden ${config.theme === t.name ? 'bg-white/10' : 'bg-white/5 hover:bg-white/10 hover:border-white/20'}`}
+                                >
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${config.theme === t.name ? 'scale-110 neo-glow' : 'opacity-40 group-hover:opacity-100 group-hover:scale-105'}`} style={{ color: t.color, backgroundColor: `${t.color}15`, '--brand-glow': t.color }}>
+                                        <Icon size={20} />
+                                    </div>
+                                    <span className={`text-[9px] font-black uppercase tracking-[0.1em] transition-all ${config.theme === t.name ? 'opacity-100' : 'opacity-30'}`}>{t.name}</span>
+                                    {config.theme === t.name && (
+                                        <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: t.color, boxShadow: `0 0 10px ${t.color}` }} />
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* 2. Prefix Settings */}
+                <div className="glass p-4 rounded-2xl space-y-4 border-white/5">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500">
+                            <Terminal size={20} />
+                        </div>
+                        <div>
+                            <h3 className="font-black text-sm uppercase tracking-widest">Bot Prefix</h3>
+                            <p className="text-[10px] text-white/30 uppercase font-black">Command Prefix</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <input
+                            value={localPrefix}
+                            onChange={e => setLocalPrefix(e.target.value)}
+                            className="w-full bg-white/5 border border-white/5 p-3 rounded-xl outline-none focus:border-brand-red focus:bg-white/10 transition-all font-black text-xl text-center shadow-inner"
+                        />
+                        <button
+                            onClick={() => {
+                                setConfig(prev => ({ ...prev, prefix: localPrefix }));
+                                ipc.send('save-config', { ...config, prefix: localPrefix });
+                            }}
+                            className="bg-brand-red px-4 rounded-xl btn-animate font-black text-[10px] uppercase tracking-[0.1em] shadow-lg shadow-brand-red/20 text-white"
+                        >
+                            SET
+                        </button>
+                    </div>
+                </div>
+
+                <div className="glass p-4 rounded-2xl gap-4 border-brand-red/10 bg-brand-red/5 flex flex-col justify-between lg:col-span-1">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-brand-red/20 rounded-xl flex items-center justify-center text-brand-red">
+                                <Zap size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-sm uppercase tracking-widest">System Core</h3>
+                                <p className="text-[10px] text-white/30 uppercase font-black">All-in-One Control</p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <div className="flex bg-white/5 p-1 rounded-xl gap-1 relative overflow-hidden">
+                                {/* Animated Selector Background */}
+                                <motion.div
+                                    className="absolute inset-y-1 bg-brand-red rounded-lg shadow-lg shadow-brand-red/20 z-0"
+                                    initial={false}
+                                    animate={{
+                                        x: remoteConfig.mode === 'local' ? '0%' :
+                                            (remoteConfig.serverUrl.includes('35.187.186.246') ? '100%' : '200%'),
+                                        width: 'calc(33.33% - 2.6px)'
+                                    }}
+                                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                />
+
+                                <button
+                                    onClick={() => {
+                                        saveRemoteConfig({ ...remoteConfig, mode: 'local', serverUrl: 'http://localhost:3001' });
+                                        ipc.send('bot-control', { cmd: 'switchServer', value: 'LOCAL' });
+                                    }}
+                                    className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors duration-200 z-10 ${remoteConfig.mode === 'local' ? 'text-white' : 'text-white/40 hover:text-white'}`}
+                                >
+                                    LOCAL
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        saveRemoteConfig({ ...remoteConfig, mode: 'remote', serverUrl: 'http://35.187.186.246:3001' });
+                                        ipc.send('bot-control', { cmd: 'switchServer', value: 'LOW_VM' });
+                                    }}
+                                    className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors duration-200 z-10 ${remoteConfig.mode === 'remote' && remoteConfig.serverUrl.includes('35.187.186.246') ? 'text-white' : 'text-white/40 hover:text-white'}`}
+                                >
+                                    LOW VM
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        saveRemoteConfig({ ...remoteConfig, mode: 'remote', serverUrl: 'http://35.233.125.241:3001' });
+                                        ipc.send('bot-control', { cmd: 'switchServer', value: 'HIGH_VM' });
+                                    }}
+                                    className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors duration-200 z-10 ${remoteConfig.mode === 'remote' && remoteConfig.serverUrl.includes('35.233.125.241') ? 'text-white' : 'text-white/40 hover:text-white'}`}
+                                >
+                                    HIGH VM
+                                </button>
+                            </div>
+                            <div className="px-2">
+                                <p className="text-[8px] text-white/20 font-bold uppercase tracking-widest flex items-center gap-2">
+                                    <div className={`w-1.5 h-1.5 rounded-full ${botData ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-red-500 animate-pulse'}`} />
+                                    Active: <span className="text-white/50">{botData ? `${botData.activeServer} (${remoteConfig.mode.toUpperCase()})` : 'BAĞLANTI BEKLENİYOR...'}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {/* Remote Connection Config (Hidden/Background) */}
+
+                {/* 3. Discord Integration */}
+                <div className="glass p-4 rounded-2xl space-y-4 border-[#5865F2]/20 bg-[#5865F2]/5">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[#5865F2]/20 rounded-xl flex items-center justify-center">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#5865F2">
+                                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className="font-black text-sm uppercase tracking-widest text-[#5865F2]">Discord Hub</h3>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => ipc.send('open-external', 'https://discord.com/api/oauth2/authorize?client_id=950813277007515709&permissions=8&scope=bot%20applications.commands')}
+                        className="w-full py-3 bg-[#5865F2] text-white font-black text-[10px] tracking-widest uppercase rounded-xl hover:bg-[#4752C4] transition-none active:scale-95"
+                    >
+                        Botu Davet Et
+                    </button>
+                </div>
+
+
+                {/* 4. Access Control */}
+                <div className={`glass p-4 rounded-2xl space-y-4 border-white/5`}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 ${isSystemAdmin ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} rounded-xl flex items-center justify-center`}>
+                                <ShieldCheck size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-sm uppercase tracking-widest text-white/90">Erişim Yönetimi</h3>
+                                <p className="text-[10px] text-white/30 uppercase font-black">{isSystemAdmin ? 'SİSTEM SAHİBİ DOĞRULANDI' : 'ERİŞİM KISITLI'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center gap-4">
+                        {discordUser ? (
+                            <>
+                                <img src={`https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`} className="w-8 h-8 rounded-full border border-white/10" alt="" />
+                                <div>
+                                    <p className="font-bold text-[10px]">{discordUser.username}</p>
+                                </div>
+                                <div className="ml-auto">
+                                    {isSystemAdmin ? (
+                                        <span className="px-2 py-0.5 bg-green-500/20 text-green-500 rounded-full text-[8px] font-black uppercase tracking-widest whitespace-nowrap">ADMİN</span>
+                                    ) : (
+                                        <span className="px-3 py-1 bg-red-500/20 text-red-500 rounded-full text-[9px] font-black uppercase tracking-widest">YETKİSİZ</span>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <p className="text-[10px] text-white/20 font-black uppercase tracking-widest w-full text-center py-2">Discord hesabı bağlı değil</p>
+                        )}
+                    </div>
+                </div>
+
+
+                {/* 6. System Utilities */}
+                <div className="bg-red-500/5 border border-red-500/10 p-4 rounded-2xl lg:col-span-3 flex flex-col md:flex-row items-center justify-between gap-6 pointer-events-auto">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-red-500/20 rounded-2xl flex items-center justify-center text-red-500 shadow-lg shadow-red-500/10">
+                            <Activity size={24} />
+                        </div>
+                        <div>
+                            <h3 className="font-black text-lg uppercase tracking-widest text-red-500">System Core Utils</h3>
+                            <p className="text-[10px] text-white/30 uppercase font-black tracking-widest">Maintenance & Emergency Force Exit</p>
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap gap-4 w-full md:w-auto">
+                        <button
+                            onClick={() => {
+                                localStorage.clear();
+                                window.location.reload();
+                            }}
+                            className="flex-1 md:flex-none px-8 py-4 bg-white/5 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all btn-animate flex items-center justify-center gap-2"
+                        >
+                            <X size={14} /> Önbelleği Sıfırla
+                        </button>
+                        <button
+                            onClick={() => ipc.send('kill-all-bot')}
+                            className="flex-1 md:flex-none px-8 py-4 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all btn-animate flex items-center justify-center gap-2"
+                        >
+                            <Zap size={14} /> Botu Zorla Durdur
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div className="flex items-center justify-center gap-4 py-8">
+                <div className="h-[1px] flex-1 bg-white/5" />
+                <p className="text-[10px] text-brand-red/50 font-black uppercase tracking-[0.4em] flex items-center gap-2">
+                    <Zap size={14} className="animate-pulse" /> Hot-reload active
+                </p>
+                <div className="h-[1px] flex-1 bg-white/5" />
+            </div>
+        </div>
+    );
+});
+
 export default function App() {
     const [activeTab, setActiveTab] = useState('Home');
     const [botStatus, setBotStatus] = useState('offline');
@@ -647,7 +906,7 @@ export default function App() {
                                 {activeTab === 'Logs' && <LogsView logs={logs} onSimulateLog={(l) => setLogs(p => [...p.slice(-49), l])} onClearLogs={() => setLogs([])} />}
                                 {activeTab === 'Commands' && <CommandsView config={config} setConfig={saveConfig} killAll={killAll} botInfo={botData} isSystemAdmin={isSystemAdmin} />}
                                 {activeTab === 'AutoResponse' && <AutoResponseView responses={autoResponses} setResponses={(r) => { setAutoResponses(r); ipc.send('save-auto-responses', r); }} isSystemAdmin={isSystemAdmin} />}
-                                {activeTab === 'Settings' && <SettingsView config={config} setConfig={saveConfig} isSystemAdmin={isSystemAdmin} discordUser={discordUser} remoteConfig={remoteConfig} saveRemoteConfig={saveRemoteConfig} />}
+                                {activeTab === 'Settings' && <SettingsView config={config} setConfig={saveConfig} isSystemAdmin={isSystemAdmin} discordUser={discordUser} remoteConfig={remoteConfig} saveRemoteConfig={saveRemoteConfig} botData={botData} />}
                             </motion.div>
                         </AnimatePresence>
                     )}
@@ -1502,7 +1761,7 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
                         </div>
                         <div>
                             <h3 className="font-black text-sm uppercase tracking-widest text-white/90">Denetim Kaydı Sistemi</h3>
-                            <p className="text-[9px] text-white/30 uppercase font-black tracking-[0.2em]">Audit Log Configuration</p>
+                            <p className="text-[9px] text-white/30 uppercase font-black">Audit Log Configuration</p>
                         </div>
                     </div>
 
@@ -1897,229 +2156,6 @@ const AutoResponseView = React.memo(({ responses, setResponses }) => {
     );
 });
 
-const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser, remoteConfig, saveRemoteConfig }) => {
-    if (!config) return null;
-    const [localPrefix, setLocalPrefix] = useState(config.prefix || '!');
-
-    const applyTheme = (t) => {
-        document.documentElement.style.setProperty('--brand-rgb', t.rgb);
-        document.documentElement.style.setProperty('--brand-color', t.color);
-        document.documentElement.style.setProperty('--brand-glow', t.glow);
-        const newConfig = { ...config, theme: t.name };
-        setConfig(newConfig);
-        ipc.send('save-config', newConfig);
-    };
-
-    return (
-        <div className="space-y-8">
-            <header>
-                <div className="flex items-center gap-4 mb-2">
-                    <div className="w-8 h-[2px] bg-brand-red" />
-                    <span className="text-[10px] text-brand-red font-black uppercase tracking-[0.3em]">Core Configuration</span>
-                </div>
-                <h1 className="text-4xl font-black tracking-tighter uppercase">Settings <span className="text-brand-red">Hub</span></h1>
-            </header>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-                {/* 1. Aesthetics Grid */}
-                <div className="bg-[#ffffff05] border border-white/5 p-4 rounded-2xl space-y-4 border-white/5 lg:col-span-2">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-brand-red/10 rounded-xl flex items-center justify-center text-brand-red">
-                                <Palette size={20} />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-sm uppercase tracking-widest">Aesthetics Studio</h3>
-                                <p className="text-[10px] text-white/30 uppercase font-black">Design & Themes</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {THEMES.map(t => {
-                            const Icon = t.icon;
-                            return (
-                                <button
-                                    key={t.name}
-                                    onClick={() => applyTheme(t)}
-                                    style={{
-                                        boxShadow: config.theme === t.name ? `0 0 30px ${t.glow}33` : 'none',
-                                        borderColor: config.theme === t.name ? t.color : 'rgba(255,255,255,0.05)'
-                                    }}
-                                    className={`p-3 rounded-xl btn-animate flex flex-col items-center gap-2 border group relative overflow-hidden ${config.theme === t.name ? 'bg-white/10' : 'bg-white/5 hover:bg-white/10 hover:border-white/20'}`}
-                                >
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${config.theme === t.name ? 'scale-110 neo-glow' : 'opacity-40 group-hover:opacity-100 group-hover:scale-105'}`} style={{ color: t.color, backgroundColor: `${t.color}15`, '--brand-glow': t.color }}>
-                                        <Icon size={20} />
-                                    </div>
-                                    <span className={`text-[9px] font-black uppercase tracking-[0.1em] transition-all ${config.theme === t.name ? 'opacity-100' : 'opacity-30'}`}>{t.name}</span>
-                                    {config.theme === t.name && (
-                                        <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: t.color, boxShadow: `0 0 10px ${t.color}` }} />
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* 2. Prefix Settings */}
-                <div className="glass p-4 rounded-2xl space-y-4 border-white/5">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500">
-                            <Terminal size={20} />
-                        </div>
-                        <div>
-                            <h3 className="font-black text-sm uppercase tracking-widest">Bot Prefix</h3>
-                            <p className="text-[10px] text-white/30 uppercase font-black">Command Prefix</p>
-                        </div>
-                    </div>
-                    <div className="flex gap-2">
-                        <input
-                            value={localPrefix}
-                            onChange={e => setLocalPrefix(e.target.value)}
-                            className="w-full bg-white/5 border border-white/5 p-3 rounded-xl outline-none focus:border-brand-red focus:bg-white/10 transition-all font-black text-xl text-center shadow-inner"
-                        />
-                        <button
-                            onClick={() => {
-                                setConfig(prev => ({ ...prev, prefix: localPrefix }));
-                                ipc.send('save-config', { ...config, prefix: localPrefix });
-                            }}
-                            className="bg-brand-red px-4 rounded-xl btn-animate font-black text-[10px] uppercase tracking-[0.1em] shadow-lg shadow-brand-red/20 text-white"
-                        >
-                            SET
-                        </button>
-                    </div>
-                </div>
-
-                <div className="glass p-4 rounded-2xl gap-4 border-brand-red/10 bg-brand-red/5 flex flex-col justify-between">
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-brand-red/20 rounded-xl flex items-center justify-center text-brand-red">
-                                <Wifi size={20} />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-sm uppercase tracking-widest">Dashboard Mode</h3>
-                                <p className="text-[10px] text-white/30 uppercase font-black">Local vs Remote</p>
-                            </div>
-                        </div>
-
-                        <div className="flex bg-white/5 p-1 rounded-xl gap-1">
-                            <button
-                                onClick={() => saveRemoteConfig({ ...remoteConfig, mode: 'local' })}
-                                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${remoteConfig.mode === 'local' ? 'bg-brand-red text-white' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-                            >
-                                LOCAL (DEV)
-                            </button>
-                            <button
-                                onClick={() => saveRemoteConfig({ ...remoteConfig, mode: 'remote' })}
-                                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${remoteConfig.mode === 'remote' ? 'bg-brand-red text-white' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-                            >
-                                REMOTE (VM)
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                {/* Remote Connection Config (Hidden/Background) */}
-
-                {/* 3. Discord Integration */}
-                <div className="glass p-4 rounded-2xl space-y-4 border-[#5865F2]/20 bg-[#5865F2]/5">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#5865F2]/20 rounded-xl flex items-center justify-center">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#5865F2">
-                                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 className="font-black text-sm uppercase tracking-widest text-[#5865F2]">Discord Hub</h3>
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => ipc.send('open-external', 'https://discord.com/api/oauth2/authorize?client_id=950813277007515709&permissions=8&scope=bot%20applications.commands')}
-                        className="w-full py-3 bg-[#5865F2] text-white font-black text-[10px] tracking-widest uppercase rounded-xl hover:bg-[#4752C4] transition-none active:scale-95"
-                    >
-                        Botu Davet Et
-                    </button>
-                </div>
-
-
-                {/* 4. Access Control */}
-                <div className={`glass p-4 rounded-2xl space-y-4 border-white/5`}>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 ${isSystemAdmin ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} rounded-xl flex items-center justify-center`}>
-                                <ShieldCheck size={20} />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-sm uppercase tracking-widest text-white/90">Erişim Yönetimi</h3>
-                                <p className="text-[10px] text-white/30 uppercase font-black">{isSystemAdmin ? 'SİSTEM SAHİBİ DOĞRULANDI' : 'ERİŞİM KISITLI'}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center gap-4">
-                        {discordUser ? (
-                            <>
-                                <img src={`https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`} className="w-8 h-8 rounded-full border border-white/10" alt="" />
-                                <div>
-                                    <p className="font-bold text-[10px]">{discordUser.username}</p>
-                                </div>
-                                <div className="ml-auto">
-                                    {isSystemAdmin ? (
-                                        <span className="px-2 py-0.5 bg-green-500/20 text-green-500 rounded-full text-[8px] font-black uppercase tracking-widest whitespace-nowrap">ADMİN</span>
-                                    ) : (
-                                        <span className="px-3 py-1 bg-red-500/20 text-red-500 rounded-full text-[9px] font-black uppercase tracking-widest">YETKİSİZ</span>
-                                    )}
-                                </div>
-                            </>
-                        ) : (
-                            <p className="text-[10px] text-white/20 font-black uppercase tracking-widest w-full text-center py-2">Discord hesabı bağlı değil</p>
-                        )}
-                    </div>
-                </div>
-
-
-                {/* 6. System Utilities */}
-                <div className="bg-red-500/5 border border-red-500/10 p-4 rounded-2xl lg:col-span-3 flex flex-col md:flex-row items-center justify-between gap-6 pointer-events-auto">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-red-500/20 rounded-2xl flex items-center justify-center text-red-500 shadow-lg shadow-red-500/10">
-                            <Activity size={24} />
-                        </div>
-                        <div>
-                            <h3 className="font-black text-lg uppercase tracking-widest text-red-500">System Core Utils</h3>
-                            <p className="text-[10px] text-white/30 uppercase font-black tracking-widest">Maintenance & Emergency Force Exit</p>
-                        </div>
-                    </div>
-                    <div className="flex flex-wrap gap-4 w-full md:w-auto">
-                        <button
-                            onClick={() => {
-                                localStorage.clear();
-                                window.location.reload();
-                            }}
-                            className="flex-1 md:flex-none px-8 py-4 bg-white/5 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all btn-animate flex items-center justify-center gap-2"
-                        >
-                            <X size={14} /> Önbelleği Sıfırla
-                        </button>
-                        <button
-                            onClick={() => ipc.send('kill-all-bot')}
-                            className="flex-1 md:flex-none px-8 py-4 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all btn-animate flex items-center justify-center gap-2"
-                        >
-                            <Zap size={14} /> Botu Zorla Durdur
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-
-            <div className="flex items-center justify-center gap-4 py-8">
-                <div className="h-[1px] flex-1 bg-white/5" />
-                <p className="text-[10px] text-brand-red/50 font-black uppercase tracking-[0.4em] flex items-center gap-2">
-                    <Zap size={14} className="animate-pulse" /> Hot-reload active
-                </p>
-                <div className="h-[1px] flex-1 bg-white/5" />
-            </div>
-        </div >
-    );
-});
 
 // --- Slash Commands Panel ---
 const SlashCommandsPanel = React.memo(() => {
