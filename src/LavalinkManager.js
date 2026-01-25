@@ -201,20 +201,37 @@ class LavalinkManager {
             });
 
             this.kazagumo.on('playerEnd', async (player) => {
-                // Autoplay Logic
                 if (player.queue.length === 0 && player.data.get('autoplay')) {
-                    const lastTrack = player.data.get('autoplay_last') || player.queue.current;
-                    if (!lastTrack) return;
+                    const lastTrack = player.data.get('autoplay_last');
+                    if (!lastTrack || !lastTrack.title) {
+                        console.log('[AUTOPLAY] No last track metadata found, skipping autoplay.');
+                        return;
+                    }
 
-                    console.log(`[LAVALINK] Autoplay tetiklendi. Referans: ${lastTrack.title}`);
-                    const query = `${lastTrack.author} ${lastTrack.title} related`;
-                    const result = await this.search(query, 'Autoplay');
+                    // Autoplay search query - Avoid "related" keyword if it's causing 400s
+                    // Using author + title is safer for standard YouTube search
+                    const query = `${lastTrack.author} ${lastTrack.title}`;
+                    console.log(`[AUTOPLAY] Searching for related track: ${query}`);
 
-                    if (result && result.tracks.length > 0) {
-                        const nextTrack = result.tracks[0];
-                        nextTrack.requester = 'RMusic Autoplay';
-                        player.queue.add(nextTrack);
-                        player.play();
+                    try {
+                        const result = await this.search(query, { id: 'autoplay', username: 'RMusic Autoplay' });
+
+                        if (result && result.tracks.length > 0) {
+                            // Pick a different track than the last one if possible
+                            const nextTrack = result.tracks.find(t => t.uri !== lastTrack.uri) || result.tracks[1] || result.tracks[0];
+
+                            nextTrack.requester = { id: 'autoplay', username: 'RMusic Autoplay' };
+                            player.queue.add(nextTrack);
+                            player.play();
+                            console.log(`[AUTOPLAY] Automatically playing: ${nextTrack.title}`);
+                        } else {
+                            console.log('[AUTOPLAY] No tracks found for autoplay query.');
+                        }
+                    } catch (err) {
+                        console.error('[AUTOPLAY_ERR]', err.message);
+                        if (err.message.includes('400') || err.message.includes('Bad Request')) {
+                            console.error('[AUTOPLAY] Search engine returned Bad Request. Check Lavalink/YouTube configuration.');
+                        }
                     }
                 }
             });
