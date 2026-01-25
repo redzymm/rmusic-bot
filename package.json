@@ -12,7 +12,6 @@
   "author": "AHG",
   "license": "ISC",
   "dependencies": {
-    "@discordjs/opus": "^0.9.0",
     "@discordjs/voice": "0.16.0",
     "@distube/yt-dlp": "^2.0.1",
     "@snazzah/davey": "^0.1.9",
@@ -26,7 +25,6 @@
     "libsodium-wrappers": "^0.7.13",
     "play-dl": "^1.9.7",
     "shoukaku": "4.2.0",
-    "sodium-native": "^5.0.10",
     "sql.js": "^1.10.0",
     "tweetnacl": "^1.0.3",
     "ws": "^8.16.0"
