@@ -324,8 +324,6 @@ fs.readdirSync(komutlarPath)
 /* =======================
    READY
  ======================= */
-const os = require("os");
-
 // Initialize Lavalink Manager
 client.lavalink = new LavalinkManager(client);
 
