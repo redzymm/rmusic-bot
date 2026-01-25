@@ -17,14 +17,6 @@ const os = require("os");
 
 console.log("[BOT] Ortam hazırlanıyor...");
 
-const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, AuditLogEvent } = require("discord.js");
-const initSqlJs = require("sql.js");
-// const fs = require("fs"); // Already declared above
-// const path = require("path"); // Already declared above
-const { spawn, execSync } = require("child_process");
-
-// Load environment variables from .env file (Moved to top)
-
 // Safely load config or use defaults
 let ayarlar = {};
 try {
