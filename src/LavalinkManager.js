@@ -105,7 +105,8 @@ class LavalinkManager {
             });
 
             this.kazagumo.shoukaku.on('debug', (name, info) => {
-                // Show ALL logs to prove reconnection attempts are happening
+                // Ignore spammy resume debug logs
+                if (info.includes('Resuming configured') || info.includes('Session Id')) return;
                 console.log(`[LAVALINK_DEBUG] ${name}: ${info}`);
             });
 
