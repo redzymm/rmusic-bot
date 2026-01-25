@@ -40,6 +40,7 @@ class LavalinkManager {
 
             this.kazagumo = new Kazagumo({
                 defaultSearchEngine: 'youtube',
+                userId: botId, // Explicitly provide botId
                 plugins: [
                     new Spotify({
                         clientId: process.env.SPOTIFY_CLIENT_ID || '',
