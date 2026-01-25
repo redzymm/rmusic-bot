@@ -80,8 +80,20 @@ function broadcast(data) {
     });
 }
 
-// Send log to all clients
+// Send log to all clients with duplicate suppression
+let lastLogLine = '';
+let lastLogTime = 0;
+
 function sendLog(text, isError = false) {
+    const clean = text.trim();
+    if (!clean) return;
+
+    // Suppress exact duplicates within 1 second to prevent spam
+    if (clean === lastLogLine && Date.now() - lastLogTime < 1000) return;
+
+    lastLogLine = clean;
+    lastLogTime = Date.now();
+
     broadcast({ type: 'log', text, isError, timestamp: Date.now() });
 }
 
