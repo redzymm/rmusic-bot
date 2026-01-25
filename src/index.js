@@ -1,5 +1,15 @@
 const fs = require('fs');
 const path = require('path');
+
+// Load environment variables (MUST BE FIRST)
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+// Error handlers
+process.on('uncaughtException', (err) => {
+    console.error(`[FATAL] ${err.message}\n${err.stack}`);
+});
+process.on('unhandledRejection', (reason) => console.error(`[REJECT] ${reason}`));
+
 const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, AuditLogEvent } = require("discord.js");
 const initSqlJs = require("sql.js");
 const { spawn, execSync } = require("child_process");
