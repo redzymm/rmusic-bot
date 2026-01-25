@@ -82,6 +82,28 @@ function startLavalink() {
 
     console.log("[LAVALINK] Sunucu başlatılıyor... (java -jar Lavalink.jar)");
 
+    // SMART CONFIG: Calibrate application.yml based on VM Performance Mode
+    try {
+        const configPath = path.join(lavalinkDir, "application.yml");
+        if (fs.existsSync(configPath)) {
+            let content = fs.readFileSync(configPath, "utf8");
+            const isHigh = (process.env.VM_PERFORMANCE_MODE || "LOW").toUpperCase() === "HIGH";
+
+            if (isHigh) {
+                content = content.replace(/opusEncodingQuality: \d+/g, "opusEncodingQuality: 10");
+                content = content.replace(/resamplingQuality: \w+/g, "resamplingQuality: HIGH");
+                console.log("[LAVALINK] SMART_CONFIG: Ultra-Premium ses ayarları uygulandı (Opus 10).");
+            } else {
+                content = content.replace(/opusEncodingQuality: \d+/g, "opusEncodingQuality: 8");
+                content = content.replace(/resamplingQuality: \w+/g, "resamplingQuality: MEDIUM");
+                console.log("[LAVALINK] SMART_CONFIG: Tasarruf modu ses ayarları uygulandı (Opus 8).");
+            }
+            fs.writeFileSync(configPath, content);
+        }
+    } catch (e) {
+        console.error("[LAVALINK_WARN] Smart Config kalibrasyonu başarısız:", e.message);
+    }
+
     // CRITICAL FIX: Kill any existing orphans on 1GB RAM VM before starting
     try {
         if (process.platform !== "win32") {
@@ -91,14 +113,28 @@ function startLavalink() {
     } catch (e) { }
 
     try {
-        lavalinkProcess = spawn("java", [
-            "-Xms128M",
-            "-Xmx384M", // 1GB RAM VM için güvenli sınır (Node + OS payı bırakıldı)
+        const perfMode = (process.env.VM_PERFORMANCE_MODE || "LOW").toUpperCase();
+        const isHigh = perfMode === "HIGH";
+
+        // Dynamic Java Flags based on VM Power
+        const javaArgs = [
+            isHigh ? "-Xms1G" : "-Xms128M",
+            isHigh ? "-Xmx4G" : "-Xmx384M", // 16GB RAM VM için 4GB devasa güç, 1GB VM için 384MB diyet
             "-XX:+UseG1GC",
             "-XX:MaxGCPauseMillis=50",
             "-jar",
             "Lavalink.jar"
-        ], {
+        ];
+
+        // HIGH modunda disk ve bellek hızlandırıcılar ekle (SSD & 16GB RAM dostu)
+        if (isHigh) {
+            javaArgs.splice(4, 0, "-XX:+AlwaysPreTouch");
+            console.log(`[LAVALINK] ULTRA-PERFORMANS MODU AKTİF (4GB RAM) 🚀`);
+        } else {
+            console.log(`[LAVALINK] DÜŞÜK RAM TASARRUF MODU AKTİF (384MB RAM) 🛡️`);
+        }
+
+        lavalinkProcess = spawn("java", javaArgs, {
             cwd: lavalinkDir,
             stdio: ["ignore", "pipe", "pipe"]
         });

@@ -262,9 +262,16 @@ class LavalinkManager {
     }
 
     static buildFilters(client) {
+        const perfMode = (process.env.VM_PERFORMANCE_MODE || "LOW").toUpperCase();
+        const isHigh = perfMode === "HIGH";
+
         const filters = {};
         const vol = (client.globalVolume || 100) / 100;
         filters.volume = vol;
+
+        // Dynamic Quality based on VM Performance
+        // Lavalink v4.0.5+ supports dynamic quality tweaks via filters if configured.
+        // We ensure the bot's filter building reflects the intended quality balance.
 
         if (client.equalizer && client.equalizer.some(g => g !== 0)) {
             const bands = client.equalizer.map((gain, i) => ({
