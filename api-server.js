@@ -80,13 +80,27 @@ function broadcast(data) {
     });
 }
 
-// Send log to all clients with duplicate suppression
+// Send log to all clients with duplicate suppression and spam filtering
 const logHistory = new Set();
 const MAX_HISTORY = 10;
+const SPAM_PATTERNS = [
+    '[DEBUG]',
+    '[INFO]',
+    'NAVIGATOR_LOG',
+    'LAVALINK_CONSOLE] INFO',
+    'LAVALINK_CONSOLE] DEBUG',
+    'LAVALINK_CONSOLE] TRACE',
+    'StatsEvent',
+    'PlayerUpdate',
+    'Heartbeat'
+];
 
 function sendLog(text, isError = false) {
     const clean = text.trim();
     if (!clean) return;
+
+    // Filter out known spam patterns
+    if (SPAM_PATTERNS.some(pattern => clean.includes(pattern))) return;
 
     // Check if we've seen this exact log very recently (within the last few lines)
     if (logHistory.has(clean)) return;

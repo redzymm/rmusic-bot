@@ -139,17 +139,18 @@ function startLavalink() {
             stdio: ["ignore", "pipe", "pipe"]
         });
 
-        const logFilter = (data) => {
-            const str = data.toString();
-            // Silence INFO, DEBUG, and WARN logs to keep dashboard clean
-            if (str.includes(" INFO ") || str.includes("DEBUG") || str.includes("WARN") || str.includes("Sentry")) {
-                if (!str.includes("Lavalink is ready") && !str.includes("started on port")) return;
+        lavalinkProcess.stdout.on("data", (data) => {
+            const str = data.toString().trim();
+            // Only log important stuff from Lavalink to avoid spamming the dashboard
+            if (str.includes("WARN") || str.includes("ERROR") || str.includes("FATAL") || str.includes("Started Lavalink")) {
+                console.log(`[LAVALINK_CONSOLE] ${str}`);
             }
-            console.log(`[LAVALINK_OUT] ${str.trim()}`);
-        };
+        });
 
-        lavalinkProcess.stdout.on("data", logFilter);
-        lavalinkProcess.stderr.on("data", (data) => console.error(`[LAVALINK_ERR] ${data}`));
+        lavalinkProcess.stderr.on("data", (data) => {
+            const str = data.toString().trim();
+            if (str) console.error(`[LAVALINK_ERR] ${str}`);
+        });
 
         lavalinkProcess.on("exit", (code) => {
             console.warn(`[LAVALINK] Sunucu kapandı (Kod: ${code})`);
@@ -161,7 +162,7 @@ function startLavalink() {
         lavalinkProcess.on("error", (err) => {
             console.error(`[LAVALINK_ERR] Başlatma hatası:`, err);
             if (err.code === 'ENOENT') {
-                console.error("[LAVALINK_ERR] 'java' komutu bulunamadı. Lütfen sisteme Java 17+ yükleyin.");
+                console.error("[LAVALINK_ERR] 'java' command not found. Please install Java 17+.");
             }
         });
     } catch (e) {
