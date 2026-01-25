@@ -45,6 +45,8 @@ module.exports = {
                     textId: message.channel.id,
                     deaf: true
                 });
+                // Initialize autoplay from global setting
+                player.data.set('autoplay', client.globalAutoplay || false);
             }
 
             // Attach text channel ID for event messages (Global Manager will use this)

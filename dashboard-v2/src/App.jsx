@@ -1679,6 +1679,7 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
             case 'prefix': return <Terminal size={iconSize} />;
             case 'test': return <ShieldCheck size={iconSize} />;
             case 'ping': return <Wifi size={iconSize} />;
+            case 'autoplay': return <Waves size={iconSize} />;
             case 'yardım': return <Search size={iconSize} />;
             default: return <Terminal size={iconSize} />;
         }
@@ -1686,6 +1687,7 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
 
     const knownCmds = botInfo?.commands || [
         { name: 'p', description: 'YouTube üzerinden müzik oynatır' },
+        { name: 'autoplay', description: 'Otomatik oynatmayı açar/kapatır' },
         { name: 'skip', description: 'Mevcut şarkıyı atlar' },
         { name: 'stop', description: 'Oynatmayı durdurur ve kanaldan çıkar' },
         { name: 'kuyruk', description: 'Sunucudaki şarkı sırasını gösterir' },

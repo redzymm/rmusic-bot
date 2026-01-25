@@ -391,6 +391,35 @@ app.post('/api/auto-responses', authenticate, (req, res) => {
     }
 });
 
+// Get Slash Commands (Remote Dashboard)
+app.get('/api/slash-commands', authenticate, (req, res) => {
+    try {
+        const slashCommands = require('./src/slashCommands.js');
+        const list = slashCommands.map(cmd => ({
+            name: cmd.name,
+            description: cmd.description
+        }));
+        res.json(list);
+    } catch (e) {
+        res.status(500).json({ error: 'Slash komutları okunamadı', details: e.message });
+    }
+});
+
+// Deploy Slash Commands (Remote Dashboard)
+app.post('/api/deploy-slash-commands', authenticate, async (req, res) => {
+    try {
+        const { deployCommands } = require('./src/deploy-commands.js');
+        const isGlobal = req.body.isGlobal || false;
+
+        // Bu işlem zaman alabilir, o yüzden async süreç başlatıyoruz
+        // (Not: deploy-commands.js içindeki deployCommands fonksiyonunu dışa aktarmalıyız)
+        await deployCommands(isGlobal);
+        res.json({ success: true, message: 'Slash komutları başarıyla kaydedildi!' });
+    } catch (e) {
+        res.status(500).json({ error: 'Deploy başarısız', details: e.message });
+    }
+});
+
 // ========== START SERVER ==========
 server.listen(PORT, '0.0.0.0', () => {
     console.log('╔════════════════════════════════════════════╗');

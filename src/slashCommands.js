@@ -22,6 +22,10 @@ module.exports = [
         .setDescription('Skip the current song'),
 
     new SlashCommandBuilder()
+        .setName('autoplay')
+        .setDescription('Toggle autoplay mode (continuous playback)'),
+
+    new SlashCommandBuilder()
         .setName('stop')
         .setDescription('Stop playback and leave the voice channel'),
 

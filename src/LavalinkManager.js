@@ -185,6 +185,9 @@ class LavalinkManager {
             });
 
             this.kazagumo.on('playerEmpty', (player) => {
+                // Autoplay aktifse player'ı silme, playerEnd beklesin
+                if (player.data.get('autoplay')) return;
+
                 console.log(`[LAVALINK] Kuyruk bitti (Guild: ${player.guildId})`);
                 const textChannelId = player.data.get('textChannelId');
                 if (textChannelId) {

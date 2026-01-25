@@ -680,9 +680,11 @@ ipcMain.on('beam-to-server', (event, data) => {
     }
 });
 
-// Deploy Slash Commands (Dashboard'dan tetiklenir)
 ipcMain.handle('deploy-slash-commands', async (event, isGlobal = false) => {
-    const { spawn } = require('child_process');
+    if (isRemoteMode()) {
+        return await remoteRequest('/api/deploy-slash-commands', 'POST', { isGlobal });
+    }
+
     const deployScript = path.join(__dirname, '../src/deploy-commands.js');
 
     return new Promise((resolve) => {
@@ -717,6 +719,12 @@ ipcMain.handle('deploy-slash-commands', async (event, isGlobal = false) => {
 
 // Get Slash Commands List (Dashboard için)
 ipcMain.handle('get-slash-commands', async () => {
+    if (isRemoteMode()) {
+        const result = await remoteRequest('/api/slash-commands');
+        if (!result.error && Array.isArray(result)) return result;
+        return [];
+    }
+
     try {
         const slashCommands = require('../src/slashCommands.js');
         return slashCommands.map(cmd => ({
