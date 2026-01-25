@@ -53,13 +53,13 @@ module.exports = {
             // Add to queue
             if (result.type === 'PLAYLIST') {
                 for (const track of result.tracks) {
-                    track.setRequester(message.author);
+                    track.requester = message.author;
                     player.queue.add(track);
                 }
                 await message.channel.send(`✅ **${result.tracks.length}** şarkı playlistten eklendi!`);
             } else {
                 const track = result.tracks[0];
-                track.setRequester(message.author);
+                track.requester = message.author;
                 player.queue.add(track);
                 if (player.queue.length > 1) {
                     await message.channel.send(`✅ Kuyruğa eklendi: **${track.title}**`);
