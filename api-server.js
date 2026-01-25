@@ -90,9 +90,15 @@ const SPAM_PATTERNS = [
     'LAVALINK_CONSOLE] INFO',
     'LAVALINK_CONSOLE] DEBUG',
     'LAVALINK_CONSOLE] TRACE',
+    'LAVALINK_DEBUG]',
+    '[SETTINGS] Saved',
+    '[SETTINGS] Loading',
     'StatsEvent',
     'PlayerUpdate',
-    'Heartbeat'
+    'Heartbeat',
+    'DASHBOARD_DATA',
+    'Session Id',
+    'Resuming configured'
 ];
 
 function sendLog(text, isError = false) {

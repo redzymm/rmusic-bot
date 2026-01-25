@@ -105,9 +105,8 @@ class LavalinkManager {
             });
 
             this.kazagumo.shoukaku.on('debug', (name, info) => {
-                // Ignore spammy resume debug logs
-                if (info.includes('Resuming configured') || info.includes('Session Id')) return;
-                console.log(`[LAVALINK_DEBUG] ${name}: ${info}`);
+                // Highly verbose, only enable if troubleshooting connection
+                // console.log(`[LAVALINK_DEBUG] ${name}: ${info}`);
             });
 
             // Kazagumo Events
