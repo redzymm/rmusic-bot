@@ -101,8 +101,9 @@ function startLavalink() {
 
     try {
         lavalinkProcess = spawn("java", [
-            "-Xmx1G",
-            "-Xms256M",
+            "-Xmx512M",
+            "-Xms128M",
+            "-XX:+UseSerialGC", // Low RAM optimized
             "-jar",
             "Lavalink.jar"
         ], {
