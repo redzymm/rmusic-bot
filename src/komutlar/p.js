@@ -65,6 +65,13 @@ module.exports = {
                 await message.channel.send(`✅ **${result.tracks.length}** şarkı playlistten eklendi!`);
             } else {
                 const track = result.tracks[0];
+
+                // Süre kontrolü (7 dakika)
+                const MAX_DURATION = 1000 * 60 * 7;
+                if (track.length > MAX_DURATION) {
+                    return message.reply(`❌ **Bu video çok uzun!** Maksimum **7 dakika** sınırı vardır. (Video: ${Math.floor(track.length / 1000 / 60)} dk)`);
+                }
+
                 track.requester = message.author;
                 player.queue.add(track);
                 if (player.queue.length > 1) {

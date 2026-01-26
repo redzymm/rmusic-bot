@@ -12,6 +12,7 @@ const CACHE_TTL = 1000 * 60 * 15; // 15 dakika önbellekte tut
 // Pro Algoritma: Kara liste ve Geçmiş takibi
 const BANNED_KEYWORDS = ['live', 'remix', 'sped up', 'slowed', 'nightcore', 'lyrics', 'karaoke', 'cover', 'edit', 'remix', 'official video', 'clip official'];
 const playedTracksHistory = new Set();
+const MAX_DURATION = 1000 * 60 * 7; // 7 dakika sınırı
 
 function getNodes() {
     return [{
@@ -257,8 +258,9 @@ class LavalinkManager {
                             let validTracks = result.tracks.filter(t => {
                                 const title = t.title.toLowerCase();
                                 const isBanned = BANNED_KEYWORDS.some(word => title.includes(word));
+                                const isTooLong = t.length > MAX_DURATION;
                                 const isDuplicate = t.uri === lastTrack.uri || t.title === lastTrack.title || playedTracksHistory.has(t.identifier);
-                                return !isBanned && !isDuplicate;
+                                return !isBanned && !isDuplicate && !isTooLong;
                             });
 
                             // Eğer hiç sonuç kalmadıysa filtreyi esnet (ama aynı şarkıyı çalma)
