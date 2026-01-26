@@ -9,6 +9,10 @@ const { SERVERS, LAVALINK_PASSWORD } = require('./configs/servers');
 const ytCache = new Map();
 const CACHE_TTL = 1000 * 60 * 15; // 15 dakika önbellekte tut
 
+// Pro Algoritma: Kara liste ve Geçmiş takibi
+const BANNED_KEYWORDS = ['live', 'remix', 'sped up', 'slowed', 'nightcore', 'lyrics', 'karaoke', 'cover', 'edit', 'remix', 'official video', 'clip official'];
+const playedTracksHistory = new Set();
+
 function getNodes() {
     return [{
         name: 'main',
@@ -149,6 +153,16 @@ class LavalinkManager {
                 }
                 player.data.set('autoplay_last', track); // Autoplay için son şarkıyı kaydet
 
+                // Algoritma: Şarkıyı geçmişe ekle (Döngü önlemek için)
+                if (track.identifier) {
+                    playedTracksHistory.add(track.identifier);
+                    // Hafızayı taze tut (son 100 şarkı)
+                    if (playedTracksHistory.size > 100) {
+                        const first = playedTracksHistory.values().next().value;
+                        playedTracksHistory.delete(first);
+                    }
+                }
+
                 // Spotify Preload: Sıradaki şarkı Spotify ise önceden hazırla
                 if (player.queue.length > 0) {
                     const next = player.queue[0];
@@ -224,45 +238,55 @@ class LavalinkManager {
                         return;
                     }
 
-                    // Autoplay search query - Using author + title for better accuracy
-                    let query = lastTrack.title;
-                    if (!lastTrack.title.toLowerCase().includes(lastTrack.author.toLowerCase())) {
-                        query = `${lastTrack.author} ${lastTrack.title}`;
+                    // Pro Algoritma: Sanatçı bazlı veya şarkı bazlı akıllı sorgu
+                    // Eğer sanatçı biliniyorsa sadece sanatçı araması keşif için daha iyidir
+                    let query = lastTrack.author;
+                    if (query.toLowerCase().includes('topic') || query.toLowerCase().includes('vevo')) {
+                        query = lastTrack.title;
                     }
-                    console.log(`[AUTOPLAY] Requesting related track for: ${query}`);
-                    const requester = { id: 'autoplay', username: 'RMusic Autoplay' };
+
+                    console.log(`[AUTOPLAY] Pro Discovery started for: ${query}`);
+                    const requester = { id: 'autoplay', username: 'RMusic Radio' };
 
                     try {
-                        // 1. Arama yap (Cache kullanarak)
+                        // 1. Arama yap
                         const result = await this.search(query, requester);
 
                         if (result && result.tracks.length > 0) {
-                            console.log(`[AUTOPLAY] Found ${result.tracks.length} tracks. Provider: ${result.type}`);
-                            // 2. Benzer bir şarkı seç (aynı şarkı olmasın)
-                            let nextTrack = result.tracks.find(t => t.uri !== lastTrack.uri && t.title !== lastTrack.title);
+                            // 2. Pro Filtreleme
+                            let validTracks = result.tracks.filter(t => {
+                                const title = t.title.toLowerCase();
+                                const isBanned = BANNED_KEYWORDS.some(word => title.includes(word));
+                                const isDuplicate = t.uri === lastTrack.uri || t.title === lastTrack.title || playedTracksHistory.has(t.identifier);
+                                return !isBanned && !isDuplicate;
+                            });
 
-                            if (!nextTrack) {
-                                nextTrack = result.tracks[Math.floor(Math.random() * Math.min(result.tracks.length, 5))];
+                            // Eğer hiç sonuç kalmadıysa filtreyi esnet (ama aynı şarkıyı çalma)
+                            if (validTracks.length === 0) {
+                                validTracks = result.tracks.filter(t => t.uri !== lastTrack.uri && t.title !== lastTrack.title);
                             }
 
+                            // 3. Karıştır ve Seç
+                            validTracks.sort(() => Math.random() - 0.5);
+                            const nextTrack = validTracks[0] || result.tracks[Math.floor(Math.random() * Math.min(result.tracks.length, 5))];
+
                             if (nextTrack) {
-                                console.log(`[AUTOPLAY] Selected Track: ${nextTrack.title}`);
+                                console.log(`[AUTOPLAY] Selected: ${nextTrack.title} | Alg: Discovery`);
                                 nextTrack.requester = requester;
 
-                                // Direct play for reliability in playerEnd/Empty state
                                 try {
                                     await player.play(nextTrack);
-                                    console.log(`[AUTOPLAY] SUCCESS: Playback started for ${nextTrack.title}`);
+                                    console.log(`[AUTOPLAY] SUCCESS: Radio mode active.`);
                                 } catch (playErr) {
-                                    console.error(`[AUTOPLAY_PLAY_ERR] Failed to start playback: ${playErr.message}`);
+                                    console.error(`[AUTOPLAY_PLAY_ERR] ${playErr.message}`);
                                     player.destroy();
                                 }
                             } else {
-                                console.log('[AUTOPLAY] No relevant tracks found. Motor shutting down.');
+                                console.log('[AUTOPLAY] Discovery failed. Shutting down.');
                                 player.destroy();
                             }
                         } else {
-                            console.log('[AUTOPLAY] No tracks returned in search. Motor shutting down.');
+                            console.log('[AUTOPLAY] No tracks returned in search. Shutting down.');
                             player.destroy();
                         }
                     } catch (err) {
