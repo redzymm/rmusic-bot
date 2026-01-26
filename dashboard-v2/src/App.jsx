@@ -209,7 +209,7 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
                             <div className="px-2">
                                 <p className="text-[8px] text-white/20 font-bold uppercase tracking-widest flex items-center gap-2">
                                     <div className={`w-1.5 h-1.5 rounded-full ${botData ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-red-500 animate-pulse'}`} />
-                                    Active: <span className="text-white/50">{botData ? `${botData.activeServer} (${remoteConfig.mode.toUpperCase()})` : 'BAĞLANTI BEKLENİYOR...'}</span>
+                                    Active: <span className="text-white/50">{botData ? `${botData.activeServer === 'LOCAL' && remoteConfig.mode === 'remote' ? 'REMOTE_VM' : botData.activeServer} (${remoteConfig.mode.toUpperCase()})` : 'BAĞLANTI BEKLENİYOR...'}</span>
                                 </p>
                             </div>
                         </div>
@@ -327,7 +327,13 @@ export default function App() {
     const [isSearching, setIsSearching] = useState(false);
     const [nowPlayingLocal, setNowPlayingLocal] = useState(null);
     const [nowPlayingLocalId, setNowPlayingLocalId] = useState(null);
-    const [config, setConfig] = useState(null);
+    const [config, setConfig] = useState({
+        prefix: '!',
+        theme: 'Red Ultra',
+        mod_log_enabled: false,
+        log_channel: '',
+        disabled_commands: []
+    });
     const [localVolume, setLocalVolume] = useState(() => {
         const saved = localStorage.getItem('localVolume');
         return saved ? parseFloat(saved) : 1;
@@ -1666,7 +1672,8 @@ const LogsView = React.memo(({ logs, onSimulateLog, onClearLogs }) => {
 });
 
 const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
-    if (!config) return <div className="h-full flex items-center justify-center text-brand-red font-black tracking-widest uppercase text-xl">Initializing Policy...</div>;
+    // Ensure config is not null, should be initialized with defaults in App state
+    const currentConfig = config || { disabled_commands: [], mod_log_enabled: false, log_channel: '' };
 
     const getIcon = (name) => {
         const iconSize = 20;

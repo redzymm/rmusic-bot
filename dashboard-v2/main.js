@@ -56,12 +56,10 @@ function loadRemoteConfig() {
         const configPath = path.join(__dirname, '../data/remote-config.json');
         if (fs.existsSync(configPath)) {
             const fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-            // Merge file config (mostly for 'mode') but FORCE env vars for connection details
+            // Merge file config
             remoteConfig = {
                 ...remoteConfig,
-                ...fileConfig,
-                serverUrl: process.env.REMOTE_SERVER_IP || 'http://35.187.186.246:3001',
-                apiKey: process.env.API_SECRET_KEY || 'rmusic-x7k9m2p4v8n1q3w5y6z0-secure-2026'
+                ...fileConfig
             };
             console.log('[REMOTE] Config loaded:', remoteConfig.mode, remoteConfig.serverUrl);
         }
@@ -486,7 +484,9 @@ ipcMain.handle('get-config', async () => {
             prefix: '!',
             theme: 'Red Ultra',
             adminPassword: '3131',
-            disabled_commands: []
+            disabled_commands: [],
+            mod_log_enabled: false,
+            log_channel: ''
         };
     }
 });

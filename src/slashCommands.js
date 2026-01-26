@@ -30,6 +30,14 @@ module.exports = [
         .setDescription('Stop playback and leave the voice channel'),
 
     new SlashCommandBuilder()
+        .setName('pause')
+        .setDescription('Pause or resume the current song'),
+
+    new SlashCommandBuilder()
+        .setName('resume')
+        .setDescription('Resume the paused song'),
+
+    new SlashCommandBuilder()
         .setName('queue')
         .setDescription('Show the current song queue'),
 
