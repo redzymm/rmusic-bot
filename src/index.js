@@ -1040,6 +1040,7 @@ process.stdin.on("data", (data) => {
                         }
                     }
                     saveSettings();
+                    sendStatus();
                 }
             }
 
@@ -1074,6 +1075,7 @@ process.stdin.on("data", (data) => {
                 const newConfig = require("../data/ayarlar.json");
                 client.disabledCommands = newConfig.disabled_commands || [];
                 console.log("[INFO] Config Reloaded. Disabled Cmds: " + client.disabledCommands.length);
+                sendStatus();
             }
 
             if (json.cmd === "reloadAutoResponses") {
