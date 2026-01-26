@@ -174,7 +174,14 @@ class LavalinkManager {
                     if (player.queue.length === 0 && player.data.get('autoplay')) {
                         console.log(`[LAVALINK_DROP_KILLER] Autoplay için ön arama yapılıyor...`);
                         const lastTrack = player.queue.current;
-                        const query = `${lastTrack.author} ${lastTrack.title} related`;
+
+                        // Query normalizasyonu: Yazar başlıkta varsa tekrarlama
+                        let query = lastTrack.title;
+                        if (!query.toLowerCase().includes(lastTrack.author.toLowerCase())) {
+                            query = `${lastTrack.author} ${lastTrack.title}`;
+                        }
+                        query += " related";
+
                         this.search(query, 'DropKiller').catch(() => null);
                     }
 
@@ -218,16 +225,22 @@ class LavalinkManager {
                     }
 
                     // Autoplay search query - Using author + title for better accuracy
-                    const query = `${lastTrack.author} ${lastTrack.title}`;
+                    // Query normalizasyonu
+                    let query = lastTrack.title;
+                    if (!lastTrack.title.toLowerCase().includes(lastTrack.author.toLowerCase())) {
+                        query = `${lastTrack.author} ${lastTrack.title}`;
+                    }
                     console.log(`[AUTOPLAY] Requesting related track for: ${query}`);
+                    const requester = { id: 'autoplay', username: 'RMusic Autoplay' };
 
                     try {
-                        // 1. Arama yap
-                        const result = await this.kazagumo.search(query, { id: 'autoplay', username: 'RMusic Autoplay' });
+                        // 1. Arama yap (Cache kullanarak)
+                        const result = await this.search(query, requester);
 
                         if (result && result.tracks.length > 0) {
+                            console.log(`[AUTOPLAY] Found ${result.tracks.length} tracks.`);
                             // 2. Benzer bir şarkı seç (aynı şarkı olmasın)
-                            let nextTrack = result.tracks.find(t => t.uri !== lastTrack.uri);
+                            let nextTrack = result.tracks.find(t => t.uri !== lastTrack.uri && t.title !== lastTrack.title);
 
                             // Eğer tek sonuç varsa veya farklı şarkı bulunamazsa listeye göre seç
                             if (!nextTrack) {
