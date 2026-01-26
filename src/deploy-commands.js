@@ -28,22 +28,25 @@ console.log(`[DEBUG] Config Token: ${ayarlar.token ? 'PRESENT' : 'MISSING'}`);
 const slashCommands = require('./slashCommands.js');
 const isGlobal = process.argv.includes('--global');
 
-async function deployCommands() {
+async function deployCommands(passedIsGlobal = null, logger = console.log) {
     const commands = slashCommands.map(cmd => cmd.toJSON());
     const token = process.env.DISCORD_TOKEN || ayarlar.token;
+    const finalIsGlobal = passedIsGlobal !== null ? passedIsGlobal : isGlobal;
 
-    console.log(`[DEBUG] Final Token to use: ${token ? token.substring(0, 5) + '...' : 'NULL'}`);
+    logger(`[DEBUG] Final Token to use: ${token ? token.substring(0, 5) + '...' : 'NULL'}`);
 
     if (!token) {
-        console.error('❌ DISCORD_TOKEN bulunamadı! .env dosyasını kontrol edin.');
-        process.exit(1);
+        const err = '❌ DISCORD_TOKEN bulunamadı! .env dosyasını kontrol edin.';
+        logger(err);
+        if (require.main === module) process.exit(1);
+        throw new Error(err);
     }
 
     const rest = new REST({ version: '10' }).setToken(token);
 
     try {
-        console.log(`🚀 ${commands.length} slash komutu kaydediliyor...`);
-        console.log(`📍 Mod: ${isGlobal ? 'GLOBAL (tüm sunucular)' : 'GUILD (test sunucusu)'}`);
+        logger(`🚀 ${commands.length} slash komutu kaydediliyor...`);
+        logger(`📍 Mod: ${finalIsGlobal ? 'GLOBAL (tüm sunucular)' : 'GUILD (test sunucusu)'}`);
 
         // Bot'un Application ID'sini al
         const clientData = await rest.get(Routes.user('@me'));
@@ -51,7 +54,7 @@ async function deployCommands() {
 
         let data;
 
-        if (isGlobal) {
+        if (finalIsGlobal) {
             // Global komutlar (tüm sunucularda, ~1 saat gecikme)
             data = await rest.put(
                 Routes.applicationCommands(clientId),
@@ -59,14 +62,16 @@ async function deployCommands() {
             );
         } else {
             // Guild-specific komutlar (anında aktif)
-            const guildId = process.env.TEST_GUILD_ID || ayarlar.test_guild_id || await getFirstGuildId(rest, clientId);
+            const guildId = process.env.TEST_GUILD_ID || ayarlar.test_guild_id || await getFirstGuildId(rest, clientId, logger);
 
             if (!guildId) {
-                console.error('❌ Sunucu ID bulunamadı! .env içinde TEST_GUILD_ID tanımlayın.');
-                process.exit(1);
+                const err = '❌ Sunucu ID bulunamadı! .env içinde TEST_GUILD_ID tanımlayın.';
+                logger(err);
+                if (require.main === module) process.exit(1);
+                throw new Error(err);
             }
 
-            console.log(`🎯 Hedef Sunucu ID: ${guildId}`);
+            logger(`🎯 Hedef Sunucu ID: ${guildId}`);
 
             data = await rest.put(
                 Routes.applicationGuildCommands(clientId, guildId),
@@ -74,15 +79,15 @@ async function deployCommands() {
             );
         }
 
-        console.log(`✅ ${data.length} slash komutu başarıyla kaydedildi!`);
-        console.log('\n📋 Kaydedilen komutlar:');
-        data.forEach(cmd => console.log(`   /${cmd.name} - ${cmd.description}`));
+        logger(`✅ ${data.length} slash komutu başarıyla kaydedildi!`);
+        logger('\n📋 Kaydedilen komutlar:');
+        data.forEach(cmd => logger(`   /${cmd.name} - ${cmd.description}`));
 
         // ayarlar.json'u güncelle (Eğer varsa)
         if (Object.keys(ayarlar).length > 0) {
             try {
                 ayarlar.slash_commands_deployed = true;
-                ayarlar.slash_deploy_mode = isGlobal ? 'global' : 'guild';
+                ayarlar.slash_deploy_mode = finalIsGlobal ? 'global' : 'guild';
                 ayarlar.slash_deploy_date = new Date().toISOString();
                 fs.writeFileSync(
                     path.join(__dirname, '../data/ayarlar.json'),
@@ -92,17 +97,18 @@ async function deployCommands() {
         }
 
     } catch (error) {
-        console.error('❌ Komut kaydı sırasında hata:', error);
-        process.exit(1);
+        logger(`❌ Komut kaydı sırasında hata: ${error.message}`);
+        if (require.main === module) process.exit(1);
+        throw error;
     }
 }
 
-async function getFirstGuildId(rest, clientId) {
+async function getFirstGuildId(rest, clientId, logger) {
     try {
         // Bu method bot zaten login değilse çalışmaz
         // Manuel olarak guild ID gerekebilir
-        console.log('⚠️  test_guild_id bulunamadı. Lütfen ayarlar.json dosyasına ekleyin:');
-        console.log('    "test_guild_id": "SUNUCU_ID_BURAYA"');
+        logger('⚠️  test_guild_id bulunamadı. Lütfen ayarlar.json dosyasına ekleyin:');
+        logger('    "test_guild_id": "SUNUCU_ID_BURAYA"');
         return null;
     } catch (e) {
         return null;

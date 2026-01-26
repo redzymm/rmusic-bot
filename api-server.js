@@ -411,11 +411,15 @@ app.post('/api/deploy-slash-commands', authenticate, async (req, res) => {
         const { deployCommands } = require('./src/deploy-commands.js');
         const isGlobal = req.body.isGlobal || false;
 
-        // Bu işlem zaman alabilir, o yüzden async süreç başlatıyoruz
-        // (Not: deploy-commands.js içindeki deployCommands fonksiyonunu dışa aktarmalıyız)
-        await deployCommands(isGlobal);
+        sendLog(`[SYSTEM] Slash komutları kaydediliyor (Mod: ${isGlobal ? 'GLOBAL' : 'GUILD'})...`);
+
+        // deployCommands artık logger olarak sendLog alabilir
+        await deployCommands(isGlobal, (msg) => sendLog(msg));
+
+        sendLog(`[SYSTEM] Slash komutları başarıyla kaydedildi!`);
         res.json({ success: true, message: 'Slash komutları başarıyla kaydedildi!' });
     } catch (e) {
+        sendLog(`[ERR] Deploy başarısız: ${e.message}`, true);
         res.status(500).json({ error: 'Deploy başarısız', details: e.message });
     }
 });
