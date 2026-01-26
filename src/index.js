@@ -1021,6 +1021,7 @@ process.stdin.on("data", (data) => {
                     }
                 }
                 saveSettings();
+                sendStatus();
             }
 
             if (json.cmd === "toggleFilter") {
@@ -1060,6 +1061,7 @@ process.stdin.on("data", (data) => {
                     }
                 }
                 saveSettings();
+                sendStatus();
             }
 
             if (json.cmd === "autoplay") {
@@ -1068,6 +1070,7 @@ process.stdin.on("data", (data) => {
                     player.data.set('autoplay', client.globalAutoplay);
                 });
                 saveSettings();
+                sendStatus();
             }
 
             if (json.cmd === "reloadConfig") {
