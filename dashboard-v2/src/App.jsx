@@ -1672,6 +1672,7 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
         const iconSize = 20;
         switch (name.toLowerCase()) {
             case 'p': return <Play size={iconSize} />;
+            case 'pause': return <Pause size={iconSize} />;
             case 'skip': return <Zap size={iconSize} />;
             case 'stop': return <Square size={iconSize} />;
             case 'kuyruk': return <Music size={iconSize} />;
@@ -1688,6 +1689,7 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
     const knownCmds = botInfo?.commands || [
         { name: 'p', description: 'YouTube üzerinden müzik oynatır' },
         { name: 'autoplay', description: 'Otomatik oynatmayı açar/kapatır' },
+        { name: 'pause', description: 'Müziği duraklatır veya devam ettirir' },
         { name: 'skip', description: 'Mevcut şarkıyı atlar' },
         { name: 'stop', description: 'Oynatmayı durdurur ve kanaldan çıkar' },
         { name: 'kuyruk', description: 'Sunucudaki şarkı sırasını gösterir' },

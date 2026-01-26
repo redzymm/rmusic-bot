@@ -514,6 +514,8 @@ const slashToPrefix = {
     'play': 'p',
     'skip': 'skip',
     'stop': 'stop',
+    'pause': 'pause',
+    'resume': 'pause',
     'queue': 'kuyruk',
     'reset': 'sıfırla',
     'ping': 'ping',
