@@ -331,6 +331,10 @@ try {
             client.filters = data.filters;
             console.log(`[SETTINGS] Filters loaded:`, data.filters);
         }
+        if (data.autoplay !== undefined) {
+            client.globalAutoplay = data.autoplay;
+            console.log(`[SETTINGS] Autoplay loaded: ${data.autoplay}`);
+        }
         if (data.equalizer !== undefined) {
             client.equalizer = data.equalizer;
             console.log(`[SETTINGS] Equalizer loaded.`);

@@ -45,7 +45,7 @@ module.exports = {
                     textId: message.channel.id,
                     deaf: true
                 });
-                // Initialize autoplay from global setting
+                // Initialize autoplay from global setting (Ensure default value)
                 player.data.set('autoplay', client.globalAutoplay || false);
             }
 

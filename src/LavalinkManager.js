@@ -186,7 +186,10 @@ class LavalinkManager {
 
             this.kazagumo.on('playerEmpty', (player) => {
                 // Autoplay aktifse player'ı silme, playerEnd beklesin
-                if (player.data.get('autoplay')) return;
+                if (player.data.get('autoplay')) {
+                    console.log(`[LAVALINK] Kuyruk boşaldı, Autoplay için bekleniyor... (Guild: ${player.guildId})`);
+                    return;
+                }
 
                 console.log(`[LAVALINK] Kuyruk bitti (Guild: ${player.guildId})`);
                 const textChannelId = player.data.get('textChannelId');
@@ -203,37 +206,51 @@ class LavalinkManager {
             });
 
             this.kazagumo.on('playerEnd', async (player) => {
+                // Sadece kuyruk boşsa ve autoplay aktifse çalış (playerEmpty ile çakışmayı önle)
                 if (player.queue.length === 0 && player.data.get('autoplay')) {
                     const lastTrack = player.data.get('autoplay_last');
                     if (!lastTrack || !lastTrack.title) {
-                        console.log('[AUTOPLAY] No last track metadata found, skipping autoplay.');
+                        console.log('[AUTOPLAY] No last track metadata found, destroying player.');
+                        player.destroy();
                         return;
                     }
 
-                    // Autoplay search query - Avoid "related" keyword if it's causing 400s
-                    // Using author + title is safer for standard YouTube search
+                    // Autoplay search query - Using author + title for better accuracy
                     const query = `${lastTrack.author} ${lastTrack.title}`;
-                    console.log(`[AUTOPLAY] Searching for related track: ${query}`);
+                    console.log(`[AUTOPLAY] Requesting related track for: ${query}`);
 
                     try {
-                        const result = await this.search(query, { id: 'autoplay', username: 'RMusic Autoplay' });
+                        // 1. Arama yap
+                        const result = await this.kazagumo.search(query, { id: 'autoplay', username: 'RMusic Autoplay' });
 
                         if (result && result.tracks.length > 0) {
-                            // Pick a different track than the last one if possible
-                            const nextTrack = result.tracks.find(t => t.uri !== lastTrack.uri) || result.tracks[1] || result.tracks[0];
+                            // 2. Benzer bir şarkı seç (aynı şarkı olmasın)
+                            let nextTrack = result.tracks.find(t => t.uri !== lastTrack.uri);
 
-                            nextTrack.requester = { id: 'autoplay', username: 'RMusic Autoplay' };
-                            player.queue.add(nextTrack);
-                            player.play();
-                            console.log(`[AUTOPLAY] Automatically playing: ${nextTrack.title}`);
+                            // Eğer tek sonuç varsa veya farklı şarkı bulunamazsa listeye göre seç
+                            if (!nextTrack) {
+                                nextTrack = result.tracks[1] || result.tracks[0];
+                            }
+
+                            if (nextTrack) {
+                                nextTrack.requester = { id: 'autoplay', username: 'RMusic Autoplay' };
+                                player.queue.add(nextTrack);
+
+                                // Kazagumo'da play() playerEnd içindeyken bazen sorun yapabiliyor, mini delay ekle
+                                setTimeout(() => {
+                                    if (player.queue.length > 0) {
+                                        player.play();
+                                        console.log(`[AUTOPLAY] SUCCESS: Now playing ${nextTrack.title}`);
+                                    }
+                                }, 500);
+                            }
                         } else {
-                            console.log('[AUTOPLAY] No tracks found for autoplay query.');
+                            console.log('[AUTOPLAY] No relevant tracks found. Motor shutting down.');
+                            player.destroy();
                         }
                     } catch (err) {
                         console.error('[AUTOPLAY_ERR]', err.message);
-                        if (err.message.includes('400') || err.message.includes('Bad Request')) {
-                            console.error('[AUTOPLAY] Search engine returned Bad Request. Check Lavalink/YouTube configuration.');
-                        }
+                        player.destroy();
                     }
                 }
             });
