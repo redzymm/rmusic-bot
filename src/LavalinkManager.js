@@ -238,26 +238,27 @@ class LavalinkManager {
                         const result = await this.search(query, requester);
 
                         if (result && result.tracks.length > 0) {
-                            console.log(`[AUTOPLAY] Found ${result.tracks.length} tracks.`);
+                            console.log(`[AUTOPLAY] Found ${result.tracks.length} tracks. Provider: ${result.type}`);
                             // 2. Benzer bir şarkı seç (aynı şarkı olmasın)
                             let nextTrack = result.tracks.find(t => t.uri !== lastTrack.uri && t.title !== lastTrack.title);
 
-                            // Eğer tek sonuç varsa veya farklı şarkı bulunamazsa listeye göre seç
                             if (!nextTrack) {
-                                nextTrack = result.tracks[1] || result.tracks[0];
+                                nextTrack = result.tracks[Math.floor(Math.random() * Math.min(result.tracks.length, 5))];
                             }
 
                             if (nextTrack) {
-                                nextTrack.requester = { id: 'autoplay', username: 'RMusic Autoplay' };
+                                console.log(`[AUTOPLAY] Selected Track: ${nextTrack.title} (${nextTrack.uri})`);
+                                nextTrack.requester = requester;
                                 player.queue.add(nextTrack);
 
-                                // Kazagumo'da play() playerEnd içindeyken bazen sorun yapabiliyor, mini delay ekle
                                 setTimeout(() => {
                                     if (player.queue.length > 0) {
                                         player.play();
-                                        console.log(`[AUTOPLAY] SUCCESS: Now playing ${nextTrack.title}`);
+                                        console.log(`[AUTOPLAY] SUCCESS: Playback started for ${nextTrack.title}`);
+                                    } else {
+                                        console.log('[AUTOPLAY] Queue empty after add? Something is wrong.');
                                     }
-                                }, 500);
+                                }, 1000); // 1s delay for stability
                             }
                         } else {
                             console.log('[AUTOPLAY] No relevant tracks found. Motor shutting down.');
