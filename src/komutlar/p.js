@@ -47,6 +47,10 @@ module.exports = {
                 });
                 // Initialize autoplay from global setting (Ensure default value)
                 player.data.set('autoplay', client.globalAutoplay || false);
+
+                // Apply initial volume and filters
+                const initialFilters = client.lavalink.constructor.buildFilters(client);
+                player.shoukaku.setFilters(initialFilters);
             }
 
             // Attach text channel ID for event messages (Global Manager will use this)

@@ -308,7 +308,8 @@ function saveSettings() {
             volume: client.globalVolume,
             autoplay: client.globalAutoplay,
             filters: client.filters,
-            equalizer: client.equalizer
+            equalizer: client.equalizer,
+            activeServerMode: client.activeServerMode || 'LOCAL'
         };
         fs.writeFileSync(settingsPath, JSON.stringify(data, null, 2));
         console.log(`[SETTINGS] Saved to ${settingsPath}`);
@@ -338,6 +339,10 @@ try {
         if (data.equalizer !== undefined) {
             client.equalizer = data.equalizer;
             console.log(`[SETTINGS] Equalizer loaded.`);
+        }
+        if (data.activeServerMode !== undefined) {
+            client.activeServerMode = data.activeServerMode;
+            console.log(`[SETTINGS] Server Mode loaded: ${data.activeServerMode}`);
         }
     } else {
         console.log(`[SETTINGS] No settings.json found, checking fallback...`);
@@ -433,7 +438,13 @@ client.once(Events.ClientReady, async (c) => {
     if (client.lavalink) {
         const connectorId = c.user?.id || client.user?.id;
         console.log(`[STARTUP] Lavalink bağlanıyor... Hedef Bot ID: ${connectorId}`);
-        client.lavalink.init(c, connectorId).catch(e => console.error("[BOT] Lavalink başlatılamadı:", e));
+        client.lavalink.init(c, connectorId).then(() => {
+            // Kayıtlı sunucu modu farklıysa geçiş yap
+            if (client.activeServerMode && client.activeServerMode !== 'LOCAL' && client.activeServerMode !== 'REMOTE_ENV') {
+                console.log(`[STARTUP] Kayıtlı sunucu moduna geçiş yapılıyor: ${client.activeServerMode}`);
+                client.lavalink.switchServer(client.activeServerMode);
+            }
+        }).catch(e => console.error("[BOT] Lavalink başlatılamadı:", e));
     }
 
     saveSettings(); // Ensure settings file exists with current values

@@ -92,8 +92,10 @@ class LavalinkManager {
                 this.kazagumo.shoukaku.addNode(node);
             }
 
-            // İlk modu belirle
-            this.client.activeServerMode = process.env.LAVALINK_HOST ? 'REMOTE_ENV' : 'LOCAL';
+            // İlk modu belirle (Eğer ayarlardan yüklenmediyse)
+            if (!this.client.activeServerMode) {
+                this.client.activeServerMode = process.env.LAVALINK_HOST ? 'REMOTE_ENV' : 'LOCAL';
+            }
 
             // Shoukaku (v4) Events
             this.kazagumo.shoukaku.on('ready', (name) => {
@@ -290,6 +292,9 @@ class LavalinkManager {
             // Performans modunu güncelle (Kalite ayarları için)
             process.env.VM_PERFORMANCE_MODE = server.perfMode;
             this.client.activeServerMode = mode;
+
+            // Ayarları kalıcı kaydet
+            if (typeof saveSettings === 'function') saveSettings();
 
             console.log(`[LAVALINK] Sunucu başarıyla değiştirildi: ${mode}`);
             return { success: true, message: `${server.name} aktif edildi.` };
