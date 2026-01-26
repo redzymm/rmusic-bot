@@ -379,8 +379,19 @@ fs.readdirSync(komutlarPath)
 
 const sendStatus = () => {
     if (!client.user) return; // Wait for ready
-    const memUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(0);
-    const cpuUsed = (os.loadavg()[0] * 10).toFixed(0);
+
+    // System-wide RAM (Total - Free)
+    const totalRamRaw = os.totalmem();
+    const freeRamRaw = os.freemem();
+    const usedRamRaw = totalRamRaw - freeRamRaw;
+
+    const memUsed = (usedRamRaw / 1024 / 1024 / 1024).toFixed(1); // GB
+    const memTotal = (totalRamRaw / 1024 / 1024 / 1024).toFixed(1); // GB
+
+    // System-wide CPU Load (%)
+    const cpus = os.cpus();
+    const loadAvg = os.loadavg()[0];
+    const cpuUsed = Math.min(100, ((loadAvg / cpus.length) * 100)).toFixed(0);
 
     const voiceChannels = Array.from(client.lavalink?.kazagumo?.players.values() || []).map(player => {
         const guild = client.guilds.cache.get(player.guildId);
@@ -403,6 +414,7 @@ const sendStatus = () => {
         guilds: client.guilds.cache.size,
         cpu: cpuUsed,
         ram: memUsed,
+        totalRam: memTotal,
         volume: client.globalVolume,
         autoplay: client.globalAutoplay,
         activeServer: client.activeServerMode || "LOCAL", // Mevcut sunucuyu gönder

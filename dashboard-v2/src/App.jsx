@@ -1131,8 +1131,8 @@ const HomeView = React.memo(({ status, start, stop, botInfo, killAll, discordUse
                 <div className="lg:col-span-2 grid grid-cols-2 gap-4">
                     <StatCard icon={Wifi} label="Ping" value={botInfo?.ping ? `${botInfo.ping}ms` : '---'} color="blue" />
                     <StatCard icon={Users} label="Guilds" value={botInfo?.guilds || '---'} color="purple" />
-                    <StatCard icon={Cpu} label="Load" value={botInfo?.cpu ? `${botInfo.cpu}%` : '0%'} color="orange" />
-                    <StatCard icon={Zap} label="Memory" value={botInfo?.ram ? `${botInfo.ram}MB` : '0MB'} color="green" />
+                    <StatCard icon={Cpu} label="System Load" value={botInfo?.cpu ? `${botInfo.cpu}%` : '0%'} color="orange" />
+                    <StatCard icon={Zap} label="System Memory" value={botInfo?.ram ? `${botInfo.ram}${botInfo.totalRam ? ` / ${botInfo.totalRam}` : ''} GB` : '0GB'} color="green" />
 
                     {/* Voice Channel Activity - Spans 2 columns */}
                     {botInfo?.voiceChannels && botInfo.voiceChannels.length > 0 && (
