@@ -64,12 +64,24 @@ module.exports = {
                 }
                 await message.channel.send(`✅ **${result.tracks.length}** şarkı playlistten eklendi!`);
             } else {
-                const track = result.tracks[0];
-
-                // Süre kontrolü (7 dakika)
                 const MAX_DURATION = 1000 * 60 * 7;
-                if (track.length > MAX_DURATION) {
-                    return message.reply(`❌ **Bu video çok uzun!** Maksimum **7 dakika** sınırı vardır. (Video: ${Math.floor(track.length / 1000 / 60)} dk)`);
+                const isLink = query.startsWith("http");
+                let track = result.tracks[0];
+
+                if (isLink) {
+                    // Direct link: Hard limit with warning
+                    if (track.length > MAX_DURATION) {
+                        if (message.guild.searchMsg) try { await message.guild.searchMsg.delete(); } catch (e) { }
+                        return message.reply(`❌ **Bu bağlantı çok uzun!** Direkt linklerde maksimum **7 dakika** sınırı vardır. (Video: ${Math.floor(track.length / 1000 / 60)} dk)`);
+                    }
+                } else {
+                    // Search: Find first valid result under 7 minutes
+                    const validTrack = result.tracks.find(t => t.length <= MAX_DURATION);
+                    if (!validTrack) {
+                        if (message.guild.searchMsg) try { await message.guild.searchMsg.delete(); } catch (e) { }
+                        return message.reply(`❌ **Uygun sonuç bulunamadı!** Aramadaki tüm videolar **7 dakika**dan uzun.`);
+                    }
+                    track = validTrack;
                 }
 
                 track.requester = message.author;
