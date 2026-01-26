@@ -225,7 +225,6 @@ class LavalinkManager {
                     }
 
                     // Autoplay search query - Using author + title for better accuracy
-                    // Query normalizasyonu
                     let query = lastTrack.title;
                     if (!lastTrack.title.toLowerCase().includes(lastTrack.author.toLowerCase())) {
                         query = `${lastTrack.author} ${lastTrack.title}`;
@@ -247,21 +246,23 @@ class LavalinkManager {
                             }
 
                             if (nextTrack) {
-                                console.log(`[AUTOPLAY] Selected Track: ${nextTrack.title} (${nextTrack.uri})`);
+                                console.log(`[AUTOPLAY] Selected Track: ${nextTrack.title}`);
                                 nextTrack.requester = requester;
-                                player.queue.add(nextTrack);
 
-                                setTimeout(() => {
-                                    if (player.queue.length > 0) {
-                                        player.play();
-                                        console.log(`[AUTOPLAY] SUCCESS: Playback started for ${nextTrack.title}`);
-                                    } else {
-                                        console.log('[AUTOPLAY] Queue empty after add? Something is wrong.');
-                                    }
-                                }, 1000); // 1s delay for stability
+                                // Direct play for reliability in playerEnd/Empty state
+                                try {
+                                    await player.play(nextTrack);
+                                    console.log(`[AUTOPLAY] SUCCESS: Playback started for ${nextTrack.title}`);
+                                } catch (playErr) {
+                                    console.error(`[AUTOPLAY_PLAY_ERR] Failed to start playback: ${playErr.message}`);
+                                    player.destroy();
+                                }
+                            } else {
+                                console.log('[AUTOPLAY] No relevant tracks found. Motor shutting down.');
+                                player.destroy();
                             }
                         } else {
-                            console.log('[AUTOPLAY] No relevant tracks found. Motor shutting down.');
+                            console.log('[AUTOPLAY] No tracks returned in search. Motor shutting down.');
                             player.destroy();
                         }
                     } catch (err) {
