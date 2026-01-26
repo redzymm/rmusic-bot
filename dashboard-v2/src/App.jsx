@@ -1090,7 +1090,7 @@ const StatCard = React.memo(({ icon: Icon, label, value, color }) => {
 const HomeView = React.memo(({ status, start, stop, botInfo, killAll, discordUser, onDiscordLogin }) => {
     return (
         <div className="space-y-8">
-            <header>
+            <header className="pr-48">
                 <div className="flex items-center gap-4 mb-2">
                     <div className="w-8 h-[2px] bg-brand-red" />
                     <span className="text-[10px] text-brand-red font-black uppercase tracking-[0.3em]">System Overview</span>
@@ -1192,7 +1192,7 @@ const AudioEngineView = React.memo(({ botInfo, status, updateVolume, toggleFilte
 
     return (
         <div className="space-y-6">
-            <header>
+            <header className="pr-48">
                 <div className="flex items-center gap-4 mb-2">
                     <div className="w-8 h-[2px] bg-brand-red" />
                     <span className="text-[10px] text-brand-red font-black uppercase tracking-[0.3em]">Acoustic Processing</span>
@@ -1325,7 +1325,7 @@ const PlayerView = React.memo(({ query, setQuery, results, searching, onSearch, 
 
     return (
         <div className="h-full flex flex-col space-y-5">
-            <header className="flex items-center justify-between">
+            <header className="flex items-center justify-between pr-48">
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="w-8 h-[2px] bg-brand-red" />
@@ -1502,7 +1502,7 @@ const LogsView = React.memo(({ logs, onSimulateLog, onClearLogs }) => {
 
     return (
         <div className="h-full flex flex-col space-y-4 relative">
-            <header className="flex items-center justify-between">
+            <header className="flex items-center justify-between pr-48">
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="w-8 h-[2px] bg-brand-red" />
