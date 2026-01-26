@@ -1735,8 +1735,8 @@ const CommandsView = React.memo(({ config, setConfig, killAll, botInfo }) => {
                                 <div className={`p-3 rounded-xl transition-all duration-300 ${isEnabled ? 'bg-brand-red text-white neo-glow' : 'bg-white/10 text-white/40'}`}>
                                     {getIcon(cmd.name)}
                                 </div>
-                                <div className={`w-10 h-5 rounded-full relative transition-all duration-300 ${isEnabled ? 'bg-brand-red' : 'bg-white/10'}`}>
-                                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all duration-300 ${isEnabled ? 'left-5.5 shadow-[0_0_10px_white]' : 'left-0.5'}`} />
+                                <div className={`w-10 h-5 rounded-full relative transition-colors duration-300 ${isEnabled ? 'bg-brand-red' : 'bg-white/10'}`}>
+                                    <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-300 ${isEnabled ? 'translate-x-5 shadow-[0_0_10px_white]' : 'translate-x-0'}`} />
                                 </div>
                             </div>
                             <div className="relative z-10">
