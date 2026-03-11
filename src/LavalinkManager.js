@@ -20,7 +20,8 @@ function getNodes() {
         url: process.env.LAVALINK_HOST || SERVERS.LOCAL.url,
         auth: LAVALINK_PASSWORD,
         secure: false,
-        followRedirects: true
+        followRedirects: true,
+        clientName: 'RMusicBot/1.0.0'
     }];
 }
 
