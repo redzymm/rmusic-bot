@@ -20,7 +20,7 @@ module.exports = {
         },
         HIGH_VM: {
             name: 'High Performance VM',
-            url: '35.233.125.241:2333',
+            url: '34.77.9.21:2333',
             perfMode: 'HIGH'
         }
     }

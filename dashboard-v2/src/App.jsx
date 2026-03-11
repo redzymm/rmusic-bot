@@ -198,10 +198,10 @@ const SettingsView = React.memo(({ config, setConfig, isSystemAdmin, discordUser
                                 </button>
                                 <button
                                     onClick={() => {
-                                        saveRemoteConfig({ ...remoteConfig, mode: 'remote', serverUrl: 'http://35.233.125.241:3001' });
+                                        saveRemoteConfig({ ...remoteConfig, mode: 'remote', serverUrl: 'http://34.77.9.21:3001' });
                                         ipc.send('bot-control', { cmd: 'switchServer', value: 'HIGH_VM' });
                                     }}
-                                    className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors duration-200 z-10 ${remoteConfig.mode === 'remote' && remoteConfig.serverUrl.includes('35.233.125.241') ? 'text-white' : 'text-white/40 hover:text-white'}`}
+                                    className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors duration-200 z-10 ${remoteConfig.mode === 'remote' && remoteConfig.serverUrl.includes('34.77.9.21') ? 'text-white' : 'text-white/40 hover:text-white'}`}
                                 >
                                     HIGH VM
                                 </button>
